@@ -1,0 +1,70 @@
+.schedule-page {
+  padding: 36px;
+  min-height: calc(100vh - 40px);
+  background: #f8f9fb;
+}
+.schedule-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.schedule-header h1 {
+  margin: 0;
+}
+.schedule-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.left-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.date-display {
+  color: #333;
+  font-weight: 600;
+  margin-left: 8px;
+}
+.ctrl.btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  cursor: pointer;
+}
+.view.btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  cursor: pointer;
+}
+.view.btn.active {
+  background: #f0f0ff;
+  border-color: #dad6ff;
+}
+.schedule-content {
+  margin-top: 18px;
+}
+.empty-card {
+  border-radius: 8px;
+  padding: 48px;
+  background: #fff;
+  border: 1px solid #eef0f6;
+  text-align: center;
+  color: #667;
+}
+.empty-icon {
+  font-size: 42px;
+  margin-bottom: 10px;
+}
+.empty-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+.empty-sub {
+  font-size: 13px;
+}

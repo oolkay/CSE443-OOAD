@@ -1,0 +1,127 @@
+.time-page {
+  padding: 28px;
+  background: #f7f7fb;
+  min-height: calc(100vh - 40px);
+}
+.time-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(21, 23, 27, 0.04);
+}
+.time-grid {
+  display: flex;
+  gap: 20px;
+}
+.calendar-card {
+  width: 320px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f2;
+}
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cal-nav {
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+}
+.cal-title {
+  font-weight: 600;
+}
+.cal-weekday-row {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  color: #888;
+  font-size: 12px;
+}
+.cal-week {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.cal-day {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cal-day.empty {
+  background: transparent;
+  cursor: default;
+  color: #ddd;
+}
+.cal-day.selected {
+  background: #00c7ed;
+  color: #fff;
+}
+
+.times-card {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f2;
+}
+.times-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.time-slot {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  cursor: pointer;
+}
+.time-slot.selected {
+  background: #00c7ed;
+  color: #fff;
+  border: none;
+}
+.time-slot.unavailable {
+  background: #00a7cf;
+  color: #fff;
+  border: none;
+  cursor: not-allowed;
+  opacity: 0.95;
+}
+
+.time-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+.back-btn {
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.next-btn {
+  background: #00c7ed;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .time-grid {
+    flex-direction: column;
+  }
+}

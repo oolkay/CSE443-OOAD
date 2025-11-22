@@ -1,0 +1,251 @@
+.appointments-page {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  min-height: calc(100vh - 40px);
+  background: #f7f7fb;
+}
+
+.appointments-sidebar {
+  width: 220px;
+  background: #eaf7f7;
+  border-radius: 6px;
+  padding: 18px;
+}
+.sidebar-title {
+  font-weight: 700;
+  color: #27b2d0;
+  margin-bottom: 12px;
+}
+.sidebar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar-list li {
+  padding: 8px 10px;
+  color: #4a4a4a;
+}
+.sidebar-list li.active {
+  background: #fff;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.appointments-main {
+  flex: 1;
+}
+.appointments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.create-btn {
+  background: #00c7ed;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(21, 23, 27, 0.04);
+  margin-bottom: 18px;
+}
+.card h3 {
+  margin-top: 0;
+}
+
+.appt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.appt-table th,
+.appt-table td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 14px;
+}
+.appt-table th {
+  color: #666;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.badge.approved {
+  background: #e6f9ff;
+  color: #00a7cf;
+}
+.badge.pending {
+  background: #f4f6f8;
+  color: #666;
+}
+.badge.completed {
+  background: #f4f6f8;
+  color: #666;
+}
+.badge.cancelled {
+  background: #ffecec;
+  color: #d64545;
+}
+
+.cancel-btn {
+  background: #ff5b5b;
+  border: none;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 360px;
+  box-shadow: 0 8px 30px rgba(21, 23, 27, 0.2);
+  text-align: center;
+}
+.modal h3 {
+  margin: 0 0 8px 0;
+}
+.modal p {
+  color: #666;
+  margin-bottom: 16px;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.modal .btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+  background: #fff;
+  cursor: pointer;
+}
+.modal .btn-danger {
+  background: #ff5b5b;
+  color: #fff;
+  border: none;
+}
+
+/* Snackbar (undo) */
+.snackbar {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: #222;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  z-index: 2100;
+}
+.snackbar .undo-btn {
+  background: transparent;
+  border: none;
+  color: #00c7ed;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Create modal specific styles */
+.create-modal {
+  background: #fff;
+  padding: 18px 18px 14px 18px;
+  border-radius: 8px;
+  width: 420px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+.create-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.create-header h3 {
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
+}
+.create-header .close-x {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+.create-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.company-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #f0f0f2;
+}
+.company-row.selected {
+  background: #f6fbfc;
+  border-color: #dff4f8;
+}
+.company-name {
+  flex: 1;
+}
+.company-row input[type="radio"] {
+  accent-color: #00c7ed;
+}
+.create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+.btn-primary {
+  background: #00c7ed;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+@media (max-width: 900px) {
+  .appointments-page {
+    flex-direction: column;
+  }
+  .appointments-sidebar {
+    width: 100%;
+  }
+}

@@ -1,0 +1,83 @@
+.service-page {
+  padding: 28px;
+  background: #f7f7fb;
+  min-height: calc(100vh - 40px);
+}
+.service-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(21, 23, 27, 0.04);
+}
+.service-title {
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+.service-sub {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.service-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #f0f0f2;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.service-image {
+  height: 110px;
+  background: linear-gradient(90deg, #eef9fb, #f6f8fb);
+}
+.service-body {
+  padding: 12px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.service-desc {
+  color: #666;
+  font-size: 13px;
+  flex: 1;
+}
+.service-time {
+  font-size: 13px;
+  color: #444;
+  margin-top: 8px;
+}
+.select-service {
+  margin-top: 8px;
+  background: #00c7ed;
+  border: none;
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.back-btn {
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .service-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .service-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}

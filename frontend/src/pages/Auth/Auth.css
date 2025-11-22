@@ -1,0 +1,143 @@
+/* Basic styling for Auth pages (Login / Reset Password) */
+.auth-page {
+  min-height: calc(100vh - 0px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background: transparent;
+  position: relative;
+}
+
+.auth-card {
+  width: 340px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 22px;
+  box-shadow: 0 6px 20px rgba(21, 23, 27, 0.06);
+  border: 1px solid #f0f0f2;
+  position: relative;
+}
+
+.auth-title {
+  text-align: center;
+  margin: 6px 0 12px 0;
+  font-size: 20px;
+}
+
+.auth-desc {
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-label {
+  font-size: 12px;
+  color: #666;
+  margin: 6px 0 4px 0;
+}
+
+.auth-input {
+  padding: 10px 12px;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.auth-input:focus {
+  border-color: #d0d8dd;
+}
+
+.auth-button {
+  margin-top: 12px;
+  background: #00c7ed;
+  color: #fff;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.auth-button:active {
+  transform: translateY(1px);
+}
+
+.auth-back {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px solid #e6e6e6;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #333;
+  font-size: 13px;
+}
+
+.auth-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.auth-forgot {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.auth-forgot:hover {
+  background: #fbfbff;
+  color: #444;
+}
+
+.auth-register-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+.auth-register {
+  color: #00a7d6;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+.auth-register:hover {
+  text-decoration: underline;
+}
+
+/* Top-right Register button for Login page */
+.auth-register-top {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  background: #00c7ed;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(11, 142, 179, 0.12);
+}
+.auth-register-top:hover {
+  opacity: 0.95;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    width: 92%;
+    padding: 16px;
+  }
+}

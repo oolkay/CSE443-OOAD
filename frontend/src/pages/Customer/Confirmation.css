@@ -1,0 +1,139 @@
+.confirm-page {
+  padding: 48px;
+  background: #f7f7fb;
+  min-height: calc(100vh - 40px);
+}
+.confirm-box {
+  max-width: 520px;
+  margin: 40px auto;
+  padding: 28px;
+  border: 3px solid #e7dbf7;
+  background: #fff;
+  border-radius: 6px;
+  text-align: left;
+}
+.confirm-box h2 {
+  margin-top: 0;
+}
+.status-row {
+  margin: 8px 0 18px 0;
+  color: #333;
+}
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+.status-badge.pending {
+  background: #fff3d9;
+  color: #d08a1a;
+}
+.confirm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+  margin-top: 8px;
+}
+.label {
+  color: #333;
+  font-weight: 600;
+}
+.value {
+  color: #333;
+}
+.note {
+  color: #666;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+.btn {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+  background: #fff;
+  cursor: pointer;
+}
+.btn-primary {
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+}
+.btn.cancel {
+  background: #ff6b5b;
+  color: #fff;
+  border: none;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 22, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+.modal-card {
+  background: #fff;
+  padding: 20px 22px;
+  border-radius: 8px;
+  max-width: 480px;
+  width: 92%;
+  box-shadow: 0 8px 30px rgba(12, 15, 35, 0.12);
+  border: 1px solid #efe6ff;
+  text-align: left;
+}
+.modal-card h3 {
+  margin: 0 0 8px 0;
+}
+.modal-card p {
+  color: #444;
+  margin-bottom: 14px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Undo snackbar */
+.undo-snackbar {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  padding: 12px 14px;
+  border-radius: 8px;
+  box-shadow: 0 6px 22px rgba(12, 15, 35, 0.12);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  z-index: 1300;
+}
+.undo-actions {
+  display: flex;
+  gap: 8px;
+}
+.undo-btn {
+  background: #fff3d9;
+  color: #d08a1a;
+  border: 1px solid transparent;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.undo-close {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+}

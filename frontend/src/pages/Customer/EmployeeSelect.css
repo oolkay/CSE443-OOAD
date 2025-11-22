@@ -1,0 +1,95 @@
+.employee-page {
+  padding: 28px;
+  background: #f7f7fb;
+  min-height: calc(100vh - 40px);
+}
+.employee-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(21, 23, 27, 0.04);
+}
+.employee-title {
+  text-align: center;
+  margin: 0 0 8px 0;
+  text-transform: none;
+}
+.employee-sub {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.selected-service {
+  background: #f3f6f8;
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  margin: 12px 0 18px 0;
+}
+.employee-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.employee-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #f0f0f2;
+  padding: 18px;
+  text-align: center;
+}
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eef9fb, #f6f8fb);
+  margin: 0 auto 10px;
+}
+.emp-name {
+  font-weight: 700;
+}
+.emp-title {
+  color: #666;
+  font-size: 13px;
+  margin: 8px 0;
+}
+.select-emp {
+  background: #00c7ed;
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.employee-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+.back-btn {
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.skip-btn {
+  background: #f3f6f8;
+  border: 1px solid #f0f0f2;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+@media (max-width: 900px) {
+  .employee-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .employee-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
