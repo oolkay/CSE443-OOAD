@@ -2,16 +2,6 @@
 
 A RESTful API built with Spring Boot for an appointment management system.
 
-## 📋 Table of Contents
-
-- [Key Concepts](#key-concepts)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Implementation Guide](#implementation-guide)
-- [API Documentation](#api-documentation)
-- [Testing](#testing)
-
 ---
 
 ## 🎯 Key Concepts
@@ -107,30 +97,197 @@ The application follows a **3-tier layered architecture**:
 
 ---
 
-## 🏗️ Architecture
-
-### Request Flow (End-to-End)
+# 📐 System Architecture
 
 ```
-1. Client Request
-   ↓
-2. Controller (receives HTTP request)
-   ↓
-3. Validates input (@Valid)
-   ↓
-4. Calls Service method
-   ↓
-5. Service executes business logic
-   ↓
-6. Calls Repository for data
-   ↓
-7. Repository queries database
-   ↓
-8. Returns data to Service
-   ↓
-9. Service processes and returns to Controller
-   ↓
-10. Controller returns HTTP response to client
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React)                         │
+│                  http://localhost:3000                      │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            │ HTTP/REST API
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│                  SPRING BOOT BACKEND                        │
+│                  http://localhost:8080                      │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │            CONTROLLER LAYER                          │  │
+│  │  ┌──────────────┐  ┌──────────────┐                │  │
+│  │  │  Service     │  │  Appointment │                 │  │
+│  │  │  Controller  │  │  Controller  │  ...            │  │
+│  │  └──────────────┘  └──────────────┘                │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                            │                                │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │            SERVICE LAYER                             │  │
+│  │  ┌──────────────┐  ┌──────────────┐                │  │
+│  │  │  Service     │  │  Appointment │                 │  │
+│  │  │  Service     │  │  Service     │  ...            │  │
+│  │  └──────────────┘  └──────────────┘                │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                            │                                │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │          REPOSITORY LAYER                            │  │
+│  │  ┌──────────────┐  ┌──────────────┐                │  │
+│  │  │  Service     │  │  Appointment │                 │  │
+│  │  │  Repository  │  │  Repository  │  ...            │  │
+│  │  └──────────────┘  └──────────────┘                │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                            │                                │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            │ JPA/Hibernate
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│                      DATABASE                               │
+│              (H2 / PostgreSQL / MySQL)                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 Request Flow Diagram
+
+### Example: Creating a New Service
+
+```
+┌──────────┐
+│  CLIENT  │
+│ (React)  │
+└──────────┘
+     │
+     │ 1. POST /api/services
+     │    {name: "Haircut", price: 25.00, ...}
+     ▼
+┌──────────────────────────────────────┐
+│    ServiceController                 │
+│  @PostMapping                        │
+│  - Receives HTTP request             │
+│  - Validates with @Valid             │
+└──────────────────────────────────────┘
+     │
+     │ 2. createService(ServiceRequestDTO)
+     ▼
+┌──────────────────────────────────────┐
+│    ServiceService                    │
+│  - Checks business rules             │
+│  - Validates uniqueness              │
+│  - Converts DTO to Entity            │
+└──────────────────────────────────────┘
+     │
+     │ 3. save(Service)
+     ▼
+┌──────────────────────────────────────┐
+│    ServiceRepository                 │
+│  - Generates SQL                     │
+│  - Executes INSERT                   │
+└──────────────────────────────────────┘
+     │
+     │ 4. INSERT INTO services...
+     ▼
+┌──────────────────────────────────────┐
+│        DATABASE                      │
+│  - Stores data                       │
+│  - Returns generated ID              │
+└──────────────────────────────────────┘
+     │
+     │ 5. Returns saved entity
+     ▼
+┌──────────────────────────────────────┐
+│    ServiceService                    │
+│  - Converts Entity to ResponseDTO    │
+└──────────────────────────────────────┘
+     │
+     │ 6. Returns ServiceResponseDTO
+     ▼
+┌──────────────────────────────────────┐
+│    ServiceController                 │
+│  - Wraps in ResponseEntity           │
+│  - Sets HTTP 201 Created             │
+└──────────────────────────────────────┘
+     │
+     │ 7. HTTP 201 Created
+     │    {id: 1, name: "Haircut", ...}
+     ▼
+┌──────────┐
+│  CLIENT  │
+│ (React)  │
+└──────────┘
+```
+
+---
+
+## 🏛️ Package Structure
+
+```
+com.appointment.api/
+│
+├── AppointmentApiApplication.java     ← Main entry point
+│
+├── controller/                        ← HTTP Layer
+│   ├── ServiceController.java         (REST endpoints)
+│   └── AppointmentController.java     (REST endpoints)
+│
+├── service/                           ← Business Logic Layer
+│   ├── ServiceService.java            (Business operations)
+│   └── AppointmentService.java        (Business operations)
+│
+├── repository/                        ← Data Access Layer
+│   ├── ServiceRepository.java         (Database operations)
+│   └── AppointmentRepository.java     (Database operations)
+│
+├── entity/                            ← Domain Models
+│   ├── Service.java                   (Database table)
+│   ├── Appointment.java               (Database table)
+│   └── AppointmentStatus.java         (Enum)
+│
+├── dto/                               ← Data Transfer Objects
+│   ├── ServiceRequestDTO.java         (Input validation)
+│   ├── ServiceResponseDTO.java        (Output format)
+│   ├── AppointmentRequestDTO.java     (Input validation)
+│   └── AppointmentResponseDTO.java    (Output format)
+│
+├── config/                            ← Configuration
+│   ├── SecurityConfig.java            (Security setup)
+│   └── CorsConfig.java                (CORS setup)
+│
+└── exception/                         ← Error Handling
+    ├── GlobalExceptionHandler.java    (Catches all errors)
+    ├── ResourceNotFoundException.java (404 errors)
+    ├── DuplicateResourceException.java(409 errors)
+    └── ErrorResponse.java             (Error format)
+```
+
+---
+
+## 🔐 Security Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  Client Request                         │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│              CORS Filter                                │
+│  - Checks allowed origins                               │
+│  - Validates headers                                    │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│          Security Filter Chain                          │
+│  - JWT Authentication (if enabled)                      │
+│  - Authorization checks                                 │
+│  - Session management                                   │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│              Controller                                 │
+│  - Endpoint logic                                       │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ### Example: Create Service Request
@@ -221,32 +378,17 @@ backend/
    cd backend
    ```
 
-2. **Install dependencies**
+2. **Make**
    ```bash
-   mvn clean install
+   make
    ```
 
-3. **Run the application**
-   ```bash
-   mvn spring-boot:run
-   ```
-
-4. **Access the API**
+3. **Access the API**
    - API: http://localhost:8080/api
-   - H2 Console: http://localhost:8080/h2-console
-     - JDBC URL: `jdbc:h2:mem:appointmentdb`
-     - Username: `sa`
-     - Password: (leave empty)
 
 ### Configuration
 
-- **Development**: Uses `application.properties` (H2 in-memory database)
-- **Production**: Uses `application-prod.properties` (PostgreSQL)
-
-To run in production mode:
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=prod
-```
+- **Development**: Uses `application.properties` (PostgreSQL)
 
 ---
 
@@ -560,159 +702,15 @@ public enum AppointmentStatus {
 |--------|----------|-------------|
 | POST | `/api/services` | Create new service |
 | GET | `/api/services` | Get all services |
-| GET | `/api/services/active` | Get active services |
 | GET | `/api/services/{id}` | Get service by ID |
 | PUT | `/api/services/{id}` | Update service |
 | DELETE | `/api/services/{id}` | Delete service |
 | GET | `/api/services/search?name={name}` | Search by name |
 
-### Example Requests
+## Postman
 
-**Create Service**
-```bash
-curl -X POST http://localhost:8080/api/services \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Haircut",
-    "description": "Professional haircut",
-    "durationMinutes": 30,
-    "price": 25.00,
-    "active": true
-  }'
-```
+**A good app for making requests**
 
-**Get All Services**
-```bash
-curl http://localhost:8080/api/services
-```
+### Step 1: Install Postman app.
 
-**Get Service by ID**
-```bash
-curl http://localhost:8080/api/services/1
-```
-
-**Update Service**
-```bash
-curl -X PUT http://localhost:8080/api/services/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Premium Haircut",
-    "description": "Premium haircut service",
-    "durationMinutes": 45,
-    "price": 35.00,
-    "active": true
-  }'
-```
-
-**Delete Service**
-```bash
-curl -X DELETE http://localhost:8080/api/services/1
-```
-
----
-
-## 🧪 Testing
-
-### Using Postman or Insomnia
-
-1. Import the API endpoints
-2. Set base URL: `http://localhost:8080`
-3. Test each endpoint with sample data
-
-### Using cURL (see examples above)
-
-### Using H2 Console
-
-1. Go to http://localhost:8080/h2-console
-2. Login with credentials from `application.properties`
-3. Run SQL queries to verify data
-
----
-
-## 🎓 Best Practices
-
-1. **Always use DTOs** - Never expose entities directly
-2. **Add validation** - Use `@Valid` and validation annotations
-3. **Handle exceptions** - Use global exception handler
-4. **Use transactions** - Add `@Transactional` on service methods
-5. **Log important operations** - Use `@Slf4j` for logging
-6. **Follow naming conventions** - Clear and consistent names
-7. **Write clean code** - Single responsibility principle
-8. **Document APIs** - Add JavaDoc comments
-9. **Test your code** - Write unit and integration tests
-10. **Use version control** - Commit regularly with clear messages
-
----
-
-## 📝 Common Tasks
-
-### Adding a New Dependency
-
-Edit `pom.xml`:
-```xml
-<dependency>
-    <groupId>group.id</groupId>
-    <artifactId>artifact-id</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-Run: `mvn clean install`
-
-### Changing Database
-
-1. Update `application.properties`
-2. Add database driver to `pom.xml`
-3. Update dialect in JPA configuration
-
-### Adding JWT Authentication
-
-See commented JWT dependencies in `pom.xml` and update `SecurityConfig.java`
-
----
-
-## 🆘 Troubleshooting
-
-### Port Already in Use
-```bash
-# Change port in application.properties
-server.port=8081
-```
-
-### Database Connection Error
-- Check database is running
-- Verify credentials in application.properties
-- Check database URL is correct
-
-### Compilation Errors
-```bash
-mvn clean install -U
-```
-
-### Lombok Not Working
-- Install Lombok plugin in your IDE
-- Enable annotation processing
-
----
-
-## 📚 Resources
-
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-- [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
-- [Lombok](https://projectlombok.org/)
-- [Maven](https://maven.apache.org/)
-
----
-
-## 🤝 Contributing
-
-When adding new features:
-1. Follow the existing project structure
-2. Create Entity → DTO → Repository → Service → Controller
-3. Add proper validation and error handling
-4. Test all endpoints
-5. Update this README if needed
-
----
-
-**Happy Coding! 🚀**
-
+### Step 2: Import the collection ("postman_collection.json") & easily make requests using that app.
