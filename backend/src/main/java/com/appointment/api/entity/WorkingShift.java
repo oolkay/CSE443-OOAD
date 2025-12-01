@@ -5,40 +5,38 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
- * Entity class representing a Service offered by the appointment system
- * This corresponds to a database table
+ * WorkingShift entity - defines employee's working hours
  */
 @Entity
-@Table(name = "services")
+@Table(name = "working_shifts")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Service {
+public class WorkingShift {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long serviceId;
+    private Long shiftId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
 
-    @Column(nullable = false, length = 100)
-    private String name;
-
-    @Column(length = 500)
-    private String description;
+    @Column(nullable = false, length = 50)
+    private String shiftName;
 
     @Column(nullable = false)
-    private Long timeDuration; // Duration in minutes
+    private LocalTime startTime;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+    @Column(nullable = false)
+    private LocalTime endTime;
+
+    @Column(length = 20)
+    private String dayOfWeek; // e.g., "MONDAY", "TUESDAY"
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -55,10 +53,5 @@ public class Service {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Helper method to get duration as Duration object
-    public Duration getDuration() {
-        return Duration.ofMinutes(timeDuration);
     }
 }

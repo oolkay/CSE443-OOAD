@@ -5,40 +5,33 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
- * Entity class representing a Service offered by the appointment system
- * This corresponds to a database table
+ * Company entity - represents a business/company in the system
  */
 @Entity
-@Table(name = "services")
+@Table(name = "companies")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Service {
+public class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long serviceId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    private Long companyId;
 
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(length = 500)
-    private String description;
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
 
-    @Column(nullable = false)
-    private Long timeDuration; // Duration in minutes
+    @Column(nullable = false, length = 255)
+    private String address;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+    @Column(length = 20)
+    private String phoneNumber;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -55,10 +48,5 @@ public class Service {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Helper method to get duration as Duration object
-    public Duration getDuration() {
-        return Duration.ofMinutes(timeDuration);
     }
 }
