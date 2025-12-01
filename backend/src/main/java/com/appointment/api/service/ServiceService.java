@@ -40,13 +40,13 @@ public class ServiceService {
         Service service = new Service();
         service.setName(requestDTO.getName());
         service.setDescription(requestDTO.getDescription());
-        service.setDurationMinutes(requestDTO.getDurationMinutes());
+        service.setTimeDuration(requestDTO.getDurationMinutes().longValue());
         service.setPrice(requestDTO.getPrice());
         
         // Save to database
         Service savedService = serviceRepository.save(service);
         
-        log.info("Service created successfully with ID: {}", savedService.getId());
+        log.info("Service created successfully with ID: {}", savedService.getServiceId());
         
         // Convert Entity to Response DTO
         return convertToResponseDTO(savedService);
@@ -94,12 +94,12 @@ public class ServiceService {
         // Update fields
         service.setName(requestDTO.getName());
         service.setDescription(requestDTO.getDescription());
-        service.setDurationMinutes(requestDTO.getDurationMinutes());
+        service.setTimeDuration(requestDTO.getDurationMinutes().longValue());
         service.setPrice(requestDTO.getPrice());
         
         Service updatedService = serviceRepository.save(service);
         
-        log.info("Service updated successfully with ID: {}", updatedService.getId());
+        log.info("Service updated successfully with ID: {}", updatedService.getServiceId());
         
         return convertToResponseDTO(updatedService);
     }
@@ -132,10 +132,10 @@ public class ServiceService {
      */
     private ServiceResponseDTO convertToResponseDTO(Service service) {
         ServiceResponseDTO responseDTO = new ServiceResponseDTO();
-        responseDTO.setId(service.getId());
+        responseDTO.setId(service.getServiceId());
         responseDTO.setName(service.getName());
         responseDTO.setDescription(service.getDescription());
-        responseDTO.setDurationMinutes(service.getDurationMinutes());
+        responseDTO.setDurationMinutes(service.getTimeDuration().intValue());
         responseDTO.setPrice(service.getPrice());
         responseDTO.setCreatedAt(service.getCreatedAt());
         responseDTO.setUpdatedAt(service.getUpdatedAt());
