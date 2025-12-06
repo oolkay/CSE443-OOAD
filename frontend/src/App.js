@@ -10,6 +10,8 @@ import EmployeeSelect from "./pages/Customer/EmployeeSelect";
 import TimePicker from "./pages/Customer/TimePicker";
 import Confirmation from "./pages/Customer/Confirmation";
 import ScheduleViewing from "./pages/Customer/ScheduleViewing";
+import ServiceManager from "./pages/ServiceManagement/ServiceManager";
+import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 
 function App() {
   return (
@@ -25,6 +27,7 @@ function App() {
             <Route path="/confirm" element={<Confirmation />} />
             <Route path="/schedule" element={<ScheduleViewing />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/employee-management" element={<EmployeeManagement />} />
             <Route path="/reset" element={<ResetPassword />} />
           </Routes>
         </main>
