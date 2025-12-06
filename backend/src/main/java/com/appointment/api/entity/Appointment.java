@@ -43,9 +43,6 @@ public class Appointment {
     @Column(nullable = false, length = 20)
     private AppointmentStatus status;
 
-    @Column(length = 1000)
-    private String notes;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
