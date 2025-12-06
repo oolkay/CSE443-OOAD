@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Appointments.css";
+import BookingWizard from "../../components/BookingWizard";
 
 const initialUpcoming = [
   {
@@ -82,14 +83,23 @@ const initialPrevious = [
 
 function StatusBadge({ status }) {
   const cls =
-    status === "Approved"
+    status === "Approved" || status === "Onaylandı"
       ? "badge approved"
-      : status === "Pending"
+      : status === "Pending" || status === "Beklemede"
       ? "badge pending"
-      : status === "Completed"
+      : status === "Completed" || status === "Tamamlandı"
       ? "badge completed"
       : "badge cancelled";
-  return <span className={cls}>{status}</span>;
+  
+  // Display Turkish status
+  const displayStatus = 
+    status === "Approved" ? "Onaylandı" :
+    status === "Pending" ? "Beklemede" :
+    status === "Completed" ? "Tamamlandı" :
+    status === "Cancelled" ? "İptal Edildi" :
+    status;
+  
+  return <span className={cls}>{displayStatus}</span>;
 }
 
 export default function Appointments() {
@@ -223,31 +233,44 @@ export default function Appointments() {
 
   // Create appointment modal state
   const [createOpen, setCreateOpen] = useState(false);
-  const [companies] = useState([
-    "Derin Bakış Psikoloji",
-    "Estetik Palette",
-    "Kronos Klinik",
-    "Fit Limit Stüdyo",
-    "Lastik Durağı Pro",
-  ]);
-  const [selectedCompany, setSelectedCompany] = useState(companies[0]);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const navigate = useNavigate();
 
   const openCreateModal = () => setCreateOpen(true);
   const closeCreateModal = () => setCreateOpen(false);
 
-  const saveCreate = () => {
-    // Instead of adding a placeholder appointment locally, navigate
-    // to the company-specific services page so the user can pick a service.
-    const q = encodeURIComponent(selectedCompany);
-    navigate(`/services?company=${q}`);
-    // keep modal open state clean
-    closeCreateModal();
+  const handleBookingComplete = (appointment) => {
+    // Refresh the upcoming list
+    try {
+      const raw = localStorage.getItem("upcomingAppointments");
+      const arr = raw ? JSON.parse(raw) : [];
+      setUpcomingList(arr);
+    } catch (e) {
+      console.error("Failed to refresh appointments:", e);
+    }
+
+    // Show success message
+    setShowSuccessMessage(true);
+    setTimeout(() => setShowSuccessMessage(false), 5000);
   };
 
   return (
     <div className="appointments-page">
+      {/* Booking Wizard Modal */}
+      <BookingWizard
+        isOpen={createOpen}
+        onClose={closeCreateModal}
+        onComplete={handleBookingComplete}
+      />
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="success-banner">
+          ✓ Randevu talebiniz başarıyla gönderildi! Onay bekliyor.
+        </div>
+      )}
+
       {/* Confirmation modal */}
       {modalOpen && pendingCancel && (
         <div className="modal-overlay">
@@ -277,78 +300,35 @@ export default function Appointments() {
       )}
 
       <aside className="appointments-sidebar">
-        <div className="sidebar-title">Appointment Flow</div>
+        <div className="sidebar-title">Randevu İşlemleri</div>
         <ul className="sidebar-list">
-          <li className="active">Appointment Management</li>
+          <li className="active">Randevu Yönetimi</li>
           <li>
             <Link to="/schedule" className="sidebar-link">
-              Schedule Viewing
+              Program Görüntüleme
             </Link>
           </li>
         </ul>
       </aside>
 
-      {/* Create appointment modal */}
-      {createOpen && (
-        <div className="modal-overlay">
-          <div className="create-modal">
-            <div className="create-header">
-              <h3>COMPANIES</h3>
-              <button className="close-x" onClick={closeCreateModal}>
-                ×
-              </button>
-            </div>
-
-            <div className="create-list">
-              {companies.map((c, idx) => (
-                <label
-                  key={c}
-                  className={`company-row ${
-                    selectedCompany === c ? "selected" : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="company"
-                    value={c}
-                    checked={selectedCompany === c}
-                    onChange={() => setSelectedCompany(c)}
-                  />
-                  <span className="company-name">{c}</span>
-                </label>
-              ))}
-            </div>
-
-            <div className="create-actions">
-              <button className="btn" onClick={closeCreateModal}>
-                Cancel
-              </button>
-              <button className="btn-primary" onClick={saveCreate}>
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <section className="appointments-main">
         <div className="appointments-header">
-          <h1>Appointment Management</h1>
+          <h1>Randevu Yönetimi</h1>
           <button className="create-btn" onClick={openCreateModal}>
-            Create New Appointment
+            Yeni Randevu Oluştur
           </button>
         </div>
 
         <div className="card">
-          <h3>Upcoming Appointments</h3>
+          <h3>Yaklaşan Randevular</h3>
           <table className="appt-table">
             <thead>
               <tr>
-                <th>Service</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Employee</th>
-                <th>Status</th>
+                <th>Hizmet</th>
+                <th>Tarih</th>
+                <th>Saat</th>
+                <th>Çalışan</th>
+                <th>Durum</th>
                 <th></th>
               </tr>
             </thead>
@@ -367,14 +347,14 @@ export default function Appointments() {
                       className="cancel-btn"
                       onClick={() => openCancelModal(a.id)}
                     >
-                      Cancel
+                      İptal Et
                     </button>
                   </td>
                 </tr>
               ))}
               {upcomingList.length === 0 && (
                 <tr>
-                  <td colSpan="6">No upcoming appointments.</td>
+                  <td colSpan="6">Yaklaşan randevu bulunmamaktadır.</td>
                 </tr>
               )}
             </tbody>
@@ -382,15 +362,15 @@ export default function Appointments() {
         </div>
 
         <div className="card">
-          <h3>Previous Appointments</h3>
+          <h3>Geçmiş Randevular</h3>
           <table className="appt-table">
             <thead>
               <tr>
-                <th>Service</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Employee</th>
-                <th>Status</th>
+                <th>Hizmet</th>
+                <th>Tarih</th>
+                <th>Saat</th>
+                <th>Çalışan</th>
+                <th>Durum</th>
               </tr>
             </thead>
             <tbody>
@@ -407,7 +387,7 @@ export default function Appointments() {
               ))}
               {previousList.length === 0 && (
                 <tr>
-                  <td colSpan="5">No previous appointments.</td>
+                  <td colSpan="5">Geçmiş randevu bulunmamaktadır.</td>
                 </tr>
               )}
             </tbody>

@@ -88,12 +88,13 @@
   color: #00a7cf;
 }
 .badge.pending {
-  background: #f4f6f8;
-  color: #666;
+  background: #fff3cd;
+  color: #856404;
+  font-weight: 600;
 }
 .badge.completed {
-  background: #f4f6f8;
-  color: #666;
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 .badge.cancelled {
   background: #ffecec;
@@ -177,68 +178,30 @@
   font-weight: 600;
 }
 
-/* Create modal specific styles */
-.create-modal {
-  background: #fff;
-  padding: 18px 18px 14px 18px;
-  border-radius: 8px;
-  width: 420px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
-  text-align: left;
-}
-.create-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.create-header h3 {
-  margin: 0;
-  font-size: 14px;
-  text-align: center;
-  width: 100%;
-}
-.create-header .close-x {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-}
-.create-list {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.company-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #f0f0f2;
-}
-.company-row.selected {
-  background: #f6fbfc;
-  border-color: #dff4f8;
-}
-.company-name {
-  flex: 1;
-}
-.company-row input[type="radio"] {
-  accent-color: #00c7ed;
-}
-.create-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-.btn-primary {
+/* Success banner */
+.success-banner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
   background: #00c7ed;
   color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 199, 237, 0.3);
+  z-index: 2100;
+  font-weight: 600;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 900px) {
