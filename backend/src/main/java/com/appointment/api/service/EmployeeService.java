@@ -6,7 +6,7 @@ import com.appointment.api.dto.ServiceResponseDTO;
 import com.appointment.api.entity.Company;
 import com.appointment.api.entity.Employee;
 import com.appointment.api.entity.Service;
-import com.appointment.api.repository.CompanyRepository;
+//import com.appointment.api.repository.CompanyRepository;
 import com.appointment.api.repository.EmployeeRepository;
 import com.appointment.api.repository.ServiceRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
-    private final CompanyRepository companyRepository;
+    //private final CompanyRepository companyRepository;
     private final ServiceRepository serviceRepository;
 
     @Transactional
@@ -69,7 +69,7 @@ public class EmployeeService {
 
     private EmployeeResponseDTO mapToResponseDTO(Employee employee) {
         EmployeeResponseDTO dto = new EmployeeResponseDTO();
-        dto.setId(employee.getId());
+        dto.setId(employee.getUserId());
         dto.setName(employee.getName());
         dto.setEmail(employee.getEmail());
         
