@@ -61,6 +61,44 @@
   margin-top: 0;
 }
 
+/* Filter group */
+.card-header-with-filter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.card-header-with-filter h3 {
+  margin: 0;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-group label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+.status-filter-select {
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.status-filter-select:hover {
+  border-color: #00c7ed;
+}
+.status-filter-select:focus {
+  outline: none;
+  border-color: #00c7ed;
+  box-shadow: 0 0 0 3px rgba(0, 199, 237, 0.1);
+}
+
 .appt-table {
   width: 100%;
   border-collapse: collapse;
@@ -82,6 +120,7 @@
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 600;
 }
 .badge.approved {
   background: #e6f9ff;
@@ -90,7 +129,6 @@
 .badge.pending {
   background: #fff3cd;
   color: #856404;
-  font-weight: 600;
 }
 .badge.completed {
   background: #e8f5e9;
@@ -99,6 +137,10 @@
 .badge.cancelled {
   background: #ffecec;
   color: #d64545;
+}
+.badge.no_show {
+  background: #fed7aa;
+  color: #9a3412;
 }
 
 .cancel-btn {

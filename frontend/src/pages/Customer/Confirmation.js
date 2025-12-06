@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Confirmation.css";
 
+// TODO: Replace with actual customer ID from auth context
+// const CUSTOMER_ID = 1;
+
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
@@ -28,8 +31,11 @@ export default function Confirmation() {
   const q = useQuery();
   const navigate = useNavigate();
   const company = q.get("company") || "Company";
+  //const companyId = q.get("companyId") || "";
   const service = q.get("service") || "";
+  //const serviceId = q.get("serviceId") || "";
   const employee = q.get("employee") || "TBD";
+  //const employeeId = q.get("employeeId") || "";
   const date = q.get("date") || "";
   const time = q.get("time") || "";
 
@@ -47,8 +53,10 @@ export default function Confirmation() {
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUndoBar, setShowUndoBar] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const undoTimerRef = useRef(null);
   const [lastCancelled, setLastCancelled] = useState(null);
+  const [createdAppointmentId, setCreatedAppointmentId] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -64,9 +72,30 @@ export default function Confirmation() {
   const confirmCancel = () => {
     setShowCancelModal(false);
 
+    // API call to cancel appointment (only if created)
+    if (createdAppointmentId) {
+      // TODO: Uncomment when backend is ready
+      /*
+      fetch(`/api/appointments/${createdAppointmentId}`, {
+        method: 'DELETE',
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to cancel appointment');
+          }
+          console.log('Appointment cancelled via API');
+        })
+        .catch((error) => {
+          console.error('Error cancelling appointment:', error);
+          alert('Randevu iptal edilirken bir hata oluştu. Lütfen tekrar deneyin.');
+          return;
+        });
+      */
+    }
+
     // create cancelled appointment object
     const cancelled = {
-      id: Date.now(),
+      id: createdAppointmentId || Date.now(),
       service,
       date,
       time,
@@ -145,24 +174,68 @@ export default function Confirmation() {
     alert("Randevu iptali geri alındı");
   };
 
-  const confirmBooking = () => {
-    // create appointment and add to upcoming
-    const appt = {
-      id: Date.now(),
-      service,
-      date,
-      time,
-      employee,
-      status: "Pending",
-    };
+  const confirmBooking = async () => {
+    setIsCreating(true);
+
+    // Prepare appointment data for API
+    // const appointmentDateTime = `${date}T${time}:00`; // ISO 8601 format
+    
+    /*const appointmentData = {
+      customerId: CUSTOMER_ID,
+      employeeId: Number(employeeId),
+      serviceId: Number(serviceId),
+      appointmentDateTime: appointmentDateTime,
+      notes: "", // Optional field
+    };*/
+
     try {
+      // TODO: Uncomment when backend is ready
+      /*
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create appointment');
+      }
+
+      const createdAppointment = await response.json();
+      setCreatedAppointmentId(createdAppointment.appointmentId);
+      console.log('Appointment created:', createdAppointment);
+      */
+
+      // Fallback: create appointment locally
+      const appt = {
+        id: Date.now(),
+        appointmentId: Date.now(), // For consistency with API response
+        service,
+        date,
+        time,
+        employee,
+        status: "Pending",
+      };
+      
       const rawUp = localStorage.getItem("upcomingAppointments");
       const upArr = rawUp ? JSON.parse(rawUp) : [];
       localStorage.setItem(
         "upcomingAppointments",
         JSON.stringify([appt, ...upArr])
       );
-    } catch (e) {}
+      
+      setCreatedAppointmentId(appt.appointmentId);
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      alert('Randevu oluşturulurken bir hata oluştu: ' + error.message);
+      setIsCreating(false);
+      return;
+    }
+
+    setIsCreating(false);
     navigate("/appointments");
   };
 
@@ -194,17 +267,19 @@ export default function Confirmation() {
         </p>
 
         <div className="confirm-actions">
-          <button className="btn cancel" onClick={handleCancel}>
+          <button 
+            className="btn cancel" 
+            onClick={handleCancel}
+            disabled={isCreating}
+          >
             Randevuyu İptal Et
           </button>
           <button
             className="btn"
-            onClick={() => {
-              // create the appointment and return to appointments list
-              confirmBooking();
-            }}
+            onClick={confirmBooking}
+            disabled={isCreating}
           >
-            Geri Dön
+            {isCreating ? "Oluşturuluyor..." : "Geri Dön"}
           </button>
         </div>
       </div>

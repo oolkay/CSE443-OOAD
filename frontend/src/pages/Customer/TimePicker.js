@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./TimePicker.css";
 
@@ -51,6 +51,9 @@ export default function TimePicker() {
   const company = q.get("company") || "";
   const service = q.get("service") || "";
   const employee = q.get("employee") || "";
+  const employeeId = q.get("employeeId") || ""; // Employee ID from previous page
+  const serviceId = q.get("serviceId") || ""; // Service ID from previous page
+ // const serviceDuration = q.get("serviceDuration") || "60"; // Service duration in minutes
   const navigate = useNavigate();
 
   const today = new Date();
@@ -58,43 +61,63 @@ export default function TimePicker() {
   const [month, setMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [selectedTime, setSelectedTime] = useState(null);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const weeks = useMemo(() => buildMonth(year, month), [year, month]);
-  // employees used for combined availability simulation
-  const EMPLOYEES = ["Musab", "Ayşe", "Mehmet", "Zeynep"];
 
-  function hashString(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = (h << 5) - h + str.charCodeAt(i);
-    return Math.abs(h);
-  }
+  // Fetch available time slots from API when date changes
+  useEffect(() => {
+    if (employeeId && serviceId) {
+      fetchAvailableSlots();
+    }
+  }, [selectedDay, month, year, employeeId, serviceId]);
 
-  // mock availability: if `employee` is provided compute availability for that employee,
-  // otherwise compute combined availability across all EMPLOYEES (available if any is available)
+  const fetchAvailableSlots = async () => {
+    setLoading(true);
+    try {
+      //const selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+      
+      // TODO: API call to get employee availability
+      // const response = await fetch(
+      //   `/api/appointments/availability/employee/${employeeId}?date=${selectedDate}&serviceDuration=${serviceDuration}`
+      // );
+      // const data = await response.json();
+      // setAvailableSlots(data.availableSlots);
+      
+      // Mock data for now - remove this when API is connected
+      const mockSlots = TIMES.map((time, i) => {
+        const isAvailable = (selectedDay + i) % 3 !== 0; // Mock availability
+        return {
+          time: time,
+          available: isAvailable
+        };
+      });
+      setAvailableSlots(mockSlots);
+    } catch (error) {
+      console.error("Error fetching available slots:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const availability = useMemo(() => {
     const avail = {};
-    for (let i = 0; i < TIMES.length; i++) {
-      const key = TIMES[i];
-      if (employee) {
-        const h = hashString(employee);
-        const unavailable = (selectedDay + i + (h % 5)) % 4 === 0;
+    availableSlots.forEach(slot => {
+      avail[slot.time] = slot.available ? "available" : "unavailable";
+    });
+    
+    // If no API data yet, fallback to old mock logic
+    if (availableSlots.length === 0) {
+      for (let i = 0; i < TIMES.length; i++) {
+        const key = TIMES[i];
+        const unavailable = (selectedDay + i) % 4 === 0;
         avail[key] = unavailable ? "unavailable" : "available";
-      } else {
-        // combined: if any employee is available at this slot, mark available
-        let anyAvailable = false;
-        for (const emp of EMPLOYEES) {
-          const h = hashString(emp);
-          const unavailable = (selectedDay + i + (h % 5)) % 4 === 0;
-          if (!unavailable) {
-            anyAvailable = true;
-            break;
-          }
-        }
-        avail[key] = anyAvailable ? "available" : "unavailable";
       }
     }
+    
     return avail;
-  }, [selectedDay, employee]);
+  }, [availableSlots, selectedDay]);
 
   const prevMonth = () => {
     if (month === 0) {
@@ -178,24 +201,31 @@ export default function TimePicker() {
 
           <div className="times-card">
             <h4>Select Time Zone</h4>
-            <div className="times-list">
-              {TIMES.map((t, idx) => {
-                const state = availability[t];
-                const isSelected = selectedTime === t;
-                return (
-                  <button
-                    key={t}
-                    className={`time-slot ${
-                      state === "unavailable" ? "unavailable" : ""
-                    } ${isSelected ? "selected" : ""}`}
-                    onClick={() => state === "available" && setSelectedTime(t)}
-                    disabled={state === "unavailable"}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
+            {loading ? (
+              <div className="loading-slots">
+                <div>⏳</div>
+                <p>Müsait saatler yükleniyor...</p>
+              </div>
+            ) : (
+              <div className="times-list">
+                {TIMES.map((t, idx) => {
+                  const state = availability[t];
+                  const isSelected = selectedTime === t;
+                  return (
+                    <button
+                      key={t}
+                      className={`time-slot ${
+                        state === "unavailable" ? "unavailable" : ""
+                      } ${isSelected ? "selected" : ""}`}
+                      onClick={() => state === "available" && setSelectedTime(t)}
+                      disabled={state === "unavailable"}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import "./Appointments.css";
 import BookingWizard from "../../components/BookingWizard";
 
@@ -82,43 +82,101 @@ const initialPrevious = [
 ];
 
 function StatusBadge({ status }) {
+  const normalizedStatus = (status || "").toUpperCase();
+  
   const cls =
-    status === "Approved" || status === "Onaylandı"
+    normalizedStatus === "APPROVED" || normalizedStatus === "CONFIRMED"
       ? "badge approved"
-      : status === "Pending" || status === "Beklemede"
+      : normalizedStatus === "PENDING"
       ? "badge pending"
-      : status === "Completed" || status === "Tamamlandı"
+      : normalizedStatus === "COMPLETED"
       ? "badge completed"
+      : normalizedStatus === "NO_SHOW"
+      ? "badge no_show"
       : "badge cancelled";
   
   // Display Turkish status
   const displayStatus = 
-    status === "Approved" ? "Onaylandı" :
-    status === "Pending" ? "Beklemede" :
-    status === "Completed" ? "Tamamlandı" :
-    status === "Cancelled" ? "İptal Edildi" :
+    normalizedStatus === "APPROVED" || normalizedStatus === "CONFIRMED" ? "Onaylandı" :
+    normalizedStatus === "PENDING" ? "Beklemede" :
+    normalizedStatus === "COMPLETED" ? "Tamamlandı" :
+    normalizedStatus === "CANCELLED" ? "İptal Edildi" :
+    normalizedStatus === "NO_SHOW" ? "Gelmedi" :
+    normalizedStatus === "REJECTED" ? "Reddedildi" :
     status;
   
   return <span className={cls}>{displayStatus}</span>;
 }
 
 export default function Appointments() {
-  const [upcomingList, setUpcomingList] = useState(() => {
+  const [upcomingList, setUpcomingList] = useState([]);
+  const [previousList, setPreviousList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Filter states
+  const [upcomingStatusFilter, setUpcomingStatusFilter] = useState("ALL");
+  const [previousStatusFilter, setPreviousStatusFilter] = useState("ALL");
+
+  // Fetch appointments from API
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    setLoading(true);
     try {
-      const raw = localStorage.getItem("upcomingAppointments");
-      return raw ? JSON.parse(raw) : initialUpcoming;
-    } catch (e) {
-      return initialUpcoming;
+      // TODO: API call to get customer appointments
+      // const response = await fetch(`/api/appointments/customer/${CUSTOMER_ID}`);
+      // const data = await response.json();
+      
+      // Separate upcoming and previous appointments
+      // const now = new Date();
+      // const upcoming = data.filter(apt => new Date(apt.startTime) > now && apt.status !== 'CANCELLED');
+      // const previous = data.filter(apt => new Date(apt.startTime) <= now || apt.status === 'CANCELLED');
+      // setUpcomingList(upcoming);
+      // setPreviousList(previous);
+      
+      // Mock data for now
+      const mockData = [
+        ...initialUpcoming.map(apt => ({
+          appointmentId: apt.id,
+          serviceName: apt.service,
+          startTime: apt.date + 'T' + apt.time.split(' - ')[0],
+          endTime: apt.date + 'T' + apt.time.split(' - ')[1],
+          employeeName: apt.employee,
+          status: apt.status.toUpperCase(),
+        })),
+        ...initialPrevious.map(apt => ({
+          appointmentId: apt.id,
+          serviceName: apt.service,
+          startTime: apt.date + 'T' + apt.time.split(' - ')[0],
+          endTime: apt.date + 'T' + apt.time.split(' - ')[1],
+          employeeName: apt.employee,
+          status: apt.status.toUpperCase(),
+        }))
+      ];
+      
+      const now = new Date();
+      const upcoming = mockData.filter(apt => new Date(apt.startTime) > now && apt.status !== 'CANCELLED');
+      const previous = mockData.filter(apt => new Date(apt.startTime) <= now || apt.status === 'CANCELLED');
+      setUpcomingList(upcoming);
+      setPreviousList(previous);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      // Fallback to localStorage if API fails
+      try {
+        const raw = localStorage.getItem("upcomingAppointments");
+        const rawPrev = localStorage.getItem("previousAppointments");
+        setUpcomingList(raw ? JSON.parse(raw) : initialUpcoming);
+        setPreviousList(rawPrev ? JSON.parse(rawPrev) : initialPrevious);
+      } catch (e) {
+        setUpcomingList(initialUpcoming);
+        setPreviousList(initialPrevious);
+      }
+    } finally {
+      setLoading(false);
     }
-  });
-  const [previousList, setPreviousList] = useState(() => {
-    try {
-      const raw = localStorage.getItem("previousAppointments");
-      return raw ? JSON.parse(raw) : initialPrevious;
-    } catch (e) {
-      return initialPrevious;
-    }
-  });
+  };
 
   // modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -141,47 +199,55 @@ export default function Appointments() {
     setPendingCancel(null);
   };
 
-  const confirmCancel = () => {
+  const confirmCancel = async () => {
     if (!pendingCancel) return;
-    const id = pendingCancel.id;
+    const id = pendingCancel.appointmentId || pendingCancel.id;
 
-    // perform cancellation: remove from upcoming and add to previous
-    const newUpcoming = upcomingList.filter((a) => a.id !== id);
-    setUpcomingList(newUpcoming);
-
-    const cancelled = { ...pendingCancel, status: "Cancelled" };
-    setPreviousList((prev) => [cancelled, ...prev]);
-
-    // persist to localStorage
     try {
-      localStorage.setItem("upcomingAppointments", JSON.stringify(newUpcoming));
-      const rawPrev = localStorage.getItem("previousAppointments");
-      const prevArr = rawPrev ? JSON.parse(rawPrev) : initialPrevious;
-      localStorage.setItem(
-        "previousAppointments",
-        JSON.stringify([cancelled, ...prevArr])
-      );
-      // save lastCancelled for possible undo from other pages
-      localStorage.setItem(
-        "lastCancelledAppointment",
-        JSON.stringify(cancelled)
-      );
-    } catch (e) {
-      // ignore storage errors
+      // Check if appointment is within 24 hours
+      const appointmentTime = new Date(pendingCancel.startTime);
+      const now = new Date();
+      const hoursUntil = (appointmentTime - now) / (1000 * 60 * 60);
+      
+      if (hoursUntil < 24 && hoursUntil > 0) {
+        alert("24 saatten az kalan randevular iptal edilemez. Lütfen şirketle iletişime geçin.");
+        closeModal();
+        return;
+      }
+
+      // TODO: API call to cancel appointment
+      // const response = await fetch(`/api/appointments/${id}`, {
+      //   method: 'DELETE',
+      // });
+      // if (!response.ok) {
+      //   const error = await response.json();
+      //   alert(error.message || 'Randevu iptal edilemedi');
+      //   return;
+      // }
+
+      // Update local state
+      const newUpcoming = upcomingList.filter((a) => (a.appointmentId || a.id) !== id);
+      setUpcomingList(newUpcoming);
+
+      const cancelled = { ...pendingCancel, status: "CANCELLED" };
+      setPreviousList((prev) => [cancelled, ...prev]);
+
+      // Show success message
+      setLastCancelled(cancelled);
+      setSnackOpen(true);
+      if (snackTimer) clearTimeout(snackTimer);
+      const t = setTimeout(() => {
+        setSnackOpen(false);
+        setLastCancelled(null);
+        setSnackTimer(null);
+      }, 5000);
+      setSnackTimer(t);
+
+      closeModal();
+    } catch (error) {
+      console.error("Error cancelling appointment:", error);
+      alert("Randevu iptal edilirken bir hata oluştu");
     }
-
-    // show undo snackbar
-    setLastCancelled(cancelled);
-    setSnackOpen(true);
-    if (snackTimer) clearTimeout(snackTimer);
-    const t = setTimeout(() => {
-      setSnackOpen(false);
-      setLastCancelled(null);
-      setSnackTimer(null);
-    }, 5000);
-    setSnackTimer(t);
-
-    closeModal();
   };
 
   const undoCancel = () => {
@@ -235,7 +301,7 @@ export default function Appointments() {
   const [createOpen, setCreateOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const navigate = useNavigate();
+ // const navigate = useNavigate();
 
   const openCreateModal = () => setCreateOpen(true);
   const closeCreateModal = () => setCreateOpen(false);
@@ -254,6 +320,22 @@ export default function Appointments() {
     setShowSuccessMessage(true);
     setTimeout(() => setShowSuccessMessage(false), 5000);
   };
+
+  // Filter upcoming appointments by status
+  const filteredUpcoming = upcomingStatusFilter === "ALL"
+    ? upcomingList
+    : upcomingList.filter(a => {
+        const status = (a.status || "").toUpperCase();
+        return status === upcomingStatusFilter;
+      });
+
+  // Filter previous appointments by status
+  const filteredPrevious = previousStatusFilter === "ALL"
+    ? previousList
+    : previousList.filter(a => {
+        const status = (a.status || "").toUpperCase();
+        return status === previousStatusFilter;
+      });
 
   return (
     <div className="appointments-page">
@@ -320,7 +402,22 @@ export default function Appointments() {
         </div>
 
         <div className="card">
-          <h3>Yaklaşan Randevular</h3>
+          <div className="card-header-with-filter">
+            <h3>Yaklaşan Randevular</h3>
+            <div className="filter-group">
+              <label htmlFor="upcoming-status-filter">Durum:</label>
+              <select
+                id="upcoming-status-filter"
+                value={upcomingStatusFilter}
+                onChange={(e) => setUpcomingStatusFilter(e.target.value)}
+                className="status-filter-select"
+              >
+                <option value="ALL">Tümü</option>
+                <option value="PENDING">Beklemede</option>
+                <option value="APPROVED">Onaylandı</option>
+              </select>
+            </div>
+          </div>
           <table className="appt-table">
             <thead>
               <tr>
@@ -333,36 +430,54 @@ export default function Appointments() {
               </tr>
             </thead>
             <tbody>
-              {upcomingList.map((a) => (
-                <tr key={a.id}>
-                  <td>{a.service}</td>
-                  <td>{a.date}</td>
-                  <td>{a.time}</td>
-                  <td>{a.employee}</td>
-                  <td>
-                    <StatusBadge status={a.status} />
-                  </td>
-                  <td>
-                    <button
-                      className="cancel-btn"
-                      onClick={() => openCancelModal(a.id)}
-                    >
-                      İptal Et
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {upcomingList.length === 0 && (
+              {filteredUpcoming.length === 0 ? (
                 <tr>
-                  <td colSpan="6">Yaklaşan randevu bulunmamaktadır.</td>
+                  <td colSpan="6" style={{ textAlign: "center", padding: "2rem" }}>
+                    Yaklaşan randevu bulunamadı
+                  </td>
                 </tr>
+              ) : (
+                filteredUpcoming.map((a) => (
+                  <tr key={a.id}>
+                    <td>{a.service}</td>
+                    <td>{a.date}</td>
+                    <td>{a.time}</td>
+                    <td>{a.employee}</td>
+                    <td>
+                      <StatusBadge status={a.status} />
+                    </td>
+                    <td>
+                      <button
+                        className="cancel-btn"
+                        onClick={() => openCancelModal(a.id)}
+                      >
+                        İptal Et
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
         <div className="card">
-          <h3>Geçmiş Randevular</h3>
+          <div className="card-header-with-filter">
+            <h3>Geçmiş Randevular</h3>
+            <div className="filter-group">
+              <label htmlFor="previous-status-filter">Durum:</label>
+              <select
+                id="previous-status-filter"
+                value={previousStatusFilter}
+                onChange={(e) => setPreviousStatusFilter(e.target.value)}
+                className="status-filter-select"
+              >
+                <option value="ALL">Tümü</option>
+                <option value="COMPLETED">Tamamlandı</option>
+                <option value="CANCELLED">İptal Edildi</option>
+              </select>
+            </div>
+          </div>
           <table className="appt-table">
             <thead>
               <tr>
@@ -374,21 +489,24 @@ export default function Appointments() {
               </tr>
             </thead>
             <tbody>
-              {previousList.map((a) => (
-                <tr key={a.id}>
-                  <td>{a.service}</td>
-                  <td>{a.date}</td>
-                  <td>{a.time}</td>
-                  <td>{a.employee}</td>
-                  <td>
-                    <StatusBadge status={a.status} />
+              {filteredPrevious.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center", padding: "2rem" }}>
+                    Geçmiş randevu bulunamadı
                   </td>
                 </tr>
-              ))}
-              {previousList.length === 0 && (
-                <tr>
-                  <td colSpan="5">Geçmiş randevu bulunmamaktadır.</td>
-                </tr>
+              ) : (
+                filteredPrevious.map((a) => (
+                  <tr key={a.id}>
+                    <td>{a.service}</td>
+                    <td>{a.date}</td>
+                    <td>{a.time}</td>
+                    <td>{a.employee}</td>
+                    <td>
+                      <StatusBadge status={a.status} />
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

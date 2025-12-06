@@ -120,6 +120,17 @@
   cursor: pointer;
 }
 
+.loading-slots {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+}
+
+.loading-slots p {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
 @media (max-width: 900px) {
   .time-grid {
     flex-direction: column;

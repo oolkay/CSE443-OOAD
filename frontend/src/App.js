@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/Auth/Login";
 import ResetPassword from "./pages/Auth/ResetPassword";
@@ -12,6 +12,7 @@ import Confirmation from "./pages/Customer/Confirmation";
 import ScheduleViewing from "./pages/Customer/ScheduleViewing";
 import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
+import AppointmentManagement from "./pages/BranchManager/AppointmentManagement/AppointmentManagement";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/employee-management" element={<EmployeeManagement />} />
             <Route path="/service-management" element={<ServiceManager />} />
+            <Route path="/appointment-management" element={<AppointmentManagement />} />
             <Route path="/reset" element={<ResetPassword />} />
           </Routes>
         </main>
