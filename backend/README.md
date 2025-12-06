@@ -425,9 +425,7 @@ public class Appointment {
     
     @Column(nullable = false)
     private LocalDateTime appointmentDateTime;
-    
-    @Column(length = 500)
-    private String notes;
+
     
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
@@ -470,9 +468,6 @@ public class AppointmentRequestDTO {
     @NotNull(message = "Appointment date and time is required")
     @Future(message = "Appointment must be in the future")
     private LocalDateTime appointmentDateTime;
-    
-    @Size(max = 500, message = "Notes cannot exceed 500 characters")
-    private String notes;
 }
 
 // dto/AppointmentResponseDTO.java
@@ -487,7 +482,6 @@ public class AppointmentResponseDTO {
     private Long customerId;
     private Long serviceId;
     private LocalDateTime appointmentDateTime;
-    private String notes;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -558,7 +552,6 @@ public class AppointmentService {
         appointment.setCustomerId(dto.getCustomerId());
         appointment.setServiceId(dto.getServiceId());
         appointment.setAppointmentDateTime(dto.getAppointmentDateTime());
-        appointment.setNotes(dto.getNotes());
         appointment.setStatus(AppointmentStatus.PENDING);
         
         Appointment saved = appointmentRepository.save(appointment);
@@ -587,7 +580,6 @@ public class AppointmentService {
                 "Appointment not found with ID: " + id));
         
         appointment.setAppointmentDateTime(dto.getAppointmentDateTime());
-        appointment.setNotes(dto.getNotes());
         
         Appointment updated = appointmentRepository.save(appointment);
         return convertToDTO(updated);
@@ -608,7 +600,6 @@ public class AppointmentService {
         dto.setCustomerId(appointment.getCustomerId());
         dto.setServiceId(appointment.getServiceId());
         dto.setAppointmentDateTime(appointment.getAppointmentDateTime());
-        dto.setNotes(appointment.getNotes());
         dto.setStatus(appointment.getStatus().toString());
         dto.setCreatedAt(appointment.getCreatedAt());
         dto.setUpdatedAt(appointment.getUpdatedAt());
