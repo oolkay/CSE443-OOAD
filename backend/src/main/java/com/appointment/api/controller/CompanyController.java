@@ -164,15 +164,16 @@ public class CompanyController {
         dto.setCreatedAt(company.getCreatedAt());
         dto.setUpdatedAt(company.getUpdatedAt());
 
-        // Every company must have a manager according to schema
-        if (company.getBranchManagers() != null && !company.getBranchManagers().isEmpty()) {
-            // Get the first manager (1:1 relationship in schema)
-            var firstManager = company.getBranchManagers().iterator().next();
-            dto.setManagerId(firstManager.getUserId());
-            dto.setManagerName(firstManager.getName());
-            dto.setManagerEmail(firstManager.getEmail());
+        // Every company must have a manager according to schema (1:1 relationship)
+        if (company.getBranchManager() != null) {
+            dto.setManagerId(company.getBranchManager().getUserId());
+            dto.setManagerName(company.getBranchManager().getName());
+            dto.setManagerEmail(company.getBranchManager().getEmail());
         } else {
-            throw new IllegalStateException("Company must have at least one Branch Manager according to schema");
+            // Manager is optional - can be null if not yet assigned
+            dto.setManagerId(null);
+            dto.setManagerName(null);
+            dto.setManagerEmail(null);
         }
 
         return dto;
