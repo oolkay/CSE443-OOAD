@@ -7,8 +7,16 @@ export default function Companies() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentCompanyId, setCurrentCompanyId] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [managerData, setManagerData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phoneNumber: "",
+  });
   const [newCompany, setNewCompany] = useState({
     name: "",
     email: "",
@@ -24,6 +32,8 @@ export default function Companies() {
     companyAddress: "",
     companyPhoneNumber: "",
   });
+  const [managerCreated, setManagerCreated] = useState(false);
+  const [createdManagerData, setCreatedManagerData] = useState(null);
 
   // API call functions
   const fetchCompanies = async () => {
@@ -164,6 +174,8 @@ export default function Companies() {
     setIsEditing(false);
     setCurrentCompanyId(null);
     setNewCompany({ name: "", email: "", address: "", phoneNumber: "" });
+    setManagerCreated(false);
+    setCreatedManagerData(null);
   };
 
   const handleAddCompanyWithManager = () => {
@@ -178,53 +190,38 @@ export default function Companies() {
       companyAddress: "",
       companyPhoneNumber: "",
     });
+    setManagerCreated(false);
+    setCreatedManagerData(null);
   };
 
-  const handleCreateCompanyWithManager = async () => {
-    if (!newManager.companyName || !newManager.companyEmail || !newManager.companyAddress ||
-        !newManager.companyPhoneNumber || !newManager.name || !newManager.email || !newManager.password) {
-      alert("Please fill in all company and manager fields");
-      return;
-    }
-
-    const companyData = {
-      companyName: newManager.companyName,
-      companyEmail: newManager.companyEmail,
-      companyAddress: newManager.companyAddress,
-      companyPhoneNumber: newManager.companyPhoneNumber,
-      managerName: newManager.name,
-      managerEmail: newManager.email,
-      managerPassword: newManager.password
-    };
-
-    try {
-      const response = await fetch('http://localhost:8080/api/companies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(companyData)
-      });
-
-      if (response.ok) {
-        const newCompany = await response.json();
-        setCompanies([...companies, newCompany]);
-        await fetchCompanies(); // Refresh the list
-        alert("Company and manager created successfully!");
-      } else {
-        alert("Failed to create company and manager");
-      }
-    } catch (error) {
-      console.error('Error creating company with manager:', error);
-      alert("Error creating company and manager");
-    }
-
-    handleModalClose();
-  };
-
+  
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
       // TODO: Clear auth tokens/session
       window.location.href = "/";
     }
+  };
+
+  const handleOpenManagerModal = (company) => {
+    setSelectedCompany(company);
+    setManagerData({
+      name: company.managerName || "",
+      email: company.managerEmail || "",
+      password: "",
+      phoneNumber: "",
+    });
+    setIsManagerModalOpen(true);
+  };
+
+  const handleCloseManagerModal = () => {
+    setIsManagerModalOpen(false);
+    setSelectedCompany(null);
+    setManagerData({
+      name: "",
+      email: "",
+      password: "",
+      phoneNumber: "",
+    });
   };
 
   return (
@@ -278,7 +275,6 @@ export default function Companies() {
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Manager</th>
-                <th>Status</th>
                 <th></th>
               </tr>
             </thead>
@@ -297,13 +293,23 @@ export default function Companies() {
                       <div className="manager-info">
                         <span className="manager-name">{company.managerName}</span>
                         <span className="manager-email">{company.managerEmail}</span>
+                        <button
+                          className="btn-edit-manager"
+                          onClick={() => handleOpenManagerModal(company)}
+                          title="Edit Manager"
+                        >
+                          ✏️
+                        </button>
                       </div>
                     ) : (
-                      <span className="no-manager">No Manager</span>
+                      <button
+                        className="btn-add-manager"
+                        onClick={() => handleOpenManagerModal(company)}
+                        title="Assign Branch Manager"
+                      >
+                        + Assign Manager
+                      </button>
                     )}
-                  </td>
-                  <td>
-                    <span className="status-badge active">Active</span>
                   </td>
                   <td>
                     <div className="action-buttons">
@@ -467,39 +473,48 @@ export default function Companies() {
                       placeholder="Enter company phone number"
                     />
                   </div>
-                  <h3>Branch Manager Information</h3>
-                  <div className="form-group">
-                    <label>Manager Name</label>
-                    <input
-                      type="text"
-                      value={newManager.name}
-                      onChange={(e) =>
-                        setNewManager({ ...newManager, name: e.target.value })
-                      }
-                      placeholder="Enter manager full name"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Manager Email</label>
-                    <input
-                      type="email"
-                      value={newManager.email}
-                      onChange={(e) =>
-                        setNewManager({ ...newManager, email: e.target.value })
-                      }
-                      placeholder="Enter manager email"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Temporary Password</label>
-                    <input
-                      type="password"
-                      value={newManager.password}
-                      onChange={(e) =>
-                        setNewManager({ ...newManager, password: e.target.value })
-                      }
-                      placeholder="Enter temporary password"
-                    />
+                  <div className="manager-assignment-section">
+                    <h3>Branch Manager Assignment</h3>
+                    {managerCreated && createdManagerData ? (
+                      <div className="manager-created-status">
+                        <p className="manager-success-text">
+                          ✅ Branch Manager Created: {createdManagerData.name} ({createdManagerData.email})
+                        </p>
+                        <button
+                          type="button"
+                          className="btn-modify-manager"
+                          onClick={() => {
+                            setSelectedCompany(null);
+                            setManagerData(createdManagerData);
+                            setIsManagerModalOpen(true);
+                          }}
+                        >
+                          Modify Manager
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="manager-assignment-desc">
+                          Every company requires a Branch Manager. Click the button below to create a new Branch Manager for this company.
+                        </p>
+                        <button
+                          type="button"
+                          className="btn-create-branch-manager"
+                          onClick={() => {
+                            setSelectedCompany(null);
+                            setManagerData({
+                              name: "",
+                              email: "",
+                              password: "",
+                              phoneNumber: "",
+                            });
+                            setIsManagerModalOpen(true);
+                          }}
+                        >
+                          Create Branch Manager
+                        </button>
+                      </>
+                    )}
                   </div>
                 </>
               )}
@@ -508,8 +523,207 @@ export default function Companies() {
               <button className="btn-cancel" onClick={handleModalClose}>
                 Cancel
               </button>
-              <button className="btn-save" onClick={isEditing ? handleAddCompany : handleCreateCompanyWithManager}>
+              <button className="btn-save" onClick={isEditing ? handleAddCompany : async () => {
+                if (!newManager.companyName || !newManager.companyEmail || !newManager.companyAddress || !newManager.companyPhoneNumber) {
+                  alert("Please fill in all company fields");
+                  return;
+                }
+
+                if (!managerCreated || !createdManagerData) {
+                  alert("Please create a Branch Manager for this company first.");
+                  return;
+                }
+
+                // Create company with manager
+                const companyData = {
+                  companyName: newManager.companyName,
+                  companyEmail: newManager.companyEmail,
+                  companyAddress: newManager.companyAddress,
+                  companyPhoneNumber: newManager.companyPhoneNumber,
+                  managerName: createdManagerData.name,
+                  managerEmail: createdManagerData.email,
+                  managerPassword: createdManagerData.password
+                };
+
+                try {
+                  const response = await fetch('http://localhost:8080/api/companies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(companyData)
+                  });
+
+                  if (response.ok) {
+                    alert("Company and manager created successfully!");
+                    await fetchCompanies();
+                    handleModalClose();
+                  } else {
+                    const errorText = await response.text();
+                    let errorMessage = `Failed to create company and manager (${response.status}): ${errorText}`;
+                    try {
+                      const errorJson = await response.json();
+                      if (errorJson.message) {
+                        errorMessage = `Failed to create company and manager: ${errorJson.message}`;
+                      }
+                    } catch (e) {
+                      // If not JSON, use text error
+                    }
+                    alert(errorMessage);
+                  }
+                } catch (error) {
+                  console.error('Error creating company with manager:', error);
+                  alert(`Error creating company and manager: ${error.message}`);
+                }
+              }}>
                 {isEditing ? "Update Company" : "Create Company & Manager"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Branch Manager Modal */}
+      {isManagerModalOpen && (
+        <div className="modal-overlay" onClick={handleCloseManagerModal}>
+          <div className="modal-content manager-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                {selectedCompany ? (
+                  selectedCompany.managerName
+                    ? `Modify Branch Manager - ${selectedCompany.name}`
+                    : `Assign Branch Manager - ${selectedCompany.name}`
+                ) : 'Create Branch Manager'}
+              </h2>
+              <button className="modal-close" onClick={handleCloseManagerModal}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="manager-form-section">
+                <h3>Branch Manager Information</h3>
+                <div className="form-group">
+                  <label>Manager Name *</label>
+                  <input
+                    type="text"
+                    value={managerData.name}
+                    onChange={(e) =>
+                      setManagerData({ ...managerData, name: e.target.value })
+                    }
+                    placeholder="Enter manager full name"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Manager Email *</label>
+                  <input
+                    type="email"
+                    value={managerData.email}
+                    onChange={(e) =>
+                      setManagerData({ ...managerData, email: e.target.value })
+                    }
+                    placeholder="Enter manager email"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Password *</label>
+                  <input
+                    type="password"
+                    value={managerData.password}
+                    onChange={(e) =>
+                      setManagerData({ ...managerData, password: e.target.value })
+                    }
+                    placeholder={selectedCompany?.managerName ? "Enter new password (leave blank to keep current)" : "Enter temporary password"}
+                    required={!selectedCompany?.managerName}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input
+                    type="text"
+                    value={managerData.phoneNumber}
+                    onChange={(e) =>
+                      setManagerData({ ...managerData, phoneNumber: e.target.value })
+                    }
+                    placeholder="Enter phone number"
+                  />
+                </div>
+              </div>
+
+              {selectedCompany && (
+                <div className="company-info-section">
+                  <h3>Company Information</h3>
+                  <div className="company-display">
+                    <p><strong>Company:</strong> {selectedCompany.name}</p>
+                    <p><strong>Email:</strong> {selectedCompany.email}</p>
+                    <p><strong>Address:</strong> {selectedCompany.address}</p>
+                    <p><strong>Phone:</strong> {selectedCompany.phoneNumber}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={handleCloseManagerModal}>
+                Cancel
+              </button>
+              <button
+                className="btn-save"
+                onClick={async () => {
+                  if (!managerData.name || !managerData.email || !managerData.password) {
+                    alert("Please fill in all required manager fields (name, email, and password)");
+                    return;
+                  }
+
+                  try {
+                    if (selectedCompany) {
+                      // Update existing company's manager
+                      const response = await fetch('http://localhost:8080/api/managers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          name: managerData.name,
+                          email: managerData.email,
+                          password: managerData.password,
+                          phoneNumber: managerData.phoneNumber,
+                          companyId: selectedCompany.companyId
+                        })
+                      });
+
+                      if (response.ok) {
+                        alert(selectedCompany.managerName ? "Manager updated successfully!" : "Branch manager assigned successfully!");
+                        await fetchCompanies();
+                        handleCloseManagerModal();
+                      } else {
+                        const errorText = await response.text();
+                        let errorMessage = `Failed to ${selectedCompany.managerName ? 'update' : 'assign'} manager (${response.status}): ${errorText}`;
+                        try {
+                          const errorJson = await response.json();
+                          if (errorJson.message) {
+                            errorMessage = `Failed to ${selectedCompany.managerName ? 'update' : 'assign'} manager: ${errorJson.message}`;
+                          }
+                        } catch (e) {
+                          // If not JSON, use text error
+                        }
+                        alert(errorMessage);
+                      }
+                    } else {
+                      // Save manager data locally for later company creation
+                      setCreatedManagerData({
+                        name: managerData.name,
+                        email: managerData.email,
+                        password: managerData.password,
+                        phoneNumber: managerData.phoneNumber,
+                      });
+                      setManagerCreated(true);
+                      alert("Branch Manager information saved! Now click 'Create Company & Manager' to complete the creation.");
+                      handleCloseManagerModal();
+                    }
+                  } catch (error) {
+                    console.error('Error managing manager/company:', error);
+                    alert(`Error: ${error.message}`);
+                  }
+                }}
+              >
+                {selectedCompany ? (selectedCompany.managerName ? "Update Manager" : "Assign Manager") : "Save Manager Info"}
               </button>
             </div>
           </div>

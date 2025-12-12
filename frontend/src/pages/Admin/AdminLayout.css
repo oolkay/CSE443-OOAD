@@ -47,6 +47,10 @@
   z-index: 1000;
 }
 
+.mobile-overlay.show {
+  display: block;
+}
+
 /* Sidebar */
 .admin-sidebar {
   width: 280px;
@@ -221,11 +225,65 @@
   font-size: 14px;
 }
 
+/* Header with logout button */
+.admin-header-top {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 280px;
+  height: 60px;
+  background: #fff;
+  border-bottom: 1px solid #e8ebed;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 32px;
+  z-index: 998;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.admin-header-top .header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.header-logout-btn:hover {
+  background: #ff3838;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(255, 71, 87, 0.3);
+}
+
+.header-logout-btn .logout-icon {
+  font-size: 16px;
+}
+
+.header-logout-btn .logout-text {
+  font-size: 14px;
+}
+
 /* Main content area */
 .admin-main {
   flex: 1;
   margin-left: 280px;
   padding: 24px 32px;
+  padding-top: 84px; /* Space for fixed header */
   overflow-y: auto;
   min-height: 100vh;
   box-sizing: border-box;
@@ -239,6 +297,11 @@
 
   .admin-main {
     margin-left: 240px;
+    padding-top: 84px; /* Space for fixed header */
+  }
+
+  .admin-header-top {
+    left: 240px;
   }
 }
 
@@ -252,7 +315,7 @@
   }
 
   .mobile-overlay {
-    display: block;
+    display: none; /* Keep hidden by default, show with .show class */
   }
 
   .admin-sidebar {
@@ -266,7 +329,12 @@
   .admin-main {
     margin-left: 0;
     padding: 20px;
-    padding-top: 60px; /* Space for mobile menu toggle */
+    padding-top: 84px; /* Space for fixed header */
+  }
+
+  .admin-header-top {
+    left: 0;
+    padding: 0 20px;
   }
 
   .user-info {

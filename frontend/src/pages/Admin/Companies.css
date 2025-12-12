@@ -147,6 +147,24 @@
   background: #f0f1ff;
 }
 
+.btn-manager {
+  padding: 10px 20px;
+  background: #fff;
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-manager:hover {
+  background: #f0f9ff;
+  color: #27ae60;
+  border-color: #27ae60;
+}
+
 .filter-select {
   padding: 10px 16px;
   border: 1px solid #e8ebed;
@@ -239,6 +257,23 @@
 .btn-add-manager:hover {
   background: #e0f2fe;
   border-color: #0284c7;
+}
+
+.btn-edit-manager {
+  padding: 2px 6px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.btn-edit-manager:hover {
+  background: #fff8e1;
+  border-color: #ffb300;
 }
 
 /* Status Badges */
@@ -373,6 +408,86 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
+.modal-content.manager-modal {
+  max-width: 600px;
+}
+
+/* Manager Assignment Section */
+.manager-assignment-section {
+  background: #f8fafc;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.manager-assignment-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.manager-assignment-desc {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.btn-create-branch-manager {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+}
+
+.btn-create-branch-manager:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+}
+
+/* Manager Created Status */
+.manager-created-status {
+  background: #f0fdf4;
+  border: 1px solid #22c55e;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.manager-success-text {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.btn-modify-manager {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modify-manager:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -483,6 +598,46 @@
 
 .btn-save:hover {
   background: #4c5fd9;
+}
+
+/* Manager Modal Styles */
+.manager-modal {
+  max-width: 600px;
+  width: 90%;
+}
+
+.manager-form-section,
+.company-info-section {
+  margin-bottom: 24px;
+}
+
+.manager-form-section h3,
+.company-info-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e8ebed;
+}
+
+.company-display {
+  background: #f9fafb;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #e8ebed;
+}
+
+.company-display p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #5a6c7d;
+}
+
+.company-display strong {
+  color: #1f2937;
+  min-width: 80px;
+  display: inline-block;
 }
 
 @media (max-width: 768px) {

@@ -84,21 +84,24 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>
-            <span className="logout-icon">🚪</span>
-            <span className="logout-text">Logout</span>
-          </button>
-        </div>
-      </aside>
+        </aside>
 
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
-        <div className="mobile-overlay" onClick={toggleMobileMenu} />
+        <div className={`mobile-overlay ${isMobileMenuOpen ? 'show' : ''}`} onClick={toggleMobileMenu} />
       )}
 
       {/* Main content area */}
       <div className="admin-main">
+        {/* Header with logout button */}
+        <div className="admin-header-top">
+          <div className="header-right">
+            <button className="header-logout-btn" onClick={handleLogout} title="Logout">
+              <span className="logout-icon">🚪</span>
+              <span className="logout-text">Logout</span>
+            </button>
+          </div>
+        </div>
         <Outlet />
       </div>
     </div>
