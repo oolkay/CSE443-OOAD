@@ -6,9 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Company entity - represents a business/company in the system
+ * Super Admin manages companies, each company can have branch managers
  */
 @Entity
 @Table(name = "companies")
@@ -32,6 +35,9 @@ public class Company {
 
     @Column(length = 20)
     private String phoneNumber;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BranchManager> branchManagers = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

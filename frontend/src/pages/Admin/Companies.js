@@ -1,70 +1,110 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Companies.css";
 
-const initialCompanies = [
-  {
-    id: 1,
-    company: "Derin Bakış Psikoloji",
-    name: "Tayyib",
-    lastName: "Şener",
-    phone: "+988 (99) 436-48-15",
-  },
-  {
-    id: 2,
-    company: "Estetik Palette",
-    name: "Buğra",
-    lastName: "Kaşıkçı",
-    phone: "+988 (99) 436-48-15",
-  },
-  {
-    id: 3,
-    company: "Kronos Klinik",
-    name: "Ahmet",
-    lastName: "Tuna",
-    phone: "+988 (99) 436-48-15",
-  },
-  {
-    id: 4,
-    company: "Fit Limit Stüdyo",
-    name: "Mahmut",
-    lastName: "Terdemir",
-    phone: "+988 (99) 436-48-15",
-  },
-  {
-    id: 5,
-    company: "Lastik Durağı Pro",
-    name: "Özan",
-    lastName: "Uçar",
-    phone: "+988 (99) 436-48-15",
-  },
-  {
-    id: 6,
-    company: "Örnek Firma",
-    name: "Can",
-    lastName: "Yılmaz",
-    phone: "+988 (99) 436-48-15",
-  },
-];
-
 export default function Companies() {
-  const [companies, setCompanies] = useState(initialCompanies);
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentCompanyId, setCurrentCompanyId] = useState(null);
   const [newCompany, setNewCompany] = useState({
-    company: "",
     name: "",
-    lastName: "",
-    phone: "",
+    email: "",
+    address: "",
+    phoneNumber: "",
   });
+  const [newManager, setNewManager] = useState({
+    name: "",
+    email: "",
+    password: "",
+    companyName: "",
+    companyEmail: "",
+    companyAddress: "",
+    companyPhoneNumber: "",
+  });
+
+  // API call functions
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/companies');
+      if (response.ok) {
+        const data = await response.json();
+        setCompanies(data);
+      } else {
+        console.error('Failed to fetch companies:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createCompany = async (companyData) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(companyData)
+      });
+      if (response.ok) {
+        const newCompany = await response.json();
+        setCompanies([...companies, newCompany]);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error creating company:', error);
+    }
+    return false;
+  };
+
+  const updateCompany = async (id, companyData) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/companies/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(companyData)
+      });
+      if (response.ok) {
+        const updatedCompany = await response.json();
+        setCompanies(companies.map(c => c.companyId === id ? updatedCompany : c));
+        return true;
+      }
+    } catch (error) {
+      console.error('Error updating company:', error);
+    }
+    return false;
+  };
+
+  const deleteCompany = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/companies/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        setCompanies(companies.filter(c => c.companyId !== id));
+        return true;
+      }
+    } catch (error) {
+      console.error('Error deleting company:', error);
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
   const itemsPerPage = 8;
 
-  // Filter companies based on search (search across company name, first name, last name)
+  // Filter companies based on search (search across company name, manager name)
   const filteredCompanies = companies.filter((company) =>
-    company.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.lastName.toLowerCase().includes(searchTerm.toLowerCase())
+    company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.managerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
@@ -75,36 +115,109 @@ export default function Companies() {
     startIndex + itemsPerPage
   );
 
-  const handleEdit = (id) => {
-    console.log("Edit company:", id);
-    // TODO: Navigate to edit page or open modal
+  // Enhanced handlers with API calls
+  const handleEdit = (company) => {
+    setNewCompany({
+      name: company.name,
+      email: company.email,
+      address: company.address,
+      phoneNumber: company.phoneNumber,
+    });
+    setIsEditing(true);
+    setCurrentCompanyId(company.companyId);
+    setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this company?")) {
-      setCompanies(companies.filter((c) => c.id !== id));
+      const success = await deleteCompany(id);
+      if (!success) {
+        // Fallback to local state update
+        setCompanies(companies.filter((c) => c.companyId !== id));
+      }
     }
   };
 
-  const handleAddCompany = () => {
-    if (!newCompany.company || !newCompany.name || !newCompany.lastName || !newCompany.phone) {
+  const handleAddCompany = async () => {
+    if (!newCompany.name || !newCompany.email || !newCompany.address || !newCompany.phoneNumber) {
       alert("Please fill in all fields");
       return;
     }
 
-    const company = {
-      id: companies.length + 1,
-      ...newCompany,
-    };
+    if (isEditing) {
+      const success = await updateCompany(currentCompanyId, newCompany);
+      if (!success) {
+        // Fallback to local state update
+        setCompanies(companies.map(c =>
+          c.companyId === currentCompanyId ? { ...c, ...newCompany } : c
+        ));
+      }
+    } else {
+      alert("Please use the 'Add New Company' button to create companies with managers.");
+    }
 
-    setCompanies([...companies, company]);
-    setIsModalOpen(false);
-    setNewCompany({ company: "", name: "", lastName: "", phone: "" });
+    handleModalClose();
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setNewCompany({ company: "", name: "", lastName: "", phone: "" });
+    setIsEditing(false);
+    setCurrentCompanyId(null);
+    setNewCompany({ name: "", email: "", address: "", phoneNumber: "" });
+  };
+
+  const handleAddCompanyWithManager = () => {
+    setIsModalOpen(true);
+    setIsEditing(false);
+    setNewManager({
+      name: "",
+      email: "",
+      password: "",
+      companyName: "",
+      companyEmail: "",
+      companyAddress: "",
+      companyPhoneNumber: "",
+    });
+  };
+
+  const handleCreateCompanyWithManager = async () => {
+    if (!newManager.companyName || !newManager.companyEmail || !newManager.companyAddress ||
+        !newManager.companyPhoneNumber || !newManager.name || !newManager.email || !newManager.password) {
+      alert("Please fill in all company and manager fields");
+      return;
+    }
+
+    const companyData = {
+      companyName: newManager.companyName,
+      companyEmail: newManager.companyEmail,
+      companyAddress: newManager.companyAddress,
+      companyPhoneNumber: newManager.companyPhoneNumber,
+      managerName: newManager.name,
+      managerEmail: newManager.email,
+      managerPassword: newManager.password
+    };
+
+    try {
+      const response = await fetch('http://localhost:8080/api/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(companyData)
+      });
+
+      if (response.ok) {
+        const newCompany = await response.json();
+        setCompanies([...companies, newCompany]);
+        await fetchCompanies(); // Refresh the list
+        alert("Company and manager created successfully!");
+      } else {
+        alert("Failed to create company and manager");
+      }
+    } catch (error) {
+      console.error('Error creating company with manager:', error);
+      alert("Error creating company and manager");
+    }
+
+    handleModalClose();
   };
 
   const handleLogout = () => {
@@ -146,13 +259,13 @@ export default function Companies() {
               />
               <span className="search-icon">🔍</span>
             </div>
-            <button className="btn-add" onClick={() => setIsModalOpen(true)}>
+            <button className="btn-add" onClick={handleAddCompanyWithManager}>
               Add New Company
             </button>
           </div>
         </div>
 
-        {/* Table */}
+        {/* Enhanced Table with Manager Info */}
         <div className="companies-table-wrapper">
           <table className="companies-table">
             <thead>
@@ -161,34 +274,49 @@ export default function Companies() {
                   <input type="checkbox" />
                 </th>
                 <th>Company</th>
-                <th>Name</th>
-                <th>Last Name</th>
+                <th>Address</th>
+                <th>Email</th>
                 <th>Phone</th>
+                <th>Manager</th>
+                <th>Status</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {displayedCompanies.map((company) => (
-                <tr key={company.id}>
+                <tr key={company.companyId}>
                   <td>
                     <input type="checkbox" />
                   </td>
-                  <td>{company.company}</td>
-                  <td>{company.name}</td>
-                  <td>{company.lastName}</td>
-                  <td>{company.phone}</td>
+                  <td className="company-name">{company.name}</td>
+                  <td>{company.address}</td>
+                  <td>{company.email}</td>
+                  <td>{company.phoneNumber}</td>
+                  <td>
+                    {company.managerName ? (
+                      <div className="manager-info">
+                        <span className="manager-name">{company.managerName}</span>
+                        <span className="manager-email">{company.managerEmail}</span>
+                      </div>
+                    ) : (
+                      <span className="no-manager">No Manager</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className="status-badge active">Active</span>
+                  </td>
                   <td>
                     <div className="action-buttons">
                       <button
                         className="btn-icon edit"
-                        onClick={() => handleEdit(company.id)}
+                        onClick={() => handleEdit(company)}
                         title="Edit"
                       >
                         ✏️
                       </button>
                       <button
                         className="btn-icon delete"
-                        onClick={() => handleDelete(company.id)}
+                        onClick={() => handleDelete(company.companyId)}
                         title="Delete"
                       >
                         🗑️
@@ -234,68 +362,154 @@ export default function Companies() {
         </div>
       </div>
 
-      {/* Add New Company Modal */}
+      {/* Add/Edit Company Modal */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={handleModalClose}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Add New Company</h2>
+              <h2>{isEditing ? "Edit Company" : "Add New Company"}</h2>
               <button className="modal-close" onClick={handleModalClose}>
                 ×
               </button>
             </div>
             <div className="modal-body">
-              <div className="form-group">
-                <label>Company Name</label>
-                <input
-                  type="text"
-                  value={newCompany.company}
-                  onChange={(e) =>
-                    setNewCompany({ ...newCompany, company: e.target.value })
-                  }
-                  placeholder="Enter company name"
-                />
-              </div>
-              <div className="form-group">
-                <label>First Name</label>
-                <input
-                  type="text"
-                  value={newCompany.name}
-                  onChange={(e) =>
-                    setNewCompany({ ...newCompany, name: e.target.value })
-                  }
-                  placeholder="Enter first name"
-                />
-              </div>
-              <div className="form-group">
-                <label>Last Name</label>
-                <input
-                  type="text"
-                  value={newCompany.lastName}
-                  onChange={(e) =>
-                    setNewCompany({ ...newCompany, lastName: e.target.value })
-                  }
-                  placeholder="Enter last name"
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone</label>
-                <input
-                  type="text"
-                  value={newCompany.phone}
-                  onChange={(e) =>
-                    setNewCompany({ ...newCompany, phone: e.target.value })
-                  }
-                  placeholder="Enter phone number"
-                />
-              </div>
+              {isEditing ? (
+                <>
+                  <div className="form-group">
+                    <label>Company Name</label>
+                    <input
+                      type="text"
+                      value={newCompany.name}
+                      onChange={(e) =>
+                        setNewCompany({ ...newCompany, name: e.target.value })
+                      }
+                      placeholder="Enter company name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={newCompany.email}
+                      onChange={(e) =>
+                        setNewCompany({ ...newCompany, email: e.target.value })
+                      }
+                      placeholder="Enter email address"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Address</label>
+                    <input
+                      type="text"
+                      value={newCompany.address}
+                      onChange={(e) =>
+                        setNewCompany({ ...newCompany, address: e.target.value })
+                      }
+                      placeholder="Enter address"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input
+                      type="text"
+                      value={newCompany.phoneNumber}
+                      onChange={(e) =>
+                        setNewCompany({ ...newCompany, phoneNumber: e.target.value })
+                      }
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3>Company Information</h3>
+                  <div className="form-group">
+                    <label>Company Name</label>
+                    <input
+                      type="text"
+                      value={newManager.companyName}
+                      onChange={(e) =>
+                        setNewManager({ ...newManager, companyName: e.target.value })
+                      }
+                      placeholder="Enter company name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Company Email</label>
+                    <input
+                      type="email"
+                      value={newManager.companyEmail}
+                      onChange={(e) =>
+                        setNewManager({ ...newManager, companyEmail: e.target.value })
+                      }
+                      placeholder="Enter company email"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Company Address</label>
+                    <input
+                      type="text"
+                      value={newManager.companyAddress}
+                      onChange={(e) =>
+                        setNewManager({ ...newManager, companyAddress: e.target.value })
+                      }
+                      placeholder="Enter company address"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Company Phone</label>
+                    <input
+                      type="text"
+                      value={newManager.companyPhoneNumber}
+                      onChange={(e) =>
+                        setNewManager({ ...newManager, companyPhoneNumber: e.target.value })
+                      }
+                      placeholder="Enter company phone number"
+                    />
+                  </div>
+                  <h3>Branch Manager Information</h3>
+                  <div className="form-group">
+                    <label>Manager Name</label>
+                    <input
+                      type="text"
+                      value={newManager.name}
+                      onChange={(e) =>
+                        setNewManager({ ...newManager, name: e.target.value })
+                      }
+                      placeholder="Enter manager full name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Manager Email</label>
+                    <input
+                      type="email"
+                      value={newManager.email}
+                      onChange={(e) =>
+                        setNewManager({ ...newManager, email: e.target.value })
+                      }
+                      placeholder="Enter manager email"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Temporary Password</label>
+                    <input
+                      type="password"
+                      value={newManager.password}
+                      onChange={(e) =>
+                        setNewManager({ ...newManager, password: e.target.value })
+                      }
+                      placeholder="Enter temporary password"
+                    />
+                  </div>
+                </>
+              )}
             </div>
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleModalClose}>
                 Cancel
               </button>
-              <button className="btn-save" onClick={handleAddCompany}>
-                Add Company
+              <button className="btn-save" onClick={isEditing ? handleAddCompany : handleCreateCompanyWithManager}>
+                {isEditing ? "Update Company" : "Create Company & Manager"}
               </button>
             </div>
           </div>

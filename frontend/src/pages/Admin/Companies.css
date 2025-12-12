@@ -199,6 +199,77 @@
   color: #374151;
 }
 
+/* Company Name Styling */
+.company-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Manager Info Styling */
+.manager-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.manager-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.manager-email {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Add Manager Button */
+.btn-add-manager {
+  padding: 6px 12px;
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #7dd3fc;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-manager:hover {
+  background: #e0f2fe;
+  border-color: #0284c7;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.status-badge.pending {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+}
+
+.status-badge.inactive {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
 .action-buttons {
   display: flex;
   gap: 8px;
