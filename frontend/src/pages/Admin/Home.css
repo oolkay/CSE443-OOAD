@@ -1,0 +1,22 @@
+.admin-home {
+  width: 100%;
+}
+
+.home-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.home-content h2 {
+  font-size: 28px;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.home-content p {
+  font-size: 16px;
+  color: #6b7280;
+}
