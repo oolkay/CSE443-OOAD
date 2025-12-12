@@ -36,8 +36,8 @@ public class Company {
     @Column(length = 20)
     private String phoneNumber;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<BranchManager> branchManagers = new ArrayList<>();
+    @OneToOne(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private BranchManager branchManager;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

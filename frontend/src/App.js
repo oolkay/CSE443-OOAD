@@ -14,6 +14,7 @@ import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/Employe
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Home from "./pages/Admin/Home";
+import SuperAdmins from "./pages/Admin/SuperAdmins";
 import Companies from "./pages/Admin/Companies";
 import Settings from "./pages/Admin/Settings";
 
@@ -38,6 +39,7 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="home" element={<Home />} />
+              <Route path="super-admins" element={<SuperAdmins />} />
               <Route path="companies" element={<Companies />} />
               <Route path="settings" element={<Settings />} />
             </Route>

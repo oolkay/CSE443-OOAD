@@ -195,13 +195,6 @@ export default function Companies() {
   };
 
   
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to log out?")) {
-      // TODO: Clear auth tokens/session
-      window.location.href = "/";
-    }
-  };
-
   const handleOpenManagerModal = (company) => {
     setSelectedCompany(company);
     setManagerData({
@@ -226,21 +219,6 @@ export default function Companies() {
 
   return (
     <div className="companies-page">
-      {/* Header */}
-      <header className="companies-header">
-        <div className="header-left">
-          <span className="menu-icon">☰</span>
-          <h1 className="header-title">
-            Hi, Rabia <span className="wave">👋</span>
-          </h1>
-        </div>
-        <div className="header-right">
-          <button className="btn-logout" onClick={handleLogout}>
-            <span className="logout-icon">⎋</span>
-          </button>
-        </div>
-      </header>
-
       {/* Company List Section */}
       <div className="companies-container">
         <div className="companies-toolbar">

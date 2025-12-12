@@ -7,10 +7,12 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({ name: "Loading..." });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const menuItems = [
     { id: "home", label: "Dashboard", path: "/admin/home", icon: "🏠" },
     { id: "companies", label: "Companies", path: "/admin/companies", icon: "🏢" },
+    { id: "super-admins", label: "SuperAdmins", path: "/admin/super-admins", icon: "👥" },
     { id: "settings", label: "Settings", path: "/admin/settings", icon: "⚙️" },
   ];
 
@@ -40,6 +42,10 @@ export default function AdminLayout() {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
   const handleMenuClick = (path) => {
     navigate(path);
     setIsMobileMenuOpen(false); // Close mobile menu after navigation
@@ -53,7 +59,7 @@ export default function AdminLayout() {
       </button>
 
       {/* Sidebar */}
-      <aside className={`admin-sidebar ${isMobileMenuOpen ? "mobile-open" : ""}`}>
+      <aside className={`admin-sidebar ${isMobileMenuOpen ? "mobile-open" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}>
         <div className="admin-header">
           <button className="mobile-close-btn" onClick={toggleMobileMenu}>
             ✕
@@ -62,11 +68,17 @@ export default function AdminLayout() {
             <div className="logo-circle">
               <span className="logo-icon">👤</span>
             </div>
-            <div className="user-info">
-              <div className="user-name">{userInfo.name}</div>
-              <div className="user-email">{userInfo.email}</div>
-            </div>
+            {!isSidebarCollapsed && (
+              <div className="user-info">
+                <div className="user-name">{userInfo.name}</div>
+                <div className="user-email">{userInfo.email}</div>
+              </div>
+            )}
           </div>
+          {/* Desktop collapse button */}
+          <button className="sidebar-collapse-btn" onClick={toggleSidebarCollapse} title={isSidebarCollapsed ? "Expand" : "Collapse"}>
+            {isSidebarCollapsed ? "›" : "‹"}
+          </button>
         </div>
 
         <nav className="admin-menu">
@@ -77,14 +89,14 @@ export default function AdminLayout() {
               className={`admin-menu-item ${
                 location.pathname === item.path ? "active" : ""
               }`}
+              title={item.label}
             >
               <span className="menu-icon">{item.icon}</span>
-              <span className="menu-label">{item.label}</span>
+              {!isSidebarCollapsed && <span className="menu-label">{item.label}</span>}
             </button>
           ))}
         </nav>
-
-        </aside>
+      </aside>
 
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
@@ -92,16 +104,14 @@ export default function AdminLayout() {
       )}
 
       {/* Main content area */}
-      <div className="admin-main">
+      <div className={`admin-main ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
         {/* Header with logout button */}
-        <div className="admin-header-top">
-          <div className="header-right">
-            <button className="header-logout-btn" onClick={handleLogout} title="Logout">
-              <span className="logout-icon">🚪</span>
-              <span className="logout-text">Logout</span>
-            </button>
-          </div>
-        </div>
+        <header className="admin-page-header">
+          <div className="header-spacer"></div>
+          <button className="btn-logout" onClick={handleLogout} title="Logout">
+            <span className="logout-icon">⎋</span>
+          </button>
+        </header>
         <Outlet />
       </div>
     </div>
