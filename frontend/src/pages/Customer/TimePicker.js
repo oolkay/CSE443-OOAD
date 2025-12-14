@@ -60,41 +60,60 @@ export default function TimePicker() {
   const [selectedTime, setSelectedTime] = useState(null);
 
   const weeks = useMemo(() => buildMonth(year, month), [year, month]);
-  // employees used for combined availability simulation
-  const EMPLOYEES = ["Musab", "Ayşe", "Mehmet", "Zeynep"];
 
-  function hashString(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = (h << 5) - h + str.charCodeAt(i);
-    return Math.abs(h);
-  }
-
-  // mock availability: if `employee` is provided compute availability for that employee,
-  // otherwise compute combined availability across all EMPLOYEES (available if any is available)
+  // availability: if `employee` param is a numeric id, try to fetch real availability
+  // otherwise fall back to the existing mock behavior
   const availability = useMemo(() => {
     const avail = {};
     for (let i = 0; i < TIMES.length; i++) {
       const key = TIMES[i];
-      if (employee) {
-        const h = hashString(employee);
-        const unavailable = (selectedDay + i + (h % 5)) % 4 === 0;
-        avail[key] = unavailable ? "unavailable" : "available";
-      } else {
-        // combined: if any employee is available at this slot, mark available
-        let anyAvailable = false;
-        for (const emp of EMPLOYEES) {
-          const h = hashString(emp);
-          const unavailable = (selectedDay + i + (h % 5)) % 4 === 0;
-          if (!unavailable) {
-            anyAvailable = true;
-            break;
-          }
-        }
-        avail[key] = anyAvailable ? "available" : "unavailable";
-      }
+      avail[key] = "unavailable"; // default
     }
     return avail;
-  }, [selectedDay, employee]);
+  }, []);
+
+  // If employee param looks like a numeric id, call backend availability API and map results
+  React.useEffect(() => {
+    let cancelled = false;
+    async function loadAvailability() {
+      // detect numeric id
+      const empId = employee && /^\d+$/.test(employee) ? Number(employee) : null;
+      if (!empId) return; // not a numeric id - keep mock
+      try {
+        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+        const serviceDuration = q.get('timeDuration') || q.get('serviceDuration') || '30';
+        const date = `${year}-${String(month+1).padStart(2,'0')}-${String(selectedDay).padStart(2,'0')}`;
+        const params = new URLSearchParams({ date, serviceDuration });
+        const res = await fetch(`${BASE_URL}/api/appointments/availability/employee/${empId}?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const resp = await res.json();
+        if (cancelled) return;
+        if (resp && resp.slots) {
+          const newAvail = {};
+          // backend EmployeeAvailabilityResponse contains slots: list of AvailableSlotDTO with startTime,endTime
+          // Map TIMES by presence of any slot at that hour:minute
+          const slots = resp.slots || [];
+          const slotSet = new Set(slots.map(s => s.startTime && s.startTime.split('T')[1].slice(0,5)));
+          for (const t of TIMES) {
+            // map e.g. "09:00 AM" -> "09:00"
+            const match = t.match(/(\d{2}:\d{2})/);
+            const key = t;
+            if (match && slotSet.has(match[1])) newAvail[key] = 'available';
+            else newAvail[key] = 'unavailable';
+          }
+          setAvailabilityState(newAvail);
+        }
+      } catch (e) {
+        console.warn('Failed to load availability from API', e);
+      }
+    }
+    loadAvailability();
+    return () => { cancelled = true; };
+  }, [employee, selectedDay, month, year, q]);
+
+  // local state to hold availability when fetched from API
+  const [availabilityState, setAvailabilityState] = React.useState(null);
+  const mergedAvailability = availabilityState || availability;
 
   const prevMonth = () => {
     if (month === 0) {
@@ -180,7 +199,7 @@ export default function TimePicker() {
             <h4>Select Time Zone</h4>
             <div className="times-list">
               {TIMES.map((t, idx) => {
-                const state = availability[t];
+                const state = mergedAvailability[t];
                 const isSelected = selectedTime === t;
                 return (
                   <button
