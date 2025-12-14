@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Appointment entity - represents a booking between customer, employee and service
@@ -48,6 +50,15 @@ public class Appointment {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    // Many-to-Many relationship: An appointment can use multiple resources
+    @ManyToMany
+    @JoinTable(
+        name = "appointment_resources",
+        joinColumns = @JoinColumn(name = "appointment_id"),
+        inverseJoinColumns = @JoinColumn(name = "resource_id")
+    )
+    private List<Resource> resources = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
