@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import "./Appointments.css";
 import BookingWizard from "../../components/BookingWizard";
 
@@ -235,7 +235,45 @@ export default function Appointments() {
   const [createOpen, setCreateOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const navigate = useNavigate();
+  // try to fetch real appointments from backend for logged-in customer
+  useEffect(() => {
+    async function fetchAppointments() {
+      try {
+        // try to read customer id from localStorage (set by login flow)
+        const stored = localStorage.getItem('customerId') || localStorage.getItem('userId');
+        const cid = stored ? Number(stored) : null;
+        if (!cid) return; // nothing to fetch
+        
+        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+        const res = await fetch(`${BASE_URL}/api/appointments/customer/${cid}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const appts = await res.json();
+        
+        // split into upcoming (pending/approved) and previous (completed/cancelled/no-show)
+        const upcoming = [];
+        const previous = [];
+        appts.forEach(a => {
+          const status = a.status ? String(a.status) : '';
+          const item = {
+            id: a.appointmentId,
+            service: a.serviceName,
+            date: a.startTime ? a.startTime.split('T')[0] : '',
+            time: a.startTime && a.endTime ? `${a.startTime.split('T')[1].slice(0,5)} - ${a.endTime.split('T')[1].slice(0,5)}` : '',
+            employee: a.employeeName || '',
+            status: status
+          };
+          if (status === 'PENDING' || status === 'APPROVED') upcoming.push(item);
+          else previous.push(item);
+        });
+        if (upcoming.length) setUpcomingList(upcoming);
+        if (previous.length) setPreviousList(previous);
+      } catch (e) {
+        // silently ignore network errors; keep mock/local data
+        console.warn('Failed to load appointments from API', e);
+      }
+    }
+    fetchAppointments();
+  }, []);
 
   const openCreateModal = () => setCreateOpen(true);
   const closeCreateModal = () => setCreateOpen(false);
@@ -300,6 +338,15 @@ export default function Appointments() {
       )}
 
       <aside className="appointments-sidebar">
+        <div className="user-info">
+          <div className="user-avatar">
+            {(localStorage.getItem('userName') || 'Kullanıcı').charAt(0).toUpperCase()}
+          </div>
+          <div className="user-details">
+            <div className="user-name">{localStorage.getItem('userName') || 'Kullanıcı'}</div>
+            <div className="user-email">{localStorage.getItem('userEmail') || 'email@example.com'}</div>
+          </div>
+        </div>
         <div className="sidebar-title">Randevu İşlemleri</div>
         <ul className="sidebar-list">
           <li className="active">Randevu Yönetimi</li>
@@ -321,6 +368,7 @@ export default function Appointments() {
 
         <div className="card">
           <h3>Yaklaşan Randevular</h3>
+          {/* Desktop table */}
           <table className="appt-table">
             <thead>
               <tr>
@@ -359,10 +407,50 @@ export default function Appointments() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile card layout */}
+          <div className="appt-table-mobile">
+            {upcomingList.map((a) => (
+              <div className="appt-card-mobile" key={a.id}>
+                <div className="appt-row">
+                  <span className="appt-label">Hizmet:</span>
+                  <span className="appt-value">{a.service}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Tarih:</span>
+                  <span className="appt-value">{a.date}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Saat:</span>
+                  <span className="appt-value">{a.time}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Çalışan:</span>
+                  <span className="appt-value">{a.employee}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Durum:</span>
+                  <StatusBadge status={a.status} />
+                </div>
+                <button
+                  className="cancel-btn"
+                  onClick={() => openCancelModal(a.id)}
+                >
+                  İptal Et
+                </button>
+              </div>
+            ))}
+            {upcomingList.length === 0 && (
+              <p style={{textAlign: 'center', color: '#666', padding: '20px 0'}}>
+                Yaklaşan randevu bulunmamaktadır.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="card">
           <h3>Geçmiş Randevular</h3>
+          {/* Desktop table */}
           <table className="appt-table">
             <thead>
               <tr>
@@ -392,6 +480,39 @@ export default function Appointments() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile card layout */}
+          <div className="appt-table-mobile">
+            {previousList.map((a) => (
+              <div className="appt-card-mobile" key={a.id}>
+                <div className="appt-row">
+                  <span className="appt-label">Hizmet:</span>
+                  <span className="appt-value">{a.service}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Tarih:</span>
+                  <span className="appt-value">{a.date}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Saat:</span>
+                  <span className="appt-value">{a.time}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Çalışan:</span>
+                  <span className="appt-value">{a.employee}</span>
+                </div>
+                <div className="appt-row">
+                  <span className="appt-label">Durum:</span>
+                  <StatusBadge status={a.status} />
+                </div>
+              </div>
+            ))}
+            {previousList.length === 0 && (
+              <p style={{textAlign: 'center', color: '#666', padding: '20px 0'}}>
+                Geçmiş randevu bulunmamaktadır.
+              </p>
+            )}
+          </div>
         </div>
       </section>
     </div>
