@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import authService from "../../services/authService";
 import "./Auth.css";
 
 export default function Register() {
@@ -8,18 +9,37 @@ export default function Register() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
     if (password !== confirm) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
-    // TODO: replace with real registration API call
-    alert(`Account created for ${name} (${email})`);
-    // Redirect to login after register
-    navigate("/");
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
+
+    // Call backend registration API
+    const result = await authService.registerUser(name, email, password, phone);
+
+    if (result.success) {
+      // Redirect to appointments after successful registration
+      navigate("/appointments");
+    } else {
+      setError(result.error || "Registration failed");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -31,6 +51,8 @@ export default function Register() {
           information.
         </p>
 
+        {error && <div className="auth-error">{error}</div>}
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-label">Name - Last Name</label>
           <input
@@ -40,6 +62,7 @@ export default function Register() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            disabled={loading}
           />
 
           <label className="auth-label">E-Mail Address</label>
@@ -50,6 +73,7 @@ export default function Register() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={loading}
           />
 
           <label className="auth-label">Phone Number</label>
@@ -59,6 +83,7 @@ export default function Register() {
             placeholder="Enter your phone number (ex: +905001234567)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            disabled={loading}
           />
 
           <label className="auth-label">Password</label>
@@ -69,6 +94,7 @@ export default function Register() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
           />
 
           <label className="auth-label">Confirm Password</label>
@@ -79,10 +105,11 @@ export default function Register() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required
+            disabled={loading}
           />
 
-          <button type="submit" className="auth-button">
-            Create Account
+          <button type="submit" className="auth-button" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 

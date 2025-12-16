@@ -2,7 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/Auth/Login";
-import ResetPassword from "./pages/Auth/ResetPassword";
+import RequestReset from "./pages/Auth/RequestReset";
+import EnterNewPassword from "./pages/Auth/EnterNewPassword";
 import Register from "./pages/Auth/Register";
 import Appointments from "./pages/Customer/Appointments";
 import ServiceList from "./pages/Customer/ServiceList";
@@ -12,6 +13,7 @@ import Confirmation from "./pages/Customer/Confirmation";
 import ScheduleViewing from "./pages/Customer/ScheduleViewing";
 import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
+import RequestManagement from "./pages/BranchManager/RequestManagement/RequestManagement";
 
 function App() {
   return (
@@ -21,15 +23,20 @@ function App() {
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/reset" element={<RequestReset />} />
+            <Route path="/reset-password" element={<EnterNewPassword />} />
             <Route path="/services" element={<ServiceList />} />
             <Route path="/employees" element={<EmployeeSelect />} />
             <Route path="/times" element={<TimePicker />} />
             <Route path="/confirm" element={<Confirmation />} />
             <Route path="/schedule" element={<ScheduleViewing />} />
             <Route path="/appointments" element={<Appointments />} />
-            <Route path="/employee-management" element={<EmployeeManagement />} />
+            <Route
+              path="/employee-management"
+              element={<EmployeeManagement />}
+            />
             <Route path="/service-management" element={<ServiceManager />} />
-            <Route path="/reset" element={<ResetPassword />} />
+            <Route path="/request-management" element={<RequestManagement />} />
           </Routes>
         </main>
       </div>
