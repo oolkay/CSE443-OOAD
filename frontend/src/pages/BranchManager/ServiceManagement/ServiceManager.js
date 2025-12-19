@@ -37,12 +37,25 @@ const ServiceManager = () => {
     const [selectedService, setSelectedService] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Mock Resource Types for dropdown
+    const MOCK_RESOURCE_TYPES = [
+        'Epilasyon Cihazı',
+        'Lazer Bölümü',
+        'Cilt Bakımı',
+        'Masaj Masası',
+        'Saç Kesimi Ekipmanı',
+        'Tıraş Malzemeleri',
+        'Buhar Odası',
+        'Soya Banyosu'
+    ];
+
     // Form Başlangıç Değerleri
     const initialFormState = {
         name: '',
         description: '',
         timeDuration: '', // Kullanıcı girişi için string başlatıp number'a çevireceğiz
-        price: ''
+        price: '',
+        requiredResources: []
     };
     const [formData, setFormData] = useState(initialFormState);
 
@@ -83,7 +96,8 @@ const ServiceManager = () => {
                 name: service.name,
                 description: service.description || '',
                 timeDuration: service.timeDuration,
-                price: service.price
+                price: service.price,
+                requiredResources: service.requiredResources || []
             });
         } else {
             setIsEditing(false);
@@ -102,20 +116,27 @@ const ServiceManager = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Resource Selection Handler
+    const handleResourceChange = (e) => {
+        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+        setFormData(prev => ({ ...prev, requiredResources: selectedOptions }));
+    };
+
     // Kaydetme İşlemi
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Veri dönüştürme (String -> Number)
         const finalData = {
             ...formData,
             timeDuration: parseInt(formData.timeDuration),
-            price: parseFloat(formData.price)
+            price: parseFloat(formData.price),
+            requiredResources: formData.requiredResources
         };
 
         if (isEditing) {
             // Update Logic
-            setServices(prev => prev.map(srv => 
+            setServices(prev => prev.map(srv =>
                 srv.serviceId === selectedService?.serviceId ? { ...srv, ...finalData } : srv
             ));
         } else {
@@ -230,6 +251,19 @@ const ServiceManager = () => {
                                     {selectedService.description || "Açıklama sağlanmamıştır."}
                                 </p>
                             </div>
+
+                            {selectedService.requiredResources && selectedService.requiredResources.length > 0 && (
+                                <div className="detail-section">
+                                    <span className="label-block">Gerekli Kaynaklar:</span>
+                                    <div className="resource-tags">
+                                        {selectedService.requiredResources.map((resource, index) => (
+                                            <span key={index} className="resource-tag">
+                                                {resource}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="modal-footer">
                             <button className="btn-delete" onClick={() => handleDelete(selectedService.serviceId)}>Sil</button>
@@ -280,13 +314,43 @@ const ServiceManager = () => {
                                 
                                 <div className="form-group">
                                     <label>Açıklama (İsteğe Bağlı)</label>
-                                    <textarea 
-                                        name="description" 
-                                        value={formData.description} onChange={handleInputChange} 
+                                    <textarea
+                                        name="description"
+                                        value={formData.description} onChange={handleInputChange}
                                         rows="4"
                                         placeholder="Hizmet ayrıntılarını girin..."
                                         className="form-textarea"
                                     ></textarea>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Gerekli Kaynak Türleri</label>
+                                    <div className="checkbox-group">
+                                        {MOCK_RESOURCE_TYPES.map(type => (
+                                            <label key={type} className="checkbox-item">
+                                                <input
+                                                    type="checkbox"
+                                                    value={type}
+                                                    checked={formData.requiredResources.includes(type)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                requiredResources: [...prev.requiredResources, type]
+                                                            }));
+                                                        } else {
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                requiredResources: prev.requiredResources.filter(r => r !== type)
+                                                            }));
+                                                        }
+                                                    }}
+                                                />
+                                                <span className="checkmark"></span>
+                                                {type}
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
