@@ -22,15 +22,17 @@ const ResourceManager = () => {
     const initialFormState = {
         name: '',
         description: '',
-        type: '',
+        types: [],
         status: 'AVAILABLE'
     };
     const [formData, setFormData] = useState(initialFormState);
+    const [newTypeValue, setNewTypeValue] = useState('');
 
     // --- API CALLS ---
-    // Load resources when component mounts
+    // Load resources and types when component mounts
     useEffect(() => {
         fetchResourcesWithRetry();
+        fetchAvailableTypesWithRetry();
         // TODO: Get company ID from authentication context
         // For now, setting default company ID (should come from login)
         setCurrentCompanyId(1);
@@ -142,7 +144,7 @@ const ResourceManager = () => {
             setFormData({
                 name: resource.name,
                 description: resource.description || '',
-                type: resource.type || '',
+                types: resource.types || [],
                 status: resource.status
             });
         } else {
@@ -154,6 +156,7 @@ const ResourceManager = () => {
 
     const closeFormModal = () => {
         setIsFormModalOpen(false);
+        setNewTypeValue('');
     };
 
     // Input Değişimi
@@ -162,9 +165,50 @@ const ResourceManager = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleAddType = (type) => {
+        if (type && !formData.types.includes(type) && formData.types.length < 4) {
+            setFormData(prev => ({
+                ...prev,
+                types: [...prev.types, type]
+            }));
+        }
+    };
+
+    const handleRemoveType = (typeToRemove) => {
+        setFormData(prev => ({
+            ...prev,
+            types: prev.types.filter(type => type !== typeToRemove)
+        }));
+    };
+
+    const handleNewTypeChange = (e) => {
+        setNewTypeValue(e.target.value);
+    };
+
+    const handleAddNewType = () => {
+        if (newTypeValue.trim() && !formData.types.includes(newTypeValue.trim()) && formData.types.length < 4) {
+            handleAddType(newTypeValue.trim());
+            setNewTypeValue('');
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddNewType();
+        }
+    };
+
     // Kaydetme İşlemi - API Call
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation: en az bir type seçilmiş olmalı
+        if (!formData.types || formData.types.length === 0) {
+            alert('En az bir kaynak türü seçmelisiniz!');
+            return;
+        }
+
         try {
             let savedResource;
             if (isEditing) {
@@ -178,6 +222,10 @@ const ResourceManager = () => {
                 savedResource = await resourceService.createResource(formData);
                 setResources([...resources, savedResource]);
             }
+
+            // Refresh available types after create/update
+            await fetchAvailableTypesWithRetry();
+
             closeFormModal();
         } catch (err) {
             console.error('Error saving resource:', err);
@@ -192,6 +240,10 @@ const ResourceManager = () => {
             try {
                 await resourceService.deleteResource(id);
                 setResources(resources.filter(r => r.resourceId !== id));
+
+                // Refresh available types after delete
+                await fetchAvailableTypesWithRetry();
+
                 closeDetailModal();
             } catch (err) {
                 console.error('Error deleting resource:', err);
@@ -225,7 +277,9 @@ const ResourceManager = () => {
     // Fetch available resource types with retry logic
     const fetchAvailableTypesWithRetry = async (retryCount = 0, maxRetries = 1) => {
         try {
+            console.log('Fetching available types...');
             const types = await resourceService.getResourceTypes();
+            console.log('Fetched types:', types);
             setAvailableTypes(types);
         } catch (err) {
             if (retryCount < maxRetries) {
@@ -401,7 +455,15 @@ const ResourceManager = () => {
                                             </td>
                                             <td>
                                                 <div className="resource-type-cell">
-                                                    <span className="type-badge">{resource.type || 'Belirtilmemiş'}</span>
+                                                    {resource.types && resource.types.length > 0 ? (
+                                                        <div className="types-list">
+                                                            {resource.types.map((type, index) => (
+                                                                <span key={index} className="type-badge small">{type}</span>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="type-badge small">Belirtilmemiş</span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td>
@@ -523,21 +585,74 @@ const ResourceManager = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Kaynak Türü</label>
-                                    <input
-                                        type="text"
-                                        name="type"
-                                        value={formData.type}
-                                        onChange={handleInputChange}
-                                        required
-                                        placeholder="örn. Epilasyon Cihazı, Masaj Masası"
-                                        list="available-types"
-                                    />
-                                    <datalist id="available-types">
-                                        {availableTypes.map((type, index) => (
-                                            <option key={index} value={type} />
-                                        ))}
-                                    </datalist>
+                                    <label>Kaynak Türleri (En fazla 4)</label>
+
+                                    {/* Selected Types */}
+                                    {formData.types.length > 0 && (
+                                        <div className="selected-types">
+                                            {formData.types.map((type, index) => (
+                                                <div key={index} className="type-tag">
+                                                    <span>{type}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="remove-type-btn"
+                                                        onClick={() => handleRemoveType(type)}
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Type Selector */}
+                                    {formData.types.length < 4 && (
+                                        <div className="type-selector">
+                                            <select
+                                                value=""
+                                                onChange={(e) => {
+                                                    if (e.target.value) {
+                                                        handleAddType(e.target.value);
+                                                        e.target.value = '';
+                                                    }
+                                                }}
+                                                className="type-dropdown"
+                                            >
+                                                <option value="">Mevcut türlerden seçin...</option>
+                                                {availableTypes
+                                                    .filter(type => !formData.types.includes(type))
+                                                    .map((type, index) => (
+                                                        <option key={index} value={type}>
+                                                            {type}
+                                                        </option>
+                                                    ))
+                                                }
+                                            </select>
+
+                                            <div className="new-type-input">
+                                                <input
+                                                    type="text"
+                                                    value={newTypeValue}
+                                                    onChange={handleNewTypeChange}
+                                                    onKeyDown={handleKeyDown}
+                                                    placeholder="veya yeni tür yazın..."
+                                                    className="new-type-field"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddNewType}
+                                                    className="add-type-btn"
+                                                    disabled={!newTypeValue.trim()}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {formData.types.length === 0 && (
+                                        <span className="no-types-warning">En az bir kaynak türü eklemelisiniz.</span>
+                                    )}
                                 </div>
 
                                 <div className="form-group">
@@ -567,7 +682,15 @@ const ResourceManager = () => {
 
                             <div className="modal-footer">
                                 <button type="button" onClick={closeFormModal} className="btn-cancel">İptal</button>
-                                <button type="submit" className="btn-save">
+                                <button
+                                    type="submit"
+                                    className="btn-save"
+                                    disabled={!formData.types || formData.types.length === 0}
+                                    style={{
+                                        opacity: (!formData.types || formData.types.length === 0) ? 0.6 : 1,
+                                        cursor: (!formData.types || formData.types.length === 0) ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
                                     {isEditing ? 'Kaynağı Güncelle' : 'Kaynağı Kaydet'}
                                 </button>
                             </div>

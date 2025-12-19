@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Data Transfer Object for returning Resource data to client
@@ -24,7 +25,7 @@ public class ResourceResponseDTO {
     private Long resourceId;
     private String name;
     private String description;
-    private String type;
+    private List<String> types;
     private ResourceStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -80,13 +80,20 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
     );
 
     /**
-     * Find resources by company and type
+     * Find resources by company and containing a specific type
      */
-    List<Resource> findByCompanyCompanyIdAndType(Long companyId, String type);
+    @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND " +
+           "r.types IS NOT NULL AND " +
+           "(r.types LIKE CONCAT(:type, ',%') OR " +
+           "r.types LIKE CONCAT('%,', :type, ',%') OR " +
+           "r.types LIKE CONCAT('%,', :type) OR " +
+           "r.types = :type)")
+    List<Resource> findByCompanyCompanyIdAndTypesContaining(@Param("companyId") Long companyId, @Param("type") String type);
 
     /**
      * Get all unique resource types for a company
+     * Simple approach: get all resources and extract types in service layer
      */
-    @Query("SELECT DISTINCT r.type FROM Resource r WHERE r.company.companyId = :companyId")
-    List<String> findDistinctTypesByCompany(@Param("companyId") Long companyId);
+    @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND r.types IS NOT NULL")
+    List<Resource> findResourcesWithTypesByCompany(@Param("companyId") Long companyId);
 }

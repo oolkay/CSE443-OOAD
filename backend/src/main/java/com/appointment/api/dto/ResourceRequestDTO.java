@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * Data Transfer Object for creating and updating a Resource
  * Used to transfer data from client to server
@@ -29,9 +31,10 @@ public class ResourceRequestDTO {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    @NotBlank(message = "Resource type is required")
-    @Size(max = 100, message = "Resource type cannot exceed 100 characters")
-    private String type;
+    @NotEmpty(message = "En az bir kaynak türü gereklidir")
+    @Size(max = 4, message = "Bir kaynak en fazla 4 tür olabilir")
+    private List<@NotBlank(message = "Kaynak türü boş olamaz")
+                @Size(max = 100, message = "Kaynak türü en fazla 100 karakter olabilir") String> types;
 
     @NotNull(message = "Status is required")
     private ResourceStatus status;

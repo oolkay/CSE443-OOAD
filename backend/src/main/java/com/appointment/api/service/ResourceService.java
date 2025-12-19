@@ -56,7 +56,7 @@ public class ResourceService {
         resource.setCompany(company);
         resource.setName(requestDTO.getName());
         resource.setDescription(requestDTO.getDescription());
-        resource.setType(requestDTO.getType());
+        resource.setTypesList(requestDTO.getTypes());
         resource.setStatus(requestDTO.getStatus());
 
         // Save to database
@@ -117,7 +117,7 @@ public class ResourceService {
         // Update fields
         resource.setName(requestDTO.getName());
         resource.setDescription(requestDTO.getDescription());
-        resource.setType(requestDTO.getType());
+        resource.setTypesList(requestDTO.getTypes());
         resource.setStatus(requestDTO.getStatus());
 
         Resource updatedResource = resourceRepository.save(resource);
@@ -244,7 +244,7 @@ public class ResourceService {
         responseDTO.setResourceId(resource.getResourceId());
         responseDTO.setName(resource.getName());
         responseDTO.setDescription(resource.getDescription());
-        responseDTO.setType(resource.getType());
+        responseDTO.setTypes(resource.getTypesList());
         responseDTO.setStatus(resource.getStatus());
         responseDTO.setCreatedAt(resource.getCreatedAt());
         responseDTO.setUpdatedAt(resource.getUpdatedAt());
@@ -258,7 +258,7 @@ public class ResourceService {
     public List<ResourceResponseDTO> getResourcesByType(Long companyId, String type) {
         log.info("Fetching resources by type {} for company: {}", type, companyId);
 
-        return resourceRepository.findByCompanyCompanyIdAndType(companyId, type)
+        return resourceRepository.findByCompanyCompanyIdAndTypesContaining(companyId, type)
                 .stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
@@ -272,7 +272,21 @@ public class ResourceService {
     public List<String> getResourceTypes(Long companyId) {
         log.info("Getting resource types for company: {}", companyId);
 
-        return resourceRepository.findDistinctTypesByCompany(companyId);
+        List<Resource> resourcesWithTypes = resourceRepository.findResourcesWithTypesByCompany(companyId);
+        log.info("Found {} resources with types", resourcesWithTypes.size());
+
+        List<String> types = resourcesWithTypes.stream()
+                .flatMap(resource -> {
+                    List<String> resourceTypes = resource.getTypesList();
+                    log.debug("Resource {} has types: {}", resource.getName(), resourceTypes);
+                    return resourceTypes.stream();
+                })
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        log.info("Final types list: {}", types);
+        return types;
     }
 
     /**

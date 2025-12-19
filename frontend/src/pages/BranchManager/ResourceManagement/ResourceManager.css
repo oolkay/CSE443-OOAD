@@ -310,6 +310,13 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     align-items: center;
 }
 
+.types-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 200px;
+}
+
 .type-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -319,4 +326,120 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     font-size: 0.875rem;
     font-weight: 500;
     border: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.type-badge.small {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    border-radius: 12px;
+}
+
+/* FORM TYPE SELECTOR STYLING */
+.selected-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.type-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #6366f1;
+    color: white;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.remove-type-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.remove-type-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.type-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.type-dropdown {
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.type-dropdown:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.new-type-input {
+    display: flex;
+    gap: 8px;
+}
+
+.new-type-field {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.new-type-field:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.add-type-btn {
+    padding: 10px 14px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    min-width: 40px;
+}
+
+.add-type-btn:hover:not(:disabled) {
+    background: #4f46e5;
+}
+
+.add-type-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.no-types-warning {
+    color: #dc2626;
+    font-size: 0.875rem;
+    font-weight: 500;
 }
