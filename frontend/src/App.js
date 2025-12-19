@@ -12,6 +12,7 @@ import Confirmation from "./pages/Customer/Confirmation";
 import ScheduleViewing from "./pages/Customer/ScheduleViewing";
 import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
+import ResourceManager from "./pages/BranchManager/ResourceManagement/ResourceManager";
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Home from "./pages/Admin/Home";
 import SuperAdmins from "./pages/Admin/SuperAdmins";
@@ -34,6 +35,7 @@ function App() {
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/employee-management" element={<EmployeeManagement />} />
             <Route path="/service-management" element={<ServiceManager />} />
+            <Route path="/resource-management" element={<ResourceManager />} />
             <Route path="/reset" element={<ResetPassword />} />
             
             {/* Admin Routes */}
