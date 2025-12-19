@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Data Transfer Object for creating a new Service
@@ -32,5 +33,6 @@ public class ServiceRequestDTO {
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
     private BigDecimal price;
 
+    private List<String> requiredResourceTypes;
 }
 

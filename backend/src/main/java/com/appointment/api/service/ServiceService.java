@@ -42,6 +42,7 @@ public class ServiceService {
         service.setDescription(requestDTO.getDescription());
         service.setTimeDuration(requestDTO.getDurationMinutes().longValue());
         service.setPrice(requestDTO.getPrice());
+        service.setRequiredResourceTypesList(requestDTO.getRequiredResourceTypes());
         
         // Save to database
         Service savedService = serviceRepository.save(service);
@@ -96,6 +97,7 @@ public class ServiceService {
         service.setDescription(requestDTO.getDescription());
         service.setTimeDuration(requestDTO.getDurationMinutes().longValue());
         service.setPrice(requestDTO.getPrice());
+        service.setRequiredResourceTypesList(requestDTO.getRequiredResourceTypes());
         
         Service updatedService = serviceRepository.save(service);
         
@@ -137,6 +139,7 @@ public class ServiceService {
         responseDTO.setDescription(service.getDescription());
         responseDTO.setDurationMinutes(service.getTimeDuration().intValue());
         responseDTO.setPrice(service.getPrice());
+        responseDTO.setRequiredResourceTypes(service.getRequiredResourceTypesList());
         responseDTO.setCreatedAt(service.getCreatedAt());
         responseDTO.setUpdatedAt(service.getUpdatedAt());
         return responseDTO;
