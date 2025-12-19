@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { resourceService, setCurrentCompanyId } from '../../../services/resourceService';
+import { resourceService, setCurrentCompanyId, getCurrentCompanyId } from '../../../services/resourceService';
 import './ResourceManager.css';
 
 const ResourceManager = () => {
@@ -15,11 +15,14 @@ const ResourceManager = () => {
     const [selectedResource, setSelectedResource] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('all'); // all, available, out_of_service
+    const [availableTypes, setAvailableTypes] = useState([]);
+    const [sortByType, setSortByType] = useState('all'); // all, specific type
 
     // Form Başlangıç Değerleri
     const initialFormState = {
         name: '',
         description: '',
+        type: '',
         status: 'AVAILABLE'
     };
     const [formData, setFormData] = useState(initialFormState);
@@ -139,6 +142,7 @@ const ResourceManager = () => {
             setFormData({
                 name: resource.name,
                 description: resource.description || '',
+                type: resource.type || '',
                 status: resource.status
             });
         } else {
@@ -206,6 +210,7 @@ const ResourceManager = () => {
             try {
                 setInitialLoadComplete(false);
                 await fetchResourcesWithRetry();
+                await fetchAvailableTypesWithRetry();
                 // TODO: Get company ID from authentication context
                 // For now, setting default company ID (should come from login)
                 setCurrentCompanyId(1);
@@ -216,6 +221,24 @@ const ResourceManager = () => {
 
         initialLoad();
     }, []);
+
+    // Fetch available resource types with retry logic
+    const fetchAvailableTypesWithRetry = async (retryCount = 0, maxRetries = 1) => {
+        try {
+            const types = await resourceService.getResourceTypes();
+            setAvailableTypes(types);
+        } catch (err) {
+            if (retryCount < maxRetries) {
+                console.log(`Resource types fetch failed, retrying in 5 seconds... (${retryCount + 1}/${maxRetries + 1})`);
+                setTimeout(() => {
+                    fetchAvailableTypesWithRetry(retryCount + 1, maxRetries);
+                }, 5000); // 5 second delay
+            } else {
+                console.error('Error fetching resource types after retries:', err);
+                setAvailableTypes([]); // Empty array if all retries fail
+            }
+        }
+    };
 
     // Search and filter logic - only runs after initial load and when filters change
     useEffect(() => {
@@ -323,19 +346,20 @@ const ResourceManager = () => {
                         <thead>
                             <tr>
                                 <th>KAYNAK ADI</th>
+                                <th>TÜR</th>
                                 <th>DURUM</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
+                                    <td colSpan="3" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
                                         <div className="loading-spinner">Yükleniyor...</div>
                                     </td>
                                 </tr>
                             ) : error ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#dc2626'}}>
+                                    <td colSpan="3" style={{textAlign:'center', padding:'2rem', color:'#dc2626'}}>
                                         <div className="error-message">
                                             {error}
                                             <button
@@ -358,7 +382,7 @@ const ResourceManager = () => {
                                 </tr>
                             ) : filteredResources.length === 0 ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
+                                    <td colSpan="3" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
                                         Kaynak bulunamadı.
                                     </td>
                                 </tr>
@@ -373,6 +397,11 @@ const ResourceManager = () => {
                                                     {resource.description && (
                                                         <span className="resource-description">{resource.description}</span>
                                                     )}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="resource-type-cell">
+                                                    <span className="type-badge">{resource.type || 'Belirtilmemiş'}</span>
                                                 </div>
                                             </td>
                                             <td>
@@ -491,6 +520,24 @@ const ResourceManager = () => {
                                         value={formData.name} onChange={handleInputChange}
                                         required placeholder="örn. Masaj Masası 1"
                                     />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Kaynak Türü</label>
+                                    <input
+                                        type="text"
+                                        name="type"
+                                        value={formData.type}
+                                        onChange={handleInputChange}
+                                        required
+                                        placeholder="örn. Epilasyon Cihazı, Masaj Masası"
+                                        list="available-types"
+                                    />
+                                    <datalist id="available-types">
+                                        {availableTypes.map((type, index) => (
+                                            <option key={index} value={type} />
+                                        ))}
+                                    </datalist>
                                 </div>
 
                                 <div className="form-group">

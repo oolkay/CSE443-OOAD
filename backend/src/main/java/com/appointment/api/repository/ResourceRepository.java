@@ -78,4 +78,15 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
             @Param("name") String name,
             @Param("resourceId") Long resourceId
     );
+
+    /**
+     * Find resources by company and type
+     */
+    List<Resource> findByCompanyCompanyIdAndType(Long companyId, String type);
+
+    /**
+     * Get all unique resource types for a company
+     */
+    @Query("SELECT DISTINCT r.type FROM Resource r WHERE r.company.companyId = :companyId")
+    List<String> findDistinctTypesByCompany(@Param("companyId") Long companyId);
 }

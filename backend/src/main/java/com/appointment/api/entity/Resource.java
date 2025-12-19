@@ -31,6 +31,9 @@ public class Resource {
     @Column(length = 500)
     private String description;
 
+    @Column(length = 100)
+    private String type; // Resource type: "Epilasyon Cihazı", "Masaj Masası", "Cilt Bakım Ünitesi"
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ResourceStatus status;

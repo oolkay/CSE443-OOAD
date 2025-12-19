@@ -24,6 +24,7 @@ public class ResourceResponseDTO {
     private Long resourceId;
     private String name;
     private String description;
+    private String type;
     private ResourceStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

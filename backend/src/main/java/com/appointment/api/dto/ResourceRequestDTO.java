@@ -29,6 +29,10 @@ public class ResourceRequestDTO {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
+    @NotBlank(message = "Resource type is required")
+    @Size(max = 100, message = "Resource type cannot exceed 100 characters")
+    private String type;
+
     @NotNull(message = "Status is required")
     private ResourceStatus status;
 }

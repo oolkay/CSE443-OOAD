@@ -178,4 +178,28 @@ public class ResourceController {
         ResourceService.ResourceStatsDTO stats = resourceService.getResourceStats(companyId);
         return ResponseEntity.ok(stats);
     }
+
+    /**
+     * GET /api/resources/company/{companyId}/type/{type}
+     * Get resources by type for a company
+     * Used for grouping: Epilasyon Cihazı, Masaj Masası, etc.
+     */
+    @GetMapping("/company/{companyId}/type/{type}")
+    public ResponseEntity<List<ResourceResponseDTO>> getResourcesByType(
+            @PathVariable Long companyId,
+            @PathVariable String type) {
+        List<ResourceResponseDTO> resources = resourceService.getResourcesByType(companyId, type);
+        return ResponseEntity.ok(resources);
+    }
+
+    /**
+     * GET /api/resources/company/{companyId}/types
+     * Get all unique resource types for a company
+     * Used for frontend type dropdown/autocomplete
+     */
+    @GetMapping("/company/{companyId}/types")
+    public ResponseEntity<List<String>> getResourceTypes(@PathVariable Long companyId) {
+        List<String> types = resourceService.getResourceTypes(companyId);
+        return ResponseEntity.ok(types);
+    }
 }

@@ -303,3 +303,20 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
 .retry-btn:hover {
     background-color: #4f46e5 !important;
 }
+
+/* RESOURCE TYPE STYLING */
+.resource-type-cell {
+    display: flex;
+    align-items: center;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f3f4f6;
+    color: #374151;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+}

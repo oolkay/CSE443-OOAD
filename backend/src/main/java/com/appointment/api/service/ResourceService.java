@@ -56,6 +56,7 @@ public class ResourceService {
         resource.setCompany(company);
         resource.setName(requestDTO.getName());
         resource.setDescription(requestDTO.getDescription());
+        resource.setType(requestDTO.getType());
         resource.setStatus(requestDTO.getStatus());
 
         // Save to database
@@ -116,6 +117,7 @@ public class ResourceService {
         // Update fields
         resource.setName(requestDTO.getName());
         resource.setDescription(requestDTO.getDescription());
+        resource.setType(requestDTO.getType());
         resource.setStatus(requestDTO.getStatus());
 
         Resource updatedResource = resourceRepository.save(resource);
@@ -242,10 +244,35 @@ public class ResourceService {
         responseDTO.setResourceId(resource.getResourceId());
         responseDTO.setName(resource.getName());
         responseDTO.setDescription(resource.getDescription());
+        responseDTO.setType(resource.getType());
         responseDTO.setStatus(resource.getStatus());
         responseDTO.setCreatedAt(resource.getCreatedAt());
         responseDTO.setUpdatedAt(resource.getUpdatedAt());
         return responseDTO;
+    }
+
+    /**
+     * Get resources by type for a company
+     */
+    @Transactional(readOnly = true)
+    public List<ResourceResponseDTO> getResourcesByType(Long companyId, String type) {
+        log.info("Fetching resources by type {} for company: {}", type, companyId);
+
+        return resourceRepository.findByCompanyCompanyIdAndType(companyId, type)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all unique resource types for a company
+     * Used for frontend type dropdown/autocomplete
+     */
+    @Transactional(readOnly = true)
+    public List<String> getResourceTypes(Long companyId) {
+        log.info("Getting resource types for company: {}", companyId);
+
+        return resourceRepository.findDistinctTypesByCompany(companyId);
     }
 
     /**

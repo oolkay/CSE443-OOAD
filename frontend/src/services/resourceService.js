@@ -255,5 +255,40 @@ export const resourceService = {
       console.error('Error fetching resource stats:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get all unique resource types for the company
+   * Used for type dropdown/autocomplete
+   */
+  async getResourceTypes() {
+    try {
+      const companyId = getCurrentCompanyId();
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/types`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching resource types:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get resources by type
+   */
+  async getResourcesByType(type) {
+    try {
+      const companyId = getCurrentCompanyId();
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/type/${encodeURIComponent(type)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching resources by type:', error);
+      throw error;
+    }
   }
 };
