@@ -314,11 +314,11 @@ const ServiceManager = () => {
                                 </p>
                             </div>
 
-                            {selectedService.requiredResources && selectedService.requiredResources.length > 0 && (
+                            {selectedService.requiredResourceTypes && selectedService.requiredResourceTypes.length > 0 && (
                                 <div className="detail-section">
                                     <span className="label-block">Gerekli Kaynaklar:</span>
                                     <div className="resource-tags">
-                                        {selectedService.requiredResources.map((resource, index) => (
+                                        {selectedService.requiredResourceTypes.map((resource, index) => (
                                             <span key={index} className="resource-tag">
                                                 {resource}
                                             </span>
