@@ -84,7 +84,7 @@ public class EmployeeService {
                         service.getDescription(),
                         service.getTimeDuration().intValue(),
                         service.getPrice(),
-                        service.getRequiredResourceTypesList(),
+                        service.getRequiredResourceTypesList(), //burayı kontrol et
                         service.getCreatedAt(),
                         service.getUpdatedAt()
                 )).collect(Collectors.toList());

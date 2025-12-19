@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { serviceService } from '../../../services/serviceService';
+import { resourceService } from '../../../services/resourceService';
 import './ServiceManager.css';
 
 const ServiceManager = () => {
@@ -29,25 +31,17 @@ const ServiceManager = () => {
 
     // --- STATE ---
     const [services, setServices] = useState(MOCK_SERVICES);
-    
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    
+
     const [selectedService, setSelectedService] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-
-    // Mock Resource Types for dropdown
-    const MOCK_RESOURCE_TYPES = [
-        'Epilasyon Cihazı',
-        'Lazer Bölümü',
-        'Cilt Bakımı',
-        'Masaj Masası',
-        'Saç Kesimi Ekipmanı',
-        'Tıraş Malzemeleri',
-        'Buhar Odası',
-        'Soya Banyosu'
-    ];
+    const [resourceTypes, setResourceTypes] = useState([]);
+    const [resourceTypesLoading, setResourceTypesLoading] = useState(false);
 
     // Form Başlangıç Değerleri
     const initialFormState = {
@@ -58,6 +52,51 @@ const ServiceManager = () => {
         requiredResources: []
     };
     const [formData, setFormData] = useState(initialFormState);
+
+    // --- API EFFECTS ---
+    useEffect(() => {
+        fetchServicesWithRetry();
+        fetchResourceTypes();
+    }, []);
+
+  const fetchResourceTypes = async () => {
+        try {
+            setResourceTypesLoading(true);
+            console.log('Fetching resource types...');
+            const types = await resourceService.getResourceTypes();
+            console.log('Resource types fetched:', types);
+            setResourceTypes(types);
+        } catch (err) {
+            console.error('Error fetching resource types:', err);
+        } finally {
+            setResourceTypesLoading(false);
+        }
+    };
+
+    const fetchServicesWithRetry = async (retries = 3, delay = 5000) => {
+        console.log('fetchServicesWithRetry called');
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                console.log(`Attempt ${attempt} - Starting API call`);
+                setLoading(true);
+                const data = await serviceService.getServices();
+                console.log('API call successful, data:', data);
+                setServices(data);
+                setError(null);
+                setLoading(false);
+                return;
+            } catch (err) {
+                console.error(`Attempt ${attempt} failed:`, err);
+                if (attempt === retries) {
+                    setError('Hizmetler yüklenemedi: ' + err.message);
+                    setLoading(false);
+                    return;
+                }
+                // Wait before next attempt
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    };
 
     // --- FORMATTERS ---
     const formatCurrency = (amount) => {
@@ -95,9 +134,9 @@ const ServiceManager = () => {
             setFormData({
                 name: service.name,
                 description: service.description || '',
-                timeDuration: service.timeDuration,
+                timeDuration: service.timeDuration || service.durationMinutes,
                 price: service.price,
-                requiredResources: service.requiredResources || []
+                requiredResources: service.requiredResources || service.requiredResourceTypes || []
             });
         } else {
             setIsEditing(false);
@@ -116,42 +155,46 @@ const ServiceManager = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Resource Selection Handler
-    const handleResourceChange = (e) => {
-        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-        setFormData(prev => ({ ...prev, requiredResources: selectedOptions }));
-    };
-
     // Kaydetme İşlemi
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Veri dönüştürme (String -> Number)
-        const finalData = {
-            ...formData,
-            timeDuration: parseInt(formData.timeDuration),
-            price: parseFloat(formData.price),
-            requiredResources: formData.requiredResources
-        };
+        try {
+            // Backend'e uygun veri formatı
+            const finalData = {
+                name: formData.name,
+                description: formData.description,
+                durationMinutes: parseInt(formData.timeDuration),
+                price: parseFloat(formData.price),
+                requiredResourceTypes: formData.requiredResources // Backend expects requiredResourceTypes
+            };
 
-        if (isEditing) {
-            // Update Logic
-            setServices(prev => prev.map(srv =>
-                srv.serviceId === selectedService?.serviceId ? { ...srv, ...finalData } : srv
-            ));
-        } else {
-            // Create Logic
-            const newId = Math.floor(Math.random() * 10000);
-            setServices([...services, { serviceId: newId, ...finalData }]);
+            if (isEditing) {
+                await serviceService.updateService(selectedService.id || selectedService.serviceId, finalData);
+            } else {
+                await serviceService.createService(finalData);
+            }
+
+            // Refresh the services list
+            await fetchServicesWithRetry();
+            closeFormModal();
+        } catch (error) {
+            console.error('Error saving service:', error);
+            alert('Hizmet kaydedilemedi: ' + error.message);
         }
-        closeFormModal();
     };
 
     // Silme İşlemi
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Bu hizmeti silmek istediğinize emin misiniz?')) {
-            setServices(services.filter(s => s.serviceId !== id));
-            closeDetailModal();
+            try {
+                await serviceService.deleteService(id);
+                await fetchServicesWithRetry();
+                closeDetailModal();
+            } catch (error) {
+                console.error('Error deleting service:', error);
+                alert('Hizmet silinemedi: ' + error.message);
+            }
         }
     };
 
@@ -183,8 +226,26 @@ const ServiceManager = () => {
                 </button>
             </div>
 
+            {/* Loading and Error States */}
+            {loading && (
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Hizmetler yükleniyor...</p>
+                </div>
+            )}
+
+            {error && (
+                <div className="error-container">
+                    <p className="error-message">{error}</p>
+                    <button className="btn-retry" onClick={() => fetchServicesWithRetry()}>
+                        Tekrar Dene
+                    </button>
+                </div>
+            )}
+
             {/* LISTE */}
-            <div className="table-card">
+            {!loading && !error && (
+                <div className="table-card">
                 <div className="table-responsive">
                     <table className="custom-table">
                         <thead>
@@ -202,7 +263,7 @@ const ServiceManager = () => {
                                 </tr>
                             ) : (
                                 filteredServices.map(srv => (
-                                    <tr key={srv.serviceId} onClick={() => openDetailModal(srv)} className="clickable-row">
+                                    <tr key={srv.id || srv.serviceId} onClick={() => openDetailModal(srv)} className="clickable-row">
                                         <td>
                                             <div className="service-name-cell">
                                                 <span className="fw-bold">{srv.name}</span>
@@ -211,7 +272,7 @@ const ServiceManager = () => {
                                         <td style={{textAlign:'right'}}>
                                             <div className="meta-cell">
                                                 <span className="price-tag">{formatCurrency(srv.price)}</span>
-                                                <span className="duration-tag">{formatDuration(srv.timeDuration)}</span>
+                                                <span className="duration-tag">{formatDuration(srv.timeDuration || srv.durationMinutes)}</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -220,7 +281,8 @@ const ServiceManager = () => {
                         </tbody>
                     </table>
                 </div>
-            </div>
+                </div>
+            )}
 
             {/* --- DETAY MODALI (READ ONLY) --- */}
             {isDetailModalOpen && selectedService && (
@@ -241,7 +303,7 @@ const ServiceManager = () => {
                                 </div>
                                 <div className="detail-box">
                                     <span className="label">Süre</span>
-                                    <span className="value">{formatDuration(selectedService.timeDuration)}</span>
+                                    <span className="value">{formatDuration(selectedService.timeDuration || selectedService.durationMinutes)}</span>
                                 </div>
                             </div>
 
@@ -266,7 +328,7 @@ const ServiceManager = () => {
                             )}
                         </div>
                         <div className="modal-footer">
-                            <button className="btn-delete" onClick={() => handleDelete(selectedService.serviceId)}>Sil</button>
+                            <button className="btn-delete" onClick={() => handleDelete(selectedService.id || selectedService.serviceId)}>Sil</button>
                             <button className="btn-edit" onClick={() => openFormModal(selectedService)}>Hizmeti Düzenle</button>
                         </div>
                     </div>
@@ -325,32 +387,38 @@ const ServiceManager = () => {
 
                                 <div className="form-group">
                                     <label>Gerekli Kaynak Türleri</label>
-                                    <div className="checkbox-group">
-                                        {MOCK_RESOURCE_TYPES.map(type => (
-                                            <label key={type} className="checkbox-item">
-                                                <input
-                                                    type="checkbox"
-                                                    value={type}
-                                                    checked={formData.requiredResources.includes(type)}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setFormData(prev => ({
-                                                                ...prev,
-                                                                requiredResources: [...prev.requiredResources, type]
-                                                            }));
-                                                        } else {
-                                                            setFormData(prev => ({
-                                                                ...prev,
-                                                                requiredResources: prev.requiredResources.filter(r => r !== type)
-                                                            }));
-                                                        }
-                                                    }}
-                                                />
-                                                <span className="checkmark"></span>
-                                                {type}
-                                            </label>
-                                        ))}
-                                    </div>
+                                    {resourceTypesLoading ? (
+                                        <div className="loading-small">Kaynak türleri yükleniyor...</div>
+                                    ) : resourceTypes.length === 0 ? (
+                                        <div className="no-resource-types">Mevcut kaynak türü bulunamadı.</div>
+                                    ) : (
+                                        <div className="checkbox-group">
+                                            {resourceTypes.map(type => (
+                                                <label key={type} className="checkbox-item">
+                                                    <input
+                                                        type="checkbox"
+                                                        value={type}
+                                                        checked={formData.requiredResources.includes(type)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    requiredResources: [...prev.requiredResources, type]
+                                                                }));
+                                                            } else {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    requiredResources: prev.requiredResources.filter(r => r !== type)
+                                                                }));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span className="checkmark"></span>
+                                                    {type}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

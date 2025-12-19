@@ -3,6 +3,7 @@ package com.appointment.api.service;
 import com.appointment.api.dto.ServiceRequestDTO;
 import com.appointment.api.dto.ServiceResponseDTO;
 import com.appointment.api.entity.Service;
+import com.appointment.api.entity.Company;
 import com.appointment.api.exception.ResourceNotFoundException;
 import com.appointment.api.exception.DuplicateResourceException;
 import com.appointment.api.repository.ServiceRepository;
@@ -30,25 +31,31 @@ public class ServiceService {
      */
     public ServiceResponseDTO createService(ServiceRequestDTO requestDTO) {
         log.info("Creating new service: {}", requestDTO.getName());
-        
+
         // Business logic: Check if service with same name already exists
         if (serviceRepository.existsByName(requestDTO.getName())) {
             throw new DuplicateResourceException("Service with name '" + requestDTO.getName() + "' already exists");
         }
-        
-        // Convert DTO to Entity
+
+        // Convert DTO to Entity - Add company for now (can be parameterized later)
         Service service = new Service();
         service.setName(requestDTO.getName());
         service.setDescription(requestDTO.getDescription());
         service.setTimeDuration(requestDTO.getDurationMinutes().longValue());
         service.setPrice(requestDTO.getPrice());
         service.setRequiredResourceTypesList(requestDTO.getRequiredResourceTypes());
-        
+
+        // TODO: Get company from authenticated user or request parameter
+        // For now, using default company ID = 1
+        Company defaultCompany = new Company();
+        defaultCompany.setCompanyId(1L);
+        service.setCompany(defaultCompany);
+
         // Save to database
         Service savedService = serviceRepository.save(service);
-        
+
         log.info("Service created successfully with ID: {}", savedService.getServiceId());
-        
+
         // Convert Entity to Response DTO
         return convertToResponseDTO(savedService);
     }
