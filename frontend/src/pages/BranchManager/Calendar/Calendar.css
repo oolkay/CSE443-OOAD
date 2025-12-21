@@ -254,8 +254,14 @@ body {
 .slot-content {
     position: relative;
     height: 100%;
-    min-height: 120px;
-    padding: 0px 10px 0px 0px
+    min-height: 100px;
+    padding: 0px 10px 0px 0px;
+    background-image: 
+        linear-gradient(to bottom, transparent 24px, var(--border-light) 24px, var(--border-light) 25px, transparent 25px),
+        linear-gradient(to bottom, transparent 49px, var(--border-light) 49px, var(--border-light) 50px, transparent 50px),
+        linear-gradient(to bottom, transparent 74px, var(--border-light) 74px, var(--border-light) 75px, transparent 75px);
+    background-size: 100% 100px;
+    background-repeat: no-repeat;
 }
 
 .aggregated-appointment-block {
@@ -316,6 +322,7 @@ body {
     flex-direction: column;
     justify-content: center;
     box-sizing: border-box;
+    z-index: 1;
 }
 
 .appointment-block:hover {
@@ -353,6 +360,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .apt-service {
@@ -363,6 +371,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .apt-customer {
@@ -372,6 +381,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .apt-employee {
@@ -380,6 +390,45 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+/* Compact styling for very short appointments (15 min) */
+.appointment-block.very-short {
+    padding: 0.2rem 0.5rem !important;
+    justify-content: flex-start !important;
+    min-height: unset !important;
+}
+
+.appointment-block.short {
+    padding: 0.35rem 0.5rem !important;
+    justify-content: flex-start !important;
+}
+
+.apt-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    line-height: 1.1;
+}
+
+.apt-time-inline {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.apt-service-inline {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
 }
 
 /* --- WEEKLY VIEW --- */
@@ -390,10 +439,6 @@ body {
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
     border-bottom: 2px solid var(--border-light);
-}
-
-.time-column-header {
-    /* Empty space for time column */
 }
 
 .day-header {
@@ -608,8 +653,8 @@ body {
 }
 
 .apt-indicator.aggregated {
-    background: var(--status-approved-bg);
-    border-left-color: var(--status-approved);
+    background: var(--status-purple-bg);
+    border-left: 4px solid var(--primary-color);
     font-size: 0.85rem;
     font-weight: 600;
     height: 60%;
