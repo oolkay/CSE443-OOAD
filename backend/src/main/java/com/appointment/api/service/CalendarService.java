@@ -43,8 +43,8 @@ public class CalendarService {
             String employeeId) {
         
         // Validate interval
-        if (interval != 15 && interval != 30 && interval != 60) {
-            throw new RuntimeException("Interval must be 15, 30, or 60 minutes");
+        if (interval % 15 != 0) {
+            throw new RuntimeException("Interval must be a multiple of 15 minutes");
         }
         
         // Validate date range
@@ -102,8 +102,14 @@ public class CalendarService {
                         .appointmentId(appt.get("appointment_id") != null ? 
                             ((Number) appt.get("appointment_id")).longValue() : null)
                         .employee((String) appt.get("employee"))
+                        .employeeId(appt.get("employee_id") != null ? 
+                            ((Number) appt.get("employee_id")).longValue() : null)
                         .service((String) appt.get("service"))
+                        .serviceId(appt.get("service_id") != null ? 
+                            ((Number) appt.get("service_id")).longValue() : null)
                         .customer((String) appt.get("customer"))
+                        .status((String) appt.get("status"))
+                        .duration((Number) appt.get("duration"))
                         .build();
                     Object startTimeObj = appt.get("start_time");
                     Object endTimeObj = appt.get("end_time");

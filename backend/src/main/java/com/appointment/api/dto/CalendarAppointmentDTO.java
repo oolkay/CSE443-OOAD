@@ -15,7 +15,11 @@ public class CalendarAppointmentDTO {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String employee;
+    private Long employeeId;
     private String service;
+    private Long serviceId;
     private String customer;
+    private String status;
+    private Number duration;
 }
 

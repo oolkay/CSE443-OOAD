@@ -41,14 +41,18 @@ public interface CalendarRepository extends JpaRepository<com.appointment.api.en
         select
             iv.ts as ts,
             COALESCE(
-                json_agg(DISTINCT jsonb_build_object(
+                json_agg(jsonb_build_object(
                     'appointment_id', appo.appointment_id,
+                    'status', appo.status,
+                    'duration', serv.time_duration,
                     'start_time', appo.start_time,
                     'end_time', appo.end_time,
                     'employee', usr.name,
+                    'employee_id', usr.user_id,
                     'service', serv.name,
+                    'service_id', serv.service_id,
                     'customer', cust.name
-                )) FILTER (
+                ) ORDER BY appo.start_time ASC) FILTER (
                     WHERE appo.appointment_id IS NOT null
                         and serv.company_id = CAST(:companyId AS bigint)
                         and (:employeeId IS NULL OR ws.employee_id = CAST(:employeeId AS bigint))
@@ -58,11 +62,20 @@ public interface CalendarRepository extends JpaRepository<com.appointment.api.en
         from intervals iv
         left join working_shifts ws on
             TRIM(UPPER(TO_CHAR(iv.ts, 'Day'))) = ws.day_of_week
-            and ws.start_time <= CAST(iv.ts AS time) AND ws.end_time >= CAST(iv.ts AS time)
+            and CASE 
+                WHEN iv.interval_duration < interval '1 day' 
+                    THEN ws.start_time <= CAST(iv.ts AS time) AND ws.end_time >= CAST(iv.ts AS time)
+                    ELSE true
+            END
         left join appointments appo on 
             appo.employee_id = ws.employee_id
-            and appo.start_time < (iv.ts + iv.interval_duration)
-            and appo.end_time > iv.ts
+            and CASE 
+                WHEN iv.interval_duration >= interval '1 day'
+                    THEN DATE(appo.start_time) = DATE(iv.ts)
+                    ELSE appo.start_time < (iv.ts + iv.interval_duration)
+                        and appo.end_time > iv.ts
+            END
+            and (appo.status = 'APPROVED' or appo.status = 'COMPLETED')
         left join services serv on serv.service_id = appo.service_id
         left join users usr on usr.user_id = appo.employee_id
         left join users cust on cust.user_id = appo.customer_id
