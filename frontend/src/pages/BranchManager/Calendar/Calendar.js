@@ -192,6 +192,32 @@ const Calendar = () => {
         return statusMap[status] || status;
     };
 
+    // --- HELPER: Calculate appointment position and height ---
+    const calculateAppointmentStyle = (appointment) => {
+        const startTime = new Date(appointment.startTime);
+        const startHour = startTime.getHours();
+        const startMinutes = startTime.getMinutes();
+        const durationMinutes = appointment.duration || 60; // Default to 60 if not provided
+        
+        // Each hour slot is 100px, so each minute is 100/60 ≈ 1.667px
+        const pixelsPerMinute = 100 / 60;
+        
+        // Calculate top position within the hour slot (based on minutes)
+        const topPosition = startMinutes * pixelsPerMinute;
+        
+        // Calculate height based on duration
+        const height = durationMinutes * pixelsPerMinute;
+        
+        return {
+            position: 'absolute',
+            top: `${topPosition}px`,
+            left: 0,
+            right: 0,
+            height: `${height}px`,
+            marginBottom: 0
+        };
+    };
+
     // --- RENDER TIME SLOTS ---
     const renderDailyView = () => {
         const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8:00 - 20:00
@@ -229,18 +255,38 @@ const Calendar = () => {
                                             }
                                             insertedAppointmentIds.push(apt.appointmentId);
                                             
+                                            const appointmentStyle = calculateAppointmentStyle(apt);
+                                            const duration = apt.duration || 60;
+                                            
+                                            // Adjust content based on duration
+                                            const isVeryShort = duration <= 15;
+                                            const isShort = duration <= 30;
+                                            const showFullDetails = duration >= 60;
+                                            const showMediumDetails = duration >= 45;
+                                            
                                             return (
                                                 <div 
                                                     key={apt.appointmentId}
-                                                    className={`appointment-block ${apt?.status?.toLowerCase()}`}
+                                                    className={`appointment-block ${apt?.status?.toLowerCase()} ${isVeryShort ? 'very-short' : isShort ? 'short' : ''}`}
+                                                    style={appointmentStyle}
                                                     onClick={() => openAppointmentModal(apt)}
                                                 >
-                                                <div className="apt-time">
-                                                    {formatTime(apt.startTime)} - {formatTime(apt.endTime)}
-                                                </div>
-                                                    <div className="apt-service">{apt.service}</div>
-                                                    <div className="apt-customer">{apt.customer}</div>
-                                                    <div className="apt-employee">{apt.employee}</div>
+                                                    {isVeryShort ? (
+                                                        // For 15-min appointments: show time and service in one compact line
+                                                        <div className="apt-compact">
+                                                            <span className="apt-time-inline">{formatTime(apt.startTime)}</span>
+                                                            <span className="apt-service-inline">{apt.service}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="apt-time">
+                                                                {formatTime(apt.startTime)} - {formatTime(apt.endTime)}
+                                                            </div>
+                                                            <div className="apt-service">{apt.service}</div>
+                                                            {showMediumDetails && <div className="apt-customer">{apt.customer}</div>}
+                                                            {showFullDetails && <div className="apt-employee">{apt.employee}</div>}
+                                                        </>
+                                                    )}
                                                 </div>
                                             )})
                                         }
@@ -300,7 +346,7 @@ const Calendar = () => {
                                                         onClick={() => openAppointmentsModal(cdata)}
                                                     >
                                                         <div className="apt-time-small">{formatTime(new Date(cdata.timestamp))}</div>
-                                                        <div className="apt-service-xsmall">{appointmentCount} Randevu</div>
+                                                        <div className="apt-service-xsmall">{appointmentCount} Randevu Mevcut</div>
                                                     </div>
                                                 );
                                             }
@@ -384,7 +430,7 @@ const Calendar = () => {
                                                 }}
                                                 title={`${dayAppointments.length} Randevu`}
                                             >
-                                                📅 {dayAppointments.length} Randevu
+                                                📅 {dayAppointments.length} Randevu Mevcut
                                             </div>
                                         </>
                                     ) : (
