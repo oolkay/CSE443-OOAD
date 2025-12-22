@@ -12,7 +12,6 @@ import ServiceList from "./pages/Customer/ServiceList";
 import EmployeeSelect from "./pages/Customer/EmployeeSelect";
 import TimePicker from "./pages/Customer/TimePicker";
 import Confirmation from "./pages/Customer/Confirmation";
-import ScheduleViewing from "./pages/Customer/ScheduleViewing";
 import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
 import RequestManagement from "./pages/BranchManager/RequestManagement/RequestManagement";
@@ -33,12 +32,8 @@ function App() {
             <Route path="/employees" element={<EmployeeSelect />} />
             <Route path="/times" element={<TimePicker />} />
             <Route path="/confirm" element={<Confirmation />} />
-            <Route path="/schedule" element={<ScheduleViewing />} />
             <Route path="/appointments" element={<Appointments />} />
-            <Route
-              path="/employee-management"
-              element={<EmployeeManagement />}
-            />
+            <Route path="/employee-management" element={<EmployeeManagement />} />
             <Route path="/service-management" element={<ServiceManager />} />
             <Route path="/request-management" element={<RequestManagement />} />
           </Routes>

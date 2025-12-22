@@ -117,14 +117,30 @@ export const requestPasswordReset = async (email) => {
       body: JSON.stringify({ email }),
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    console.log("Forgot Password Raw Response:", response.status, text);
 
-    if (response.ok) {
-      return { success: true, message: data.message };
-    } else {
-      return { success: false, error: data.message || "Request failed" };
+    if (!text) {
+         // Handle empty response gracefully
+         if (response.ok) {
+            return { success: true, message: "Password reset email sent (empty response)" };
+         }
+         return { success: false, error: "Empty response from server" };
+    }
+
+    try {
+        const data = JSON.parse(text);
+        if (response.ok) {
+            return { success: true, message: data.message };
+        } else {
+            return { success: false, error: data.message || "Request failed" };
+        }
+    } catch (e) {
+        console.error("JSON Parse Error:", e, "Text:", text);
+        return { success: false, error: "Invalid JSON response from server" };
     }
   } catch (error) {
+    console.error("Network Error:", error);
     return { success: false, error: error.message };
   }
 };

@@ -340,20 +340,39 @@ export default function Appointments() {
       <aside className="appointments-sidebar">
         <div className="user-info">
           <div className="user-avatar">
-            {(localStorage.getItem('userName') || 'Kullanıcı').charAt(0).toUpperCase()}
+            {(() => {
+                const userStr = localStorage.getItem('user');
+                const user = userStr ? JSON.parse(userStr) : {};
+                return (user.name || 'K').charAt(0).toUpperCase();
+            })()}
           </div>
           <div className="user-details">
-            <div className="user-name">{localStorage.getItem('userName') || 'Kullanıcı'}</div>
-            <div className="user-email">{localStorage.getItem('userEmail') || 'email@example.com'}</div>
+            <div className="user-name">
+                {(() => {
+                    const userStr = localStorage.getItem('user');
+                    const user = userStr ? JSON.parse(userStr) : {};
+                    return user.name || 'Kullanıcı';
+                })()}
+            </div>
+            <div className="user-email">
+                {(() => {
+                    const userStr = localStorage.getItem('user');
+                    const user = userStr ? JSON.parse(userStr) : {};
+                    return user.email || 'email@example.com';
+                })()}
+            </div>
           </div>
         </div>
         <div className="sidebar-title">Randevu İşlemleri</div>
         <ul className="sidebar-list">
           <li className="active">Randevu Yönetimi</li>
-          <li>
-            <Link to="/schedule" className="sidebar-link">
-              Program Görüntüleme
-            </Link>
+          <li style={{marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '10px'}}>
+             <Link to="/" onClick={() => {
+                 localStorage.removeItem('user');
+                 localStorage.removeItem('authToken');
+             }} className="sidebar-link" style={{color: '#ff6b6b'}}>
+               Çıkış Yap
+             </Link>
           </li>
         </ul>
       </aside>

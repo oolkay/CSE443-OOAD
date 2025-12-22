@@ -118,8 +118,7 @@ public class AuthService {
         // Invalidate previous tokens for this email
         Optional<PasswordResetToken> existingToken = passwordResetTokenRepository.findByEmail(email);
         existingToken.ifPresent(token -> {
-            token.setUsed(true);
-            passwordResetTokenRepository.save(token);
+            passwordResetTokenRepository.delete(token);
         });
 
         // Create new reset token
