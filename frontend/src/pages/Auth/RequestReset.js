@@ -21,14 +21,14 @@ export default function RequestReset() {
 
     if (result.success) {
       setMessage(
-        "Reset instructions have been sent to your email. Please check your inbox."
+        "Doğrulama kodu e-posta adresinize gönderildi. Lütfen gelen kutunuzu kontrol edin."
       );
       setTimeout(() => {
-        navigate("/");
-      }, 3000);
+        navigate("/verify-code", { state: { email } });
+      }, 2000);
     } else {
       setError(
-        result.error || "Failed to send reset instructions. Please try again."
+        result.error || "Kod gönderilemedi. Lütfen tekrar deneyin."
       );
     }
 
@@ -42,10 +42,9 @@ export default function RequestReset() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2 className="auth-title">Reset Your Password</h2>
+        <h2 className="auth-title">Şifrenizi Sıfırlayın</h2>
         <p className="auth-desc">
-          Enter your registered email address and we will send you a link to
-          reset your password.
+          Kayıtlı e-posta adresinizi girin, size bir doğrulama kodu gönderelim.
         </p>
 
         {message && <div className="auth-success-message">{message}</div>}
@@ -53,11 +52,11 @@ export default function RequestReset() {
 
         {!message && (
           <form className="auth-form" onSubmit={handleSend}>
-            <label className="auth-label">E-mail</label>
+            <label className="auth-label">E-posta</label>
             <input
               className="auth-input"
               type="email"
-              placeholder="e-mail@example.com"
+              placeholder="e-posta@ornek.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -65,13 +64,13 @@ export default function RequestReset() {
             />
 
             <button type="submit" className="auth-button" disabled={loading}>
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? "Gönderiliyor..." : "Kod Gönder"}
             </button>
           </form>
         )}
 
         <button className="auth-back" onClick={handleBack}>
-          ← Back
+          ← Geri
         </button>
       </div>
     </div>

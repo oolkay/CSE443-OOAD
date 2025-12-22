@@ -59,7 +59,7 @@ export default function Login() {
 
           <div className="auth-row">
             <Link to="/reset" className="auth-forgot">
-              forgot password
+              şifremi unuttum
             </Link>
           </div>
 

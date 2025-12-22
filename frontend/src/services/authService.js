@@ -186,6 +186,63 @@ export const resetPassword = async (token, email, newPassword) => {
 };
 
 /**
+ * Verify reset code
+ */
+export const verifyResetCode = async (email, code) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-reset-code`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        code,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return { success: true, message: data.message };
+    } else {
+      return { success: false, error: data.message || "Code verification failed" };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Reset password with verification code
+ */
+export const resetPasswordWithCode = async (email, code, newPassword) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password-with-code`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        code,
+        newPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return { success: true, message: data.message };
+    } else {
+      return { success: false, error: data.message || "Password reset failed" };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Logout user
  */
 export const logoutUser = () => {
@@ -224,6 +281,8 @@ export default {
   requestPasswordReset,
   validateResetToken,
   resetPassword,
+  verifyResetCode,
+  resetPasswordWithCode,
   logoutUser,
   getCurrentUser,
   isAuthenticated,

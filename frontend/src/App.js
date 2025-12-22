@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/Auth/Login";
 import RequestReset from "./pages/Auth/RequestReset";
+import VerifyCode from "./pages/Auth/VerifyCode";
+import SetNewPassword from "./pages/Auth/SetNewPassword";
 import EnterNewPassword from "./pages/Auth/EnterNewPassword";
 import Register from "./pages/Auth/Register";
 import Appointments from "./pages/Customer/Appointments";
@@ -24,6 +26,8 @@ function App() {
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/reset" element={<RequestReset />} />
+            <Route path="/verify-code" element={<VerifyCode />} />
+            <Route path="/enter-new-password" element={<SetNewPassword />} />
             <Route path="/reset-password" element={<EnterNewPassword />} />
             <Route path="/services" element={<ServiceList />} />
             <Route path="/employees" element={<EmployeeSelect />} />
