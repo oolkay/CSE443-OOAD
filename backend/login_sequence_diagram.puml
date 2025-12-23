@@ -1,0 +1,73 @@
+@startuml
+autonumber
+skinparam sequence {
+    BackgroundColor White
+    ArrowColor #2C3E50
+    ActorBorderColor #2C3E50
+    LifeLineBorderColor #2C3E50
+    LifeLineBackgroundColor #ECF0F1
+    ParticipantBorderColor #2C3E50
+    ParticipantBackgroundColor White
+}
+
+actor "User" as User
+participant "Frontend Client" as Client
+participant "AuthController" as Controller
+participant "AuthenticationService" as Service
+participant "UserRepository" as Repository
+participant "JwtTokenProvider" as Provider
+database "Database" as DB
+
+Note over User, Client: User initiates login
+
+User -> Client: Enter email & password
+Client -> Client: Validate input format
+Client -> Controller: POST /api/auth/login (LoginRequest)
+activate Controller
+
+Controller -> Service: authenticate(email, password)
+activate Service
+
+Service -> Repository: findByEmail(email)
+activate Repository
+Repository -> DB: SELECT * FROM users WHERE email = ?
+activate DB
+DB --> Repository: User Data
+deactivate DB
+Repository --> Service: Optional<User>
+deactivate Repository
+
+alt User Not Found
+    Service --> Controller: throw UserNotFoundException
+    Controller --> Client: 404 Not Found
+    Client --> User: Show "User not found" error
+else User Found
+    Service -> Service: verifyPassword(password, encodedPassword)
+    
+    alt Invalid Password
+        Service --> Controller: throw BadCredentialsException
+        Controller --> Client: 401 Unauthorized
+        Client --> User: Show "Invalid credentials" error
+    else Password Valid
+        Service -> Provider: generateAccessToken(user)
+        activate Provider
+        Provider --> Service: accessToken
+        deactivate Provider
+
+        Service -> Provider: generateRefreshToken(user)
+        activate Provider
+        Provider --> Service: refreshToken
+        deactivate Provider
+
+        Service --> Controller: AuthenticationResponse(tokens)
+        
+        Controller --> Client: 200 OK (AccessToken, RefreshToken)
+        deactivate Service
+        deactivate Controller
+
+        Client -> Client: Store tokens (HttpOnly Cookie / LocalStorage)
+        Client --> User: Redirect to Dashboard
+    end
+end
+
+@enduml

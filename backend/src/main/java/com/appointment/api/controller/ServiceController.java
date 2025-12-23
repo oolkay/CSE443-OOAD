@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST Controller for Service endpoints
- * Handles HTTP requests and returns HTTP responses
+ * REST Controller for Service endpoints.
+ * Handles HTTP requests and returns HTTP responses.
  * Base path: /api/services
  */
 @RestController
@@ -24,6 +24,7 @@ public class ServiceController {
     private final ServiceService serviceService;
 
     /**
+     * Create a new service.
      * POST /api/services
      */
     @PostMapping
@@ -33,6 +34,7 @@ public class ServiceController {
     }
 
     /**
+     * Get all services.
      * GET /api/services
      */
     @GetMapping
@@ -42,6 +44,7 @@ public class ServiceController {
     }
 
     /**
+     * Get service by ID.
      * GET /api/services/{id}
      */
     @GetMapping("/{id}")
@@ -51,6 +54,7 @@ public class ServiceController {
     }
 
     /**
+     * Update an existing service.
      * PUT /api/services/{id}
      */
     @PutMapping("/{id}")
@@ -62,6 +66,7 @@ public class ServiceController {
     }
 
     /**
+     * Delete an service.
      * DELETE /api/services/{id}
      */
     @DeleteMapping("/{id}")
@@ -71,6 +76,7 @@ public class ServiceController {
     }
 
     /**
+     * Search services by name.
      * GET /api/services/search?name={name}
      */
     @GetMapping("/search")
@@ -79,4 +85,3 @@ public class ServiceController {
         return ResponseEntity.ok(services);
     }
 }
-
