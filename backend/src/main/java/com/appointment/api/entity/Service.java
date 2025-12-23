@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entity class representing a Service offered by the appointment system
@@ -45,6 +47,15 @@ public class Service {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    // Many-to-Many relationship: A service can require multiple resources
+    @ManyToMany
+    @JoinTable(
+        name = "service_resources",
+        joinColumns = @JoinColumn(name = "service_id"),
+        inverseJoinColumns = @JoinColumn(name = "resource_id")
+    )
+    private List<Resource> resources = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

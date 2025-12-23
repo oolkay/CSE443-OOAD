@@ -1,0 +1,1015 @@
+:root {
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --bg-body: #f3f4f6;
+    --text-main: #111827;
+    --text-secondary: #6b7280;
+    --border-light: #e5e7eb;
+    --white: #ffffff;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --radius: 12px;
+    
+    /* Status Colors */
+    --status-pending: #fbbf24;
+    --status-pending-bg: #fef3c7;
+    --status-approved: #10b981;
+    --status-approved-bg: #d1fae5;
+    --status-completed: #3b82f6;
+    --status-completed-bg: #dbeafe;
+    --status-cancelled: #ef4444;
+    --status-cancelled-bg: #fee2e2;
+
+    --status-purple-bg: #dddef3;
+
+    --user-0-name: #1e40af;   /* Blue - Darker for better contrast */
+    --user-1-name: #4338ca;   /* Indigo */
+    --user-2-name: #6d28d9;   /* Violet */
+    --user-3-name: #7e22ce;   /* Purple */
+    --user-4-name: #a21caf;   /* Fuchsia */
+    --user-5-name: #be185d;   /* Pink */
+    --user-6-name: #be123c;   /* Rose */
+    --user-7-name: #b91c1c;   /* Red */
+    --user-8-name: #c2410c;   /* Orange */
+    --user-9-name: #b45309;   /* Amber */
+    --user-10-name: #a16207;  /* Yellow */
+    --user-11-name: #4d7c0f;  /* Lime */
+    --user-12-name: #15803d;  /* Green */
+    --user-13-name: #047857;  /* Emerald */
+    --user-14-name: #0f766e;  /* Teal */
+    
+    /* User Background Colors - Light backgrounds with good contrast */
+    --user-0-bg: #dbeafe;   /* Blue light */
+    --user-1-bg: #e0e7ff;   /* Indigo light */
+    --user-2-bg: #ede9fe;   /* Violet light */
+    --user-3-bg: #f3e8ff;   /* Purple light */
+    --user-4-bg: #fae8ff;   /* Fuchsia light */
+    --user-5-bg: #fce7f3;   /* Pink light */
+    --user-6-bg: #ffe4e6;   /* Rose light */
+    --user-7-bg: #fee2e2;   /* Red light */
+    --user-8-bg: #ffedd5;   /* Orange light */
+    --user-9-bg: #fef3c7;   /* Amber light */
+    --user-10-bg: #fef9c3;  /* Yellow light */
+    --user-11-bg: #ecfccb;  /* Lime light */
+    --user-12-bg: #dcfce7;  /* Green light */
+    --user-13-bg: #d1fae5;  /* Emerald light */
+    --user-14-bg: #ccfbf1;  /* Teal light */
+}
+
+body {
+    background-color: var(--bg-body);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.calendar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* --- HEADER --- */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-left h1 {
+    font-size: 1.875rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem 0;
+    color: var(--text-main);
+}
+
+.header-left p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.header-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.employee-filter {
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--white);
+    font-size: 0.95rem;
+    color: var(--text-main);
+    cursor: pointer;
+    min-width: 200px;
+    font-weight: 500;
+}
+
+.employee-filter:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* --- CONTROLS --- */
+.calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    background: var(--white);
+    padding: 1rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.date-navigation {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-light);
+    background: var(--white);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: var(--bg-body);
+    color: var(--text-main);
+    border-color: var(--text-secondary);
+}
+
+.today-btn {
+    padding: 0.5rem 1rem;
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.today-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.current-date-display {
+    margin-left: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.view-mode-toggle {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg-body);
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.view-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.view-btn.active {
+    background: var(--white);
+    color: var(--primary-color);
+    box-shadow: var(--shadow);
+}
+
+.view-btn:hover:not(.active) {
+    color: var(--text-main);
+}
+
+/* --- CALENDAR CONTENT --- */
+.calendar-content {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.calendar-view {
+    padding: 1.5rem;
+}
+
+/* --- DAILY VIEW --- */
+.daily-view .time-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.time-slot {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 1rem;
+    min-height: 100px;
+    height: 100px;
+    border-bottom: 1px solid var(--border-light);
+    padding: 0.6rem 0;
+}
+
+.time-slot:last-child {
+    border-bottom: none;
+}
+
+.time-label {
+    font-weight: 600;
+    margin-left: 10px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    padding-top: 0.25rem;
+}
+
+.slot-content {
+    position: relative;
+    height: 100%;
+    min-height: 100px;
+    padding: 0px 10px 0px 0px;
+    background-image: 
+        linear-gradient(to bottom, transparent 24px, var(--border-light) 24px, var(--border-light) 25px, transparent 25px),
+        linear-gradient(to bottom, transparent 49px, var(--border-light) 49px, var(--border-light) 50px, transparent 50px),
+        linear-gradient(to bottom, transparent 74px, var(--border-light) 74px, var(--border-light) 75px, transparent 75px);
+    background-size: 100% 100px;
+    background-repeat: no-repeat;
+}
+
+.aggregated-appointment-block {
+    background: var(--status-purple-bg);
+    border-left: 4px solid var(--primary-color);
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    gap: 0.5rem;
+    height: 85%;
+}
+
+.aggregated-appointment-block:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+    z-index: 10;
+}
+
+.aggregated-appointment-block.small {
+    display: flex;
+    background: var(--status-purple-bg);
+    border-left: 4px solid var(--primary-color);
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+.agg-apt-time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.appointment-block {
+    background: var(--status-approved-bg);
+    border-left: 4px solid var(--status-approved);
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.appointment-block:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+    z-index: 10;
+}
+
+.appointment-block.pending {
+    background: var(--status-pending-bg);
+    border-left-color: var(--status-pending);
+}
+
+.appointment-block.approved {
+    background: var(--status-completed-bg);
+    border-left-color: var(--status-completed);
+}
+
+.appointment-block.completed {
+    background: var(--status-approved-bg);
+    border-left-color: var(--status-approved);
+}
+
+.appointment-block.cancelled {
+    background: var(--status-cancelled-bg);
+    border-left-color: var(--status-cancelled);
+    opacity: 0.7;
+}
+
+.apt-time {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.apt-service {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.apt-customer {
+    font-size: 0.75rem;
+    color: var(--text-main);
+    margin-bottom: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.apt-employee {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+/* Compact styling for very short appointments (15 min) */
+.appointment-block.very-short {
+    padding: 0.2rem 0.5rem !important;
+    justify-content: flex-start !important;
+    min-height: unset !important;
+}
+
+.appointment-block.short {
+    padding: 0.35rem 0.5rem !important;
+    justify-content: flex-start !important;
+}
+
+.apt-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    line-height: 1.1;
+}
+
+.apt-time-inline {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.apt-service-inline {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+}
+
+/* --- WEEKLY VIEW --- */
+.week-header {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.day-header {
+    text-align: center;
+}
+
+.day-name {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.day1-name {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.day-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.day-number.today {
+    background: var(--primary-color);
+    color: white;
+}
+
+.week-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.week-row {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 0.5rem;
+    min-height: 60px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.week-row:last-child {
+    border-bottom: none;
+}
+
+.day-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-left: 1px solid var(--border-light);
+}
+
+.appointment-block.small {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.apt-time-small {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.125rem;
+}
+
+.apt-service-small {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.apt-service-xsmall {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.70rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- MONTHLY VIEW --- */
+.month-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.weekday-label {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+}
+
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.month-cell {
+    min-height: 100px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.month-cell:hover {
+    background: var(--bg-body);
+    border-color: var(--primary-color);
+}
+
+.month-cell.other-month {
+    opacity: 0.4;
+}
+
+.month-cell.today {
+    background: rgba(99, 102, 241, 0.05);
+    border-color: var(--primary-color);
+}
+
+.date-number {
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.month-cell.today .date-number {
+    background: var(--primary-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.day-appointments {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    height: 75%;
+}
+
+.modal-appointments {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.apt-indicator {
+    font-size: 0.65rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+    background: var(--status-approved-bg);
+    border-left: 3px solid var(--status-approved);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.apt-indicator:hover {
+    transform: scale(1.02);
+}
+
+.apt-indicator.pending {
+    background: var(--status-pending-bg);
+    border-left-color: var(--status-pending);
+}
+
+.apt-indicator.approved {
+    background: var(--status-completed-bg);
+    border-left-color: var(--status-completed);
+}
+
+.apt-indicator.completed {
+    background: var(--status-approved-bg);
+    border-left-color: var(--status-approved);
+}
+
+.apt-indicator.cancelled {
+    background: var(--status-cancelled-bg);
+    border-left-color: var(--status-cancelled);
+    opacity: 0.6;
+}
+
+.apt-indicator.aggregated {
+    background: var(--status-purple-bg);
+    border-left: 4px solid var(--primary-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+    height: 60%;
+    display: flex;
+    align-items: center;
+}
+
+.more-indicator {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-align: center;
+    padding: 0.25rem;
+}
+
+/* --- MODAL --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+    background: var(--white);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--text-main);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.apt-employee-service-small {
+    display: flex;
+    flex-direction: row;
+    gap: 0.25rem;
+}
+
+.apt-employee-small {
+    font-size: 0.75rem;
+    color: #1e40af;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.apt-service-name-small {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 0;
+    margin-top: 0.1rem;
+}
+
+.detail-icon-large {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    background: var(--bg-body);
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detail-item .label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.detail-item .value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.status-badge.pending {
+    background: var(--status-pending-bg);
+    color: #92400e;
+}
+
+.status-badge.approved {
+    background: var(--status-approved-bg);
+    color: #065f46;
+}
+
+.status-badge.completed {
+    background: var(--status-completed-bg);
+    color: #1e40af;
+}
+
+.status-badge.cancelled {
+    background: var(--status-cancelled-bg);
+    color: #991b1b;
+}
+
+.detail-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.detail-row .icon {
+    font-size: 1.5rem;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.label-small {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.value-text {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-light);
+    background-color: var(--bg-body);
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-close {
+    flex: 1;
+    padding: 0.75rem;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-close:hover {
+    background: var(--primary-hover);
+}
+
+/* --- MODAL --- */
+.appointments-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 500;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+    .calendar-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-navigation,
+    .view-mode-toggle {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .calendar-container {
+        padding: 1rem 0.5rem;
+    }
+    
+    .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header-right {
+        justify-content: stretch;
+    }
+    
+    .employee-filter {
+        width: 100%;
+    }
+    
+    .week-header,
+    .week-row {
+        grid-template-columns: 60px repeat(7, 1fr);
+        gap: 0.25rem;
+    }
+    
+    .time-label {
+        font-size: 0.7rem;
+    }
+    
+    .day-number {
+        font-size: 1rem;
+        width: 28px;
+        height: 28px;
+    }
+    
+    .month-cell {
+        min-height: 80px;
+        padding: 0.375rem;
+    }
+    
+    .apt-indicator {
+        font-size: 0.6rem;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .current-date-display {
+        font-size: 0.875rem;
+        margin-left: 0.5rem;
+    }
+    
+    .view-mode-toggle {
+        width: 100%;
+    }
+    
+    .view-btn {
+        flex: 1;
+        font-size: 0.875rem;
+        padding: 0.625rem 0.5rem;
+    }
+    
+    .time-slot {
+        grid-template-columns: 60px 1fr;
+        gap: 0.5rem;
+    }
+    
+    .weekly-view {
+        overflow-x: auto;
+    }
+    
+    .month-cell {
+        min-height: 70px;
+    }
+    
+    .date-number {
+        font-size: 0.75rem;
+    }
+    
+    .apt-indicator {
+        font-size: 0.55rem;
+        padding: 0.2rem;
+    }
+}
+

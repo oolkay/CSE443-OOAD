@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Resource entity - represents equipment or facilities required for services
@@ -40,6 +42,14 @@ public class Resource {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    // Many-to-Many relationship: A resource can be used by multiple services
+    @ManyToMany(mappedBy = "resources")
+    private List<Service> services = new ArrayList<>();
+
+    // Many-to-Many relationship: A resource can be used by multiple appointments
+    @ManyToMany(mappedBy = "resources")
+    private List<Appointment> appointments = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

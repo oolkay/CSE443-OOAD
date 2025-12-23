@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/Auth/Login";
 import ResetPassword from "./pages/Auth/ResetPassword";
@@ -17,6 +17,7 @@ import Home from "./pages/Admin/Home";
 import SuperAdmins from "./pages/Admin/SuperAdmins";
 import Companies from "./pages/Admin/Companies";
 import Settings from "./pages/Admin/Settings";
+import Calendar from "./pages/BranchManager/Calendar/Calendar";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
               <Route path="companies" element={<Companies />} />
               <Route path="settings" element={<Settings />} />
             </Route>
+            <Route path="/calendar" element={<Calendar />} />
           </Routes>
         </main>
       </div>
