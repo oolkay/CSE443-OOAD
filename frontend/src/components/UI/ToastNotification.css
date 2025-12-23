@@ -1,19 +1,43 @@
 /* Toast Container - Positioned Fixed */
 .toast-container {
     position: fixed;
-    bottom: 20px;
+    /* Use safe area to avoid overlap with home indicator on iOS */
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
     left: 50%;
     transform: translateX(-50%);
-    z-index: 9999;
+    /* Max possible z-index to ensure visibility over EVERYTHING (modals, overlays) */
+    z-index: 2147483647;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none; /* Allow clicks to pass through container */
+    flex-direction: column-reverse;
+    /* Newest on top */
+    gap: 12px;
+    pointer-events: none;
+    width: auto;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .toast-container {
+        /* On mobile, move slightly higher to avoid being covered by bottom sheets or nav bars */
+        bottom: max(20px, env(safe-area-inset-bottom, 20px));
+        width: 100%;
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+
+    .toast {
+        min-width: unset;
+        width: 100%;
+        margin: 0 auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        /* Slightly stronger shadow for contrast */
+    }
 }
 
 /* Base Toast Style */
 .toast {
-    pointer-events: auto; /* Re-enable clicks on toasts */
+    pointer-events: auto;
+    /* Re-enable clicks on toasts */
     min-width: 300px;
     max-width: 90vw;
     background: rgba(255, 255, 255, 0.95);
@@ -79,6 +103,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -90,6 +115,7 @@
         opacity: 1;
         transform: translateY(0);
     }
+
     to {
         opacity: 0;
         transform: translateY(20px);
@@ -111,7 +137,7 @@
         width: 100%;
         padding: 0 10px;
     }
-    
+
     .toast {
         min-width: unset;
         width: 100%;

@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import './ToastNotification.css';
 
+import ReactDOM from 'react-dom';
+
 const ToastNotification = ({ toasts, removeToast }) => {
-    return (
+    return ReactDOM.createPortal(
         <div className="toast-container">
             {toasts.map((toast) => (
                 <Toast key={toast.id} {...toast} removeToast={removeToast} />
             ))}
-        </div>
+        </div>,
+        document.body
     );
 };
 
@@ -30,10 +33,10 @@ const Toast = ({ id, type, message, removeToast }) => {
     };
 
     const icons = {
-        success: '✅',
-        error: '❌',
-        info: 'ℹ️',
-        warning: '⚠️'
+        success: '',
+        error: '',
+        info: '',
+        warning: ''
     };
 
     return (
