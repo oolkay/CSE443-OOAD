@@ -1,43 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { resourceService, setCurrentCompanyId } from '../../../services/resourceService';
 import './ResourceManager.css';
 
 const ResourceManager = () => {
-    // --- MOCK DATA (Java Entity ile uyumlu) ---
-    const MOCK_RESOURCES = [
-        {
-            resourceId: 1,
-            name: 'Masaj Masası 1',
-            description: 'Elektrikli masaj masası, ayarlanabilir yükseklik',
-            status: 'AVAILABLE' // AVAILABLE, OUT_OF_SERVICE
-        },
-        {
-            resourceId: 2,
-            name: 'Masaj Masası 2',
-            description: 'Manuel masaj masası, sabit yükseklik',
-            status: 'OUT_OF_SERVICE'
-        },
-        {
-            resourceId: 3,
-            name: 'Cilt Bakım Ünitesi 1',
-            description: 'Buhar makinesi ve cilt bakım ekipmanları seti',
-            status: 'AVAILABLE'
-        },
-        {
-            resourceId: 4,
-            name: 'Saç Yıkama Ünitesi 1',
-            description: 'Ergonomik tasarım, sıcak/soğuk su',
-            status: 'OUT_OF_SERVICE'
-        },
-        {
-            resourceId: 5,
-            name: 'Saç Kesim Sandalyesi 1',
-            description: 'Hidrolik, 360 derece dönebilir',
-            status: 'AVAILABLE'
-        }
-    ];
-
     // --- STATE ---
-    const [resources, setResources] = useState(MOCK_RESOURCES);
+    const [resources, setResources] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -54,6 +23,52 @@ const ResourceManager = () => {
         status: 'AVAILABLE'
     };
     const [formData, setFormData] = useState(initialFormState);
+
+    // --- API CALLS ---
+    // Load resources when component mounts
+    useEffect(() => {
+        fetchResourcesWithRetry();
+        // TODO: Get company ID from authentication context
+        // For now, setting default company ID (should come from login)
+        setCurrentCompanyId(1);
+    }, []);
+
+    // Fetch resources with retry logic (10 second timeout)
+    const fetchResourcesWithRetry = async (retryCount = 0, maxRetries = 1) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await resourceService.getResources();
+            setResources(data);
+        } catch (err) {
+            if (retryCount < maxRetries) {
+                console.log(`Resource fetch failed, retrying in 10 seconds... (${retryCount + 1}/${maxRetries + 1})`);
+                setTimeout(() => {
+                    fetchResourcesWithRetry(retryCount + 1, maxRetries);
+                }, 10000); // 10 second delay
+            } else {
+                setError('Kaynaklar yüklenemedi. Lütfen sayfayı yenileyin.');
+                console.error('Error fetching resources after retries:', err);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Manual refresh without retry
+    const fetchResources = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await resourceService.getResources();
+            setResources(data);
+        } catch (err) {
+            setError('Kaynaklar yüklenemedi. Lütfen sayfayı yenileyin.');
+            console.error('Error fetching resources:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // --- STATUS HELPERS ---
     const getStatusConfig = (status) => {
@@ -87,14 +102,21 @@ const ResourceManager = () => {
 
     // --- HANDLERS ---
 
-    // Durum Toggle (Hızlı durum değiştirme)
-    const toggleStatus = (resourceId, currentStatus) => {
-        // Sadece AVAILABLE ve OUT_OF_SERVICE arasında toggle yap
-        const newStatus = currentStatus === 'OUT_OF_SERVICE' ? 'AVAILABLE' : 'OUT_OF_SERVICE';
-
-        setResources(prev => prev.map(res =>
-            res.resourceId === resourceId ? { ...res, status: newStatus } : res
-        ));
+    // Durum Toggle (Hızlı durum değiştirme) - API Call
+    const toggleStatus = async (resourceId, currentStatus) => {
+        try {
+            const updatedResource = await resourceService.toggleResourceStatus(resourceId);
+            setResources(prev => prev.map(res =>
+                res.resourceId === resourceId ? updatedResource : res
+            ));
+        } catch (err) {
+            console.error('Error toggling resource status:', err);
+            // Fallback to optimistic update if API fails
+            const newStatus = currentStatus === 'OUT_OF_SERVICE' ? 'AVAILABLE' : 'OUT_OF_SERVICE';
+            setResources(prev => prev.map(res =>
+                res.resourceId === resourceId ? { ...res, status: newStatus } : res
+            ));
+        }
     };
 
     // Detay Görüntüleme
@@ -136,47 +158,127 @@ const ResourceManager = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Kaydetme İşlemi
-    const handleSubmit = (e) => {
+    // Kaydetme İşlemi - API Call
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (isEditing) {
-            // Update Logic
-            setResources(prev => prev.map(res =>
-                res.resourceId === selectedResource?.resourceId ? { ...res, ...formData } : res
-            ));
-        } else {
-            // Create Logic
-            const newId = Math.floor(Math.random() * 10000);
-            setResources([...resources, { resourceId: newId, ...formData }]);
+        try {
+            let savedResource;
+            if (isEditing) {
+                // Update Logic
+                savedResource = await resourceService.updateResource(selectedResource?.resourceId, formData);
+                setResources(prev => prev.map(res =>
+                    res.resourceId === selectedResource?.resourceId ? savedResource : res
+                ));
+            } else {
+                // Create Logic
+                savedResource = await resourceService.createResource(formData);
+                setResources([...resources, savedResource]);
+            }
+            closeFormModal();
+        } catch (err) {
+            console.error('Error saving resource:', err);
+            // TODO: Show user-friendly error message
+            alert('Kaynak kaydedilemedi: ' + (err.message || 'Bilinmeyen hata'));
         }
-        closeFormModal();
     };
 
-    // Silme İşlemi
-    const handleDelete = (id) => {
+    // Silme İşlemi - API Call
+    const handleDelete = async (id) => {
         if (window.confirm('Bu kaynağı silmek istediğinize emin misiniz?')) {
-            setResources(resources.filter(r => r.resourceId !== id));
-            closeDetailModal();
+            try {
+                await resourceService.deleteResource(id);
+                setResources(resources.filter(r => r.resourceId !== id));
+                closeDetailModal();
+            } catch (err) {
+                console.error('Error deleting resource:', err);
+                // TODO: Show user-friendly error message
+                alert('Kaynak silinemedi: ' + (err.message || 'Bilinmeyen hata'));
+            }
         }
     };
 
-    const filteredResources = resources.filter(r => {
-        // Search filter
-        const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase());
+    // Track if initial load has completed
+    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-        // Status filter
-        let matchesStatus = true;
-        if (sortBy === 'available') {
-            matchesStatus = r.status === 'AVAILABLE';
-        } else if (sortBy === 'out_of_service') {
-            matchesStatus = r.status === 'OUT_OF_SERVICE';
-        } else if (sortBy === 'in_use') {
-            matchesStatus = r.status === 'IN_USE';
+    // Initial load - only runs once on component mount
+    useEffect(() => {
+        const initialLoad = async () => {
+            try {
+                setInitialLoadComplete(false);
+                await fetchResourcesWithRetry();
+                // TODO: Get company ID from authentication context
+                // For now, setting default company ID (should come from login)
+                setCurrentCompanyId(1);
+            } finally {
+                setInitialLoadComplete(true);
+            }
+        };
+
+        initialLoad();
+    }, []);
+
+    // Search and filter logic - only runs after initial load and when filters change
+    useEffect(() => {
+        // Don't run on initial load or when filters are cleared
+        if (!initialLoadComplete || (!searchTerm && sortBy === 'all')) {
+            return;
         }
 
-        return matchesSearch && matchesStatus;
-    });
+        const filterResources = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const statusFilter = sortBy === 'all' ? null :
+                                   sortBy === 'available' ? 'AVAILABLE' :
+                                   sortBy === 'out_of_service' ? 'OUT_OF_SERVICE' : 'IN_USE';
+
+                const data = await resourceService.searchResources(searchTerm, statusFilter);
+                setResources(data);
+            } catch (err) {
+                setError('Arama ve filtreleme başarısız oldu. Lütfen tekrar deneyin.');
+                console.error('Error filtering resources:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Debounce search to avoid too many API calls
+        const timeoutId = setTimeout(filterResources, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, sortBy, initialLoadComplete]);
+
+    // Reset to all resources when filters are cleared (only after initial load)
+    useEffect(() => {
+        if (initialLoadComplete && !searchTerm && sortBy === 'all') {
+            fetchResources();
+        }
+    }, [searchTerm, sortBy, initialLoadComplete]);
+
+    const filteredResources = resources; // Now handled by API
+
+    // Test backend connection
+    const testBackendConnection = async () => {
+        try {
+            console.log('Testing backend connection...');
+            const response = await fetch('http://localhost:8080/api/resources/company/1');
+            console.log('Backend test - Status:', response.status);
+            console.log('Backend test - OK:', response.ok);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Backend test - Data:', data);
+                alert('Backend bağlantısı başarılı! Veri: ' + JSON.stringify(data));
+            } else {
+                const errorText = await response.text();
+                console.log('Backend test - Error:', errorText);
+                alert('Backend bağlantı hatası: ' + response.status + ' - ' + errorText);
+            }
+        } catch (error) {
+            console.error('Backend test - Error:', error);
+            alert('Backend bağlanamadı: ' + error.message);
+        }
+    };
 
     return (
         <div className="layout-container">
@@ -225,7 +327,36 @@ const ResourceManager = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredResources.length === 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
+                                        <div className="loading-spinner">Yükleniyor...</div>
+                                    </td>
+                                </tr>
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#dc2626'}}>
+                                        <div className="error-message">
+                                            {error}
+                                            <button
+                                                className="retry-btn"
+                                                onClick={fetchResources}
+                                                style={{
+                                                    marginTop: '1rem',
+                                                    padding: '0.5rem 1rem',
+                                                    backgroundColor: '#6366f1',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Tekrar Dene
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredResources.length === 0 ? (
                                 <tr>
                                     <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
                                         Kaynak bulunamadı.
