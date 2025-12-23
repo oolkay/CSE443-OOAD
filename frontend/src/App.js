@@ -12,6 +12,11 @@ import Confirmation from "./pages/Customer/Confirmation";
 import ScheduleViewing from "./pages/Customer/ScheduleViewing";
 import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
+import AdminLayout from "./pages/Admin/AdminLayout";
+import Home from "./pages/Admin/Home";
+import SuperAdmins from "./pages/Admin/SuperAdmins";
+import Companies from "./pages/Admin/Companies";
+import Settings from "./pages/Admin/Settings";
 import Calendar from "./pages/BranchManager/Calendar/Calendar";
 
 function App() {
@@ -31,6 +36,14 @@ function App() {
             <Route path="/employee-management" element={<EmployeeManagement />} />
             <Route path="/service-management" element={<ServiceManager />} />
             <Route path="/reset" element={<ResetPassword />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="home" element={<Home />} />
+              <Route path="super-admins" element={<SuperAdmins />} />
+              <Route path="companies" element={<Companies />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
             <Route path="/calendar" element={<Calendar />} />
           </Routes>
         </main>
