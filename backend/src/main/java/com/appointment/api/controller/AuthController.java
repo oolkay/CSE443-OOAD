@@ -49,8 +49,10 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             LoginResponse loginResponse = authService.login(loginRequest);
+            log.info("Login successful for: {}", loginRequest.getEmail());
             return ResponseEntity.ok(loginResponse);
         } catch (Exception e) {
+            log.error("Login failed: {}", e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse(false, "Invalid email or password: " + e.getMessage()));
@@ -162,9 +164,7 @@ public class AuthController {
         log.info("Attempting to reset password with session token");
         
         // Validate session token
-        log.info("Session token: {}", request.getSessionToken());
         Optional<User> userOpt = passwordResetService.validateSessionToken(request.getSessionToken());
-        log.info("User: {}", userOpt);
         if (userOpt.isEmpty()) {
             log.warn("Invalid or expired session token");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -172,11 +172,11 @@ public class AuthController {
         }
         
         User user = userOpt.get();
-        log.info("Updating password for user: {}", user.getEmail());
         
         // Update the password
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+        user.setPassword(encodedPassword);
+        User savedUser = userRepository.save(user);
         
         // Invalidate the session token (one-time use)
         passwordResetService.invalidateSessionToken(request.getSessionToken());
