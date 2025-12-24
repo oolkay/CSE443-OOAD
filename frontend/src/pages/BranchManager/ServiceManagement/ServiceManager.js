@@ -149,7 +149,7 @@ const ServiceManager = () => {
             description: formData.description,
             durationMinutes: durationVal,
             price: priceVal,
-            companyId: 4
+            companyId: 1
         };
 
         try {

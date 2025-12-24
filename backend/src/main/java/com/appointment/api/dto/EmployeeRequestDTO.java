@@ -31,4 +31,7 @@ public class EmployeeRequestDTO {
 
     // Çoklu seçim: Çalışanın verebileceği hizmetlerin ID listesi
     private List<Long> serviceIds;
+
+    // Haftalık Çalışma Programı (Opsiyonel - Eğer gönderilirse güncellenir)
+    private List<WorkingShiftRequestDTO> schedule;
 }

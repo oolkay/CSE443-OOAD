@@ -4,15 +4,18 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
- * BranchManager entity - manages employees, services and resources for a company
+ * BranchManager entity - manages employees, services and resources for a
+ * company
  */
 @Entity
 @Table(name = "branch_managers")
 @DiscriminatorValue("BRANCH_MANAGER")
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = { "company" })
+@ToString(callSuper = true, exclude = { "company" })
 @NoArgsConstructor
 public class BranchManager extends User {
 

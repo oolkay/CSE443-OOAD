@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,8 @@ import java.util.List;
 @Table(name = "employees")
 @DiscriminatorValue("EMPLOYEE")
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = { "manager", "company", "services" })
+@ToString(callSuper = true, exclude = { "manager", "company", "services" })
 @NoArgsConstructor
 public class Employee extends User {
 
@@ -27,13 +29,8 @@ public class Employee extends User {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    // Employee can perform multiple services
     @ManyToMany
-    @JoinTable(
-        name = "employee_services",
-        joinColumns = @JoinColumn(name = "employee_id"),
-        inverseJoinColumns = @JoinColumn(name = "service_id")
-    )
+    @JoinTable(name = "employee_services", joinColumns = @JoinColumn(name = "employee_id"), inverseJoinColumns = @JoinColumn(name = "service_id"))
     private List<Service> services = new ArrayList<>();
 
     @Override

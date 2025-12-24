@@ -230,8 +230,8 @@ const ResourceManager = () => {
                 setError(null);
 
                 const statusFilter = sortBy === 'all' ? null :
-                                   sortBy === 'available' ? 'AVAILABLE' :
-                                   sortBy === 'out_of_service' ? 'OUT_OF_SERVICE' : 'IN_USE';
+                    sortBy === 'available' ? 'AVAILABLE' :
+                        sortBy === 'out_of_service' ? 'OUT_OF_SERVICE' : 'IN_USE';
 
                 const data = await resourceService.searchResources(searchTerm, statusFilter);
                 setResources(data);
@@ -329,13 +329,13 @@ const ResourceManager = () => {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
+                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
                                         <div className="loading-spinner">Yükleniyor...</div>
                                     </td>
                                 </tr>
                             ) : error ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#dc2626'}}>
+                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#dc2626' }}>
                                         <div className="error-message">
                                             {error}
                                             <button
@@ -358,7 +358,7 @@ const ResourceManager = () => {
                                 </tr>
                             ) : filteredResources.length === 0 ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
+                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
                                         Kaynak bulunamadı.
                                     </td>
                                 </tr>

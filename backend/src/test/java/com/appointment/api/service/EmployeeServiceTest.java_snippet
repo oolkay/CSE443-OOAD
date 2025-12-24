@@ -1,0 +1,20 @@
+
+    @Test
+    void deleteEmployee_Success() {
+        Long employeeId = 1L;
+        when(employeeRepository.existsById(employeeId)).thenReturn(true);
+        
+        WorkingShift shift1 = new WorkingShift();
+        shift1.setShiftId(101L);
+        WorkingShift shift2 = new WorkingShift();
+        shift2.setShiftId(102L);
+        List<WorkingShift> shifts = java.util.Arrays.asList(shift1, shift2);
+        
+        when(workingShiftRepository.findByEmployeeUserId(employeeId)).thenReturn(shifts);
+        
+        employeeService.deleteEmployee(employeeId);
+        
+        verify(workingShiftRepository).deleteAll(shifts);
+        verify(employeeRepository).deleteById(employeeId);
+    }
+}

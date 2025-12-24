@@ -3,20 +3,25 @@ package com.appointment.api.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Appointment entity - represents a booking between customer, employee and service
+ * Appointment entity - represents a booking between customer, employee and
+ * service
  */
 @Entity
 @Table(name = "appointments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = { "customer", "employee", "service", "resources" })
+@ToString(exclude = { "customer", "employee", "service", "resources" })
 public class Appointment {
 
     @Id
@@ -53,11 +58,7 @@ public class Appointment {
 
     // Many-to-Many relationship: An appointment can use multiple resources
     @ManyToMany
-    @JoinTable(
-        name = "appointment_resources",
-        joinColumns = @JoinColumn(name = "appointment_id"),
-        inverseJoinColumns = @JoinColumn(name = "resource_id")
-    )
+    @JoinTable(name = "appointment_resources", joinColumns = @JoinColumn(name = "appointment_id"), inverseJoinColumns = @JoinColumn(name = "resource_id"))
     private List<Resource> resources = new ArrayList<>();
 
     @PrePersist

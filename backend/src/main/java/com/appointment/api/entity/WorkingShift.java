@@ -1,16 +1,16 @@
 package com.appointment.api.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-/**
- * WorkingShift entity - defines employee's working hours
- */
 @Entity
 @Table(name = "working_shifts")
 @Data
@@ -24,6 +24,8 @@ public class WorkingShift {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Employee employee;
 
     @Column(nullable = false, length = 50)
@@ -36,7 +38,7 @@ public class WorkingShift {
     private LocalTime endTime;
 
     @Column(length = 20)
-    private String dayOfWeek; // e.g., "MONDAY", "TUESDAY"
+    private String dayOfWeek;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -3,7 +3,9 @@ package com.appointment.api.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -20,6 +22,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = { "company", "resources" })
+@ToString(exclude = { "company", "resources" })
 public class Service {
 
     @Id
@@ -50,11 +54,7 @@ public class Service {
 
     // Many-to-Many relationship: A service can require multiple resources
     @ManyToMany
-    @JoinTable(
-        name = "service_resources",
-        joinColumns = @JoinColumn(name = "service_id"),
-        inverseJoinColumns = @JoinColumn(name = "resource_id")
-    )
+    @JoinTable(name = "service_resources", joinColumns = @JoinColumn(name = "service_id"), inverseJoinColumns = @JoinColumn(name = "resource_id"))
     private List<Resource> resources = new ArrayList<>();
 
     @PrePersist

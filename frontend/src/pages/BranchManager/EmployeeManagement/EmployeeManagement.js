@@ -8,6 +8,21 @@ import ConfirmationModal from '../../../components/UI/ConfirmationModal';
 const EmployeeManager = () => {
     const DAYS_ORDER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
+    // Day Mapping
+    const DAY_MAPPING = {
+        'Pazartesi': 'MONDAY',
+        'Salı': 'TUESDAY',
+        'Çarşamba': 'WEDNESDAY',
+        'Perşembe': 'THURSDAY',
+        'Cuma': 'FRIDAY',
+        'Cumartesi': 'SATURDAY',
+        'Pazar': 'SUNDAY'
+    };
+
+    const REVERSE_DAY_MAPPING = Object.fromEntries(
+        Object.entries(DAY_MAPPING).map(([k, v]) => [v, k])
+    );
+
     // Varsayılan boş program (Yeni çalışan için - Sadece UI için)
     const DEFAULT_SCHEDULE = {
         Pazartesi: { active: true, start: '09:00', end: '18:00' },
@@ -62,13 +77,34 @@ const EmployeeManager = () => {
             ]);
 
             // Map backend response to frontend structure
-            const mappedEmployees = empData.map(emp => ({
-                ...emp,
-                // Default schedule for UI if not present (backend doesn't verify this)
-                schedule: DEFAULT_SCHEDULE,
-                serviceIds: emp.assignedServices ? emp.assignedServices.map(s => s.id) : [],
-                serviceNames: emp.assignedServices ? emp.assignedServices.map(s => s.name) : []
-            }));
+            const mappedEmployees = empData.map(emp => {
+                // Parse Valid Schedule from Backend
+                let currentSchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+
+                // If backend provided schedule list, override defaults
+                if (emp.schedule && Array.isArray(emp.schedule)) {
+                    // First reset all to inactive
+                    Object.keys(currentSchedule).forEach(day => currentSchedule[day].active = false);
+
+                    emp.schedule.forEach(shift => {
+                        const trDay = REVERSE_DAY_MAPPING[shift.dayOfWeek];
+                        if (trDay) {
+                            currentSchedule[trDay] = {
+                                active: true,
+                                start: shift.startTime.substring(0, 5), // '09:00:00' -> '09:00'
+                                end: shift.endTime.substring(0, 5)
+                            };
+                        }
+                    });
+                }
+
+                return {
+                    ...emp,
+                    schedule: currentSchedule,
+                    serviceIds: emp.assignedServices ? emp.assignedServices.map(s => s.id) : [],
+                    serviceNames: emp.assignedServices ? emp.assignedServices.map(s => s.name) : []
+                };
+            });
 
             setEmployees(mappedEmployees);
             setServices(srvData);
@@ -111,7 +147,7 @@ const EmployeeManager = () => {
                 status: employee.status || 'Active',
                 companyId: employee.companyId || 1,
                 serviceIds: employee.serviceIds || [],
-                schedule: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE))
+                schedule: JSON.parse(JSON.stringify(employee.schedule))
             });
         } else {
             setIsEditing(false);
@@ -169,13 +205,23 @@ const EmployeeManager = () => {
             return;
         }
 
+        // Transform UI Schedule object to Backend List
+        const scheduleList = Object.entries(formData.schedule)
+            .filter(([day, data]) => data.active)
+            .map(([day, data]) => ({
+                dayOfWeek: DAY_MAPPING[day],
+                startTime: data.start.length === 5 ? data.start + ":00" : data.start, // Add seconds if missing
+                endTime: data.end.length === 5 ? data.end + ":00" : data.end,
+                shiftName: "Standart Mesai" // Optional name
+            }));
+
         const payload = {
             name: formData.name,
             email: formData.email,
             password: formData.password || null, // Send null if empty string
             companyId: formData.companyId,
-            serviceIds: formData.serviceIds
-            // schedule ignored
+            serviceIds: formData.serviceIds,
+            schedule: scheduleList
         };
 
         // If editing and password is empty, don't send it (or backend should handle null)
@@ -205,7 +251,7 @@ const EmployeeManager = () => {
             let errMsg = 'Bir hata oluştu.';
 
             if (data?.validationErrors) {
-                console.log("Validation Errors:", data.validationErrors); // Konsola da bastır
+                console.log("Validation Errors:", data.validationErrors);
                 // Hataları birleştirip göster
                 errMsg = Object.values(data.validationErrors).join('. ');
             } else {
@@ -321,7 +367,7 @@ const EmployeeManager = () => {
 
                             {/* Detaylı Program Görünümü (Sadece UI) */}
                             <div className="detail-section">
-                                <span className="label-block" style={{ textAlign: 'center', marginBottom: '10px' }}>Haftalık Program (Temsili)</span>
+                                <span className="label-block" style={{ textAlign: 'center', marginBottom: '10px' }}>Haftalık Program</span>
                                 <div className="schedule-list-view">
                                     {DAYS_ORDER.map(day => {
                                         const s = selectedEmployee.schedule[day];
@@ -380,8 +426,7 @@ const EmployeeManager = () => {
                                     <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder={isEditing ? "Değişmeyecekse boş bırakın" : ""} required={!isEditing} />
                                 </div>
 
-                                {/* YENİ: GÜNLÜK ÇALIŞMA SAATLERİ (SADECE UI) */}
-                                <div className="form-section-title">Haftalık Program (Temsili)</div>
+                                <div className="form-section-title">Haftalık Program</div>
                                 <div className="schedule-editor-container">
                                     {DAYS_ORDER.map(day => {
                                         const dayData = formData.schedule[day];
@@ -416,7 +461,7 @@ const EmployeeManager = () => {
                                                             />
                                                         </>
                                                     ) : (
-                                                        <span className="closed-text">Kapalı</span>
+                                                        <span className="closed-text">Çalışmıyor</span>
                                                     )}
                                                 </div>
                                             </div>

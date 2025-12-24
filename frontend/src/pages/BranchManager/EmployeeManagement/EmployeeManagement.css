@@ -600,3 +600,21 @@ body {
         margin-bottom: 4px;
     }
 }
+
+/* --- Added Visibility Enhancements --- */
+.closed-text {
+    color: #ef4444;
+    /* Vivid Red for visibility */
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-section-title {
+    color: #111827;
+    /* Dark Gray/Black */
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+}
