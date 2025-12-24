@@ -8,6 +8,15 @@ export default function Companies() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentUser, setCurrentUser] = useState({ name: "Loading..." });
+
+  // Fetch current user info
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      setCurrentUser({ name: user.name });
+    }
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -198,6 +207,11 @@ export default function Companies() {
 
   return (
     <div className="companies-page">
+      {/* Header */}
+      <header className="companies-header">
+        <h1>Hi, {currentUser.name} 👋</h1>
+      </header>
+
       {/* Company List Section */}
       <div className="companies-container">
         <div className="companies-toolbar">
