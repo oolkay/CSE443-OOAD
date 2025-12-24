@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import superAdminService from "../../services/superAdminService";
+import authService from "../../services/authService";
 import "./SuperAdmins.css";
 
 export default function SuperAdmins() {
@@ -10,12 +11,21 @@ export default function SuperAdmins() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [currentUser, setCurrentUser] = useState({ name: "Loading..." });
   const [newSuperAdmin, setNewSuperAdmin] = useState({
     name: "",
     email: "",
     password: "",
     phoneNumber: "",
   });
+
+  // Fetch current user info
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      setCurrentUser({ name: user.name });
+    }
+  }, []);
 
   // API call functions
   const fetchSuperAdmins = async () => {
@@ -159,7 +169,7 @@ export default function SuperAdmins() {
       <header className="super-admins-header">
         <div className="header-left">
           <h1 className="header-title">
-            Hi, Super Admin <span className="wave">👋</span>
+            Hi, {currentUser.name} <span className="wave">👋</span>
           </h1>
         </div>
       </header>
