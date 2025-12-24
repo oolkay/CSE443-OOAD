@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import superAdminService from "../../services/superAdminService";
 import "./SuperAdmins.css";
 
 export default function SuperAdmins() {
@@ -20,24 +21,10 @@ export default function SuperAdmins() {
   const fetchSuperAdmins = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/super-admins', {
-        headers: {
-                    'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSuperAdmins(data);
-      } else {
-        console.error('Failed to fetch super admins:', response.status);
-        // Fallback to mock data if API fails
-        setSuperAdmins([]);
-      }
+      const data = await superAdminService.getAllSuperAdmins();
+      setSuperAdmins(data);
     } catch (error) {
       console.error('Error fetching super admins:', error);
-      // Fallback to mock data if API fails
-      setSuperAdmins([]);
     } finally {
       setLoading(false);
     }
@@ -45,100 +32,36 @@ export default function SuperAdmins() {
 
   const createSuperAdmin = async (superAdminData) => {
     try {
-      const response = await fetch('http://localhost:8080/api/super-admins', {
-        method: 'POST',
-        headers: {
-                    'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(superAdminData)
-      });
-
-      if (response.ok) {
-        const newSuperAdmin = await response.json();
-        setSuperAdmins([...superAdmins, newSuperAdmin]);
-        return true;
-      } else {
-        const errorText = await response.text();
-        let errorMessage = `Failed to create Super Admin (${response.status}): ${errorText}`;
-        try {
-          const errorJson = await response.json();
-          if (errorJson.message) {
-            errorMessage = `Failed to create Super Admin: ${errorJson.message}`;
-          }
-        } catch (e) {
-          // If not JSON, use text error
-        }
-        alert(errorMessage);
-      }
+      const newSuperAdmin = await superAdminService.createSuperAdmin(superAdminData);
+      setSuperAdmins([...superAdmins, newSuperAdmin]);
+      return true;
     } catch (error) {
       console.error('Error creating super admin:', error);
-      alert(`Error creating Super Admin: ${error.message}`);
+      alert(`Error creating Super Admin: ${error.message || error.response?.data?.message || 'Unknown error'}`);
     }
     return false;
   };
 
   const updateSuperAdmin = async (id, superAdminData) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/super-admins/${id}`, {
-        method: 'PUT',
-        headers: {
-                    'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(superAdminData)
-      });
-
-      if (response.ok) {
-        const updatedSuperAdmin = await response.json();
-        setSuperAdmins(superAdmins.map(sa => sa.userId === id ? updatedSuperAdmin : sa));
-        return true;
-      } else {
-        const errorText = await response.text();
-        let errorMessage = `Failed to update Super Admin (${response.status}): ${errorText}`;
-        try {
-          const errorJson = await response.json();
-          if (errorJson.message) {
-            errorMessage = `Failed to update Super Admin: ${errorJson.message}`;
-          }
-        } catch (e) {
-          // If not JSON, use text error
-        }
-        alert(errorMessage);
-      }
+      const updatedSuperAdmin = await superAdminService.updateSuperAdmin(id, superAdminData);
+      setSuperAdmins(superAdmins.map(sa => sa.userId === id ? updatedSuperAdmin : sa));
+      return true;
     } catch (error) {
       console.error('Error updating super admin:', error);
-      alert(`Error updating Super Admin: ${error.message}`);
+      alert(`Error updating Super Admin: ${error.message || error.response?.data?.message || 'Unknown error'}`);
     }
     return false;
   };
 
   const deleteSuperAdmin = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/super-admins/${id}`, {
-        method: 'DELETE',
-        headers: {
-                    'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        setSuperAdmins(superAdmins.filter(sa => sa.userId !== id));
-        return true;
-      } else {
-        const errorText = await response.text();
-        let errorMessage = `Failed to delete Super Admin (${response.status}): ${errorText}`;
-        try {
-          const errorJson = await response.json();
-          if (errorJson.message) {
-            errorMessage = `Failed to delete Super Admin: ${errorJson.message}`;
-          }
-        } catch (e) {
-          // If not JSON, use text error
-        }
-        alert(errorMessage);
-      }
+      await superAdminService.deleteSuperAdmin(id);
+      setSuperAdmins(superAdmins.filter(sa => sa.userId !== id));
+      return true;
     } catch (error) {
       console.error('Error deleting super admin:', error);
-      alert(`Error deleting Super Admin: ${error.message}`);
+      alert(`Error deleting Super Admin: ${error.message || error.response?.data?.message || 'Unknown error'}`);
     }
     return false;
   };
