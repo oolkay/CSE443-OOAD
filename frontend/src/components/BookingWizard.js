@@ -1,14 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import companyService from "../services/companyService";
 import "./BookingWizard.css";
-
-// Sample data
-const COMPANIES = [
-  { id: "c1", name: "Derin Bakış Psikoloji", category: "Psikoloji" },
-  { id: "c2", name: "Estetik Palette", category: "Güzellik & Estetik" },
-  { id: "c3", name: "Kronos Klinik", category: "Sağlık" },
-  { id: "c4", name: "Fit Limit Stüdyo", category: "Spor & Fitness" },
-  { id: "c5", name: "Lastik Durağı Pro", category: "Otomotiv" },
-];
 
 const SERVICES = [
   {
@@ -104,11 +96,29 @@ function hashString(str) {
 
 export default function BookingWizard({ isOpen, onClose, onComplete }) {
   const [step, setStep] = useState(1);
+  const [companies, setCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+
+  // Fetch companies from backend
+  useEffect(() => {
+    async function fetchCompanies() {
+      try {
+        const data = await companyService.getAllCompanies();
+        setCompanies(data);
+      } catch (error) {
+        console.error('Failed to fetch companies:', error);
+        setCompanies([]);
+      } finally {
+        setLoadingCompanies(false);
+      }
+    }
+    fetchCompanies();
+  }, []);
 
   // Calendar state
   const today = new Date();
@@ -258,21 +268,26 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
               <div className="step-section">
                 <label className="step-label">Randevu almak istediğiniz şirketi seçin</label>
                 <div className="company-list">
-                  {COMPANIES.map((c) => (
-                    <div
-                      key={c.id}
-                      className={`company-item ${
-                        selectedCompany?.id === c.id ? "selected" : ""
-                      }`}
-                      onClick={() => setSelectedCompany(c)}
-                    >
-                      <div className="company-icon"></div>
-                      <div className="company-info">
-                        <h4>{c.name}</h4>
-                        <p>{c.category}</p>
+                  {loadingCompanies ? (
+                    <div className="loading-message">Şirketler yükleniyor...</div>
+                  ) : companies.length === 0 ? (
+                    <div className="error-message">Henüz şirket bulunmuyor.</div>
+                  ) : (
+                    companies.map((c) => (
+                      <div
+                        key={c.companyId}
+                        className={`company-item ${
+                          selectedCompany?.companyId === c.companyId ? "selected" : ""
+                        }`}
+                        onClick={() => setSelectedCompany(c)}
+                      >
+                        <div className="company-icon"></div>
+                        <div className="company-info">
+                          <h4>{c.name}</h4>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
