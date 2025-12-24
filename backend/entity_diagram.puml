@@ -1,0 +1,129 @@
+@startuml
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor #2C3E50
+    BorderColor #2C3E50
+}
+skinparam linetype ortho
+
+' Enums
+enum AppointmentStatus {
+    PENDING
+    CONFIRMED
+    CANCELLED
+    COMPLETED
+}
+
+enum ResourceStatus {
+    AVAILABLE
+    MAINTENANCE
+    IN_USE
+}
+
+' Abstract User Class
+abstract class User {
+    +Long userId
+    +String name
+    +String email
+    +String phoneNumber
+    +String password
+    +LocalDateTime createdAt
+    +LocalDateTime updatedAt
+    +String getUserType()
+}
+
+' User Subclasses
+class SuperAdmin {
+    +String getUserType()
+}
+
+class BranchManager {
+    +String getUserType()
+}
+
+class Customer {
+    +String getUserType()
+}
+
+class Employee {
+    +String getUserType()
+}
+
+' Other Entities
+class Company {
+    +Long companyId
+    +String name
+    +String email
+    +String address
+    +String phoneNumber
+    +LocalDateTime createdAt
+    +LocalDateTime updatedAt
+}
+
+class Service {
+    +Long serviceId
+    +String name
+    +String description
+    +Long timeDuration
+    +BigDecimal price
+    +LocalDateTime createdAt
+    +LocalDateTime updatedAt
+    +Duration getDuration()
+}
+
+class Resource {
+    +Long resourceId
+    +String name
+    +String description
+    +ResourceStatus status
+    +LocalDateTime createdAt
+    +LocalDateTime updatedAt
+}
+
+class Appointment {
+    +Long appointmentId
+    +LocalDateTime startTime
+    +LocalDateTime endTime
+    +AppointmentStatus status
+    +String notes
+    +LocalDateTime createdAt
+    +LocalDateTime updatedAt
+}
+
+class WorkingShift {
+    +Long shiftId
+    +String shiftName
+    +LocalTime startTime
+    +LocalTime endTime
+    +String dayOfWeek
+    +LocalDateTime createdAt
+    +LocalDateTime updatedAt
+}
+
+' Relationships
+
+' Inheritance
+User <|-- SuperAdmin
+User <|-- BranchManager
+User <|-- Customer
+User <|-- Employee
+
+' Associations
+BranchManager "1" --> "1" Company : manages
+Employee "*" --> "1" BranchManager : reports to
+Employee "*" --> "1" Company : works for
+Employee "*" --> "*" Service : performs
+
+Service "*" --> "1" Company : belongs to
+Resource "*" --> "1" Company : belongs to
+Resource ..> ResourceStatus
+
+Appointment "*" --> "1" Customer : booked by
+Appointment "*" --> "0..1" Employee : assigned to
+Appointment "*" --> "1" Service : for
+Appointment ..> AppointmentStatus
+
+WorkingShift "*" --> "1" Employee : assigned to
+
+@enduml

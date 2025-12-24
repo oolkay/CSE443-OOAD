@@ -1,0 +1,33 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Editor/temp files
+*~
+*.swp
+*.swo
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Windows reserved / helper file names
+aux
+con
+prn
+nul
+
+# Misc system files
+System Volume Information/
+
+# Node / JS
+node_modules/
+
+# Module files
+*.module
+*.mod
+
+# Application-specific data (H2 DB files)
+/backend/data/

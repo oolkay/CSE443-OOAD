@@ -4,16 +4,18 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 
 /**
- * Data Transfer Object for creating a new Service
- * Used to transfer data from client to server
+ * Data Transfer Object for creating a new Service.
+ * Used to transfer data from client to server.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ServiceRequestDTO {
 
     @NotBlank(message = "Service name is required")
@@ -30,7 +32,10 @@ public class ServiceRequestDTO {
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
+    @Digits(integer = 10, fraction = 2, message = "Price format is invalid")
     private BigDecimal price;
 
-}
+    @NotNull(message = "Company ID is required")
+    private Long companyId;
 
+}
