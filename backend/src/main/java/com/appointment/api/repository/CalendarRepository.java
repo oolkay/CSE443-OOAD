@@ -75,7 +75,7 @@ public interface CalendarRepository extends JpaRepository<com.appointment.api.en
                     ELSE appo.start_time < (iv.ts + iv.interval_duration)
                         and appo.end_time > iv.ts
             END
-            and (appo.status = 'APPROVED' or appo.status = 'COMPLETED')
+            and appo.status = 'APPROVED'
         left join services serv on serv.service_id = appo.service_id
         left join users usr on usr.user_id = appo.employee_id
         left join users cust on cust.user_id = appo.customer_id

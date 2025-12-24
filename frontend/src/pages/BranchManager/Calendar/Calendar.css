@@ -19,6 +19,8 @@
     --status-completed-bg: #dbeafe;
     --status-cancelled: #ef4444;
     --status-cancelled-bg: #fee2e2;
+    --status-processing: #c78727;
+    --status-processing-bg: #fde68a;
 
     --status-purple-bg: #dddef3;
 
@@ -344,6 +346,11 @@ body {
 .appointment-block.completed {
     background: var(--status-approved-bg);
     border-left-color: var(--status-approved);
+}
+
+.appointment-block.processing {
+    background: var(--status-processing-bg);
+    border-left-color: var(--status-processing);
 }
 
 .appointment-block.cancelled {

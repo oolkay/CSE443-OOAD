@@ -186,7 +186,7 @@ const Calendar = () => {
         const statusMap = {
             'PENDING': 'Beklemede',
             'APPROVED': 'Onaylandı',
-            'COMPLETED': 'Tamamlandı',
+            'REJECTED': 'Reddedildi',
             'CANCELLED': 'İptal Edildi'
         };
         return statusMap[status] || status;
@@ -216,6 +216,23 @@ const Calendar = () => {
             height: `${height}px`,
             marginBottom: 0
         };
+    };
+
+    const findApppointmentClass = (apt) => {
+        const now = new Date();
+        const startTime = new Date(apt.startTime);
+        const endTime = new Date(apt.endTime);
+
+        if (startTime <= now) {
+            if (endTime > now) 
+                return 'processing';
+            return 'completed';
+        } 
+
+        return apt?.status?.toLowerCase() === 'approved' ? 'approved' :
+               apt?.status?.toLowerCase() === 'rejected' ? 'rejected' :
+               apt?.status?.toLowerCase() === 'cancelled' ? 'cancelled' :
+               'pending';
     };
 
     // --- RENDER TIME SLOTS ---
@@ -267,7 +284,7 @@ const Calendar = () => {
                                             return (
                                                 <div 
                                                     key={apt.appointmentId}
-                                                    className={`appointment-block ${apt?.status?.toLowerCase()} ${isVeryShort ? 'very-short' : isShort ? 'short' : ''}`}
+                                                    className={`appointment-block ${findApppointmentClass(apt)} ${isVeryShort ? 'very-short' : isShort ? 'short' : ''}`}
                                                     style={appointmentStyle}
                                                     onClick={() => openAppointmentModal(apt)}
                                                 >
@@ -358,7 +375,7 @@ const Calendar = () => {
                                                 return (
                                                     <div 
                                                         key={apt.appointmentId}
-                                                        className={`appointment-block small ${apt.status.toLowerCase()}`}
+                                                        className={`appointment-block small ${findApppointmentClass(apt)}`}
                                                         onClick={() => openAppointmentModal(apt)}
                                                     >
                                                         <div className="apt-time-small">
@@ -438,7 +455,7 @@ const Calendar = () => {
                                             {dayAppointments.slice(0, 3).map(apt => (
                                                 <div 
                                                     key={apt.appointmentId}
-                                                    className={`apt-indicator ${apt.status.toLowerCase()}`}
+                                                    className={`apt-indicator ${findApppointmentClass(apt)}`}
                                                     onClick={() => openAppointmentModal(apt)}
                                                     title={`${apt.service} - ${apt.customer}`}
                                                 >
@@ -634,7 +651,7 @@ const Calendar = () => {
                                 {selectedCalendarCell.appointments.map(apt => (
                                     <div 
                                         key={apt.appointmentId}
-                                        className={`appointment-block small ${apt.status.toLowerCase()}`}
+                                        className={`appointment-block small ${findApppointmentClass(apt)}`}
                                         onClick={() => openAppointmentModal(apt)}
                                         title={`${apt.service} - ${apt.customer}`}
                                         style={{

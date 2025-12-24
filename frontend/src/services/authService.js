@@ -109,7 +109,7 @@ export const registerUser = async (name, email, password, phoneNumber = "") => {
  */
 export const requestPasswordReset = async (email) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+    const response = await fetch(`${API_BASE_URL}/auth/password-reset/request`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -175,16 +175,15 @@ export const validateResetToken = async (token) => {
 /**
  * Reset password with token
  */
-export const resetPassword = async (token, email, newPassword) => {
+export const resetPassword = async (sessionToken, newPassword) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+    const response = await fetch(`${API_BASE_URL}/auth/password-reset/reset`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        token,
-        email,
+        sessionToken,
         newPassword,
       }),
     });
@@ -206,7 +205,7 @@ export const resetPassword = async (token, email, newPassword) => {
  */
 export const verifyResetCode = async (email, code) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/verify-reset-code`, {
+    const response = await fetch(`${API_BASE_URL}/auth/password-reset/verify-code`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -218,9 +217,8 @@ export const verifyResetCode = async (email, code) => {
     });
 
     const data = await response.json();
-
     if (response.ok) {
-      return { success: true, message: data.message };
+      return { success: true, message: data.message, sessionToken: data.sessionToken };
     } else {
       return { success: false, error: data.message || "Code verification failed" };
     }

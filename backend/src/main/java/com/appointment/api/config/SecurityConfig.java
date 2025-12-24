@@ -54,8 +54,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - no authentication required
-                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/validate-reset-token",
-                        "/api/auth/reset-password", "/h2-console/**").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/register", 
+                        "/api/auth/password-reset/**", "/h2-console/**").permitAll()
                 
                 // Super Admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
