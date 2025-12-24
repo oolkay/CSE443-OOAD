@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import authService from "../../services/authService";
+import companyService from "../../services/companyService";
 import "./Companies.css";
 
 export default function Companies() {
@@ -39,13 +41,8 @@ export default function Companies() {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/companies');
-      if (response.ok) {
-        const data = await response.json();
-        setCompanies(data);
-      } else {
-        console.error('Failed to fetch companies:', response.statusText);
-      }
+      const data = await companyService.getAllCompanies();
+      setCompanies(data);
     } catch (error) {
       console.error('Error fetching companies:', error);
     } finally {
@@ -55,16 +52,9 @@ export default function Companies() {
 
   const createCompany = async (companyData) => {
     try {
-      const response = await fetch('http://localhost:8080/api/companies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(companyData)
-      });
-      if (response.ok) {
-        const newCompany = await response.json();
-        setCompanies([...companies, newCompany]);
-        return true;
-      }
+      const newCompany = await companyService.createCompany(companyData);
+      setCompanies([...companies, newCompany]);
+      return true;
     } catch (error) {
       console.error('Error creating company:', error);
     }
@@ -73,16 +63,9 @@ export default function Companies() {
 
   const updateCompany = async (id, companyData) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/companies/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(companyData)
-      });
-      if (response.ok) {
-        const updatedCompany = await response.json();
-        setCompanies(companies.map(c => c.companyId === id ? updatedCompany : c));
-        return true;
-      }
+      const updatedCompany = await companyService.updateCompany(id, companyData);
+      setCompanies(companies.map(c => c.companyId === id ? updatedCompany : c));
+      return true;
     } catch (error) {
       console.error('Error updating company:', error);
     }
@@ -91,13 +74,9 @@ export default function Companies() {
 
   const deleteCompany = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/companies/${id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        setCompanies(companies.filter(c => c.companyId !== id));
-        return true;
-      }
+      await companyService.deleteCompany(id);
+      setCompanies(companies.filter(c => c.companyId !== id));
+      return true;
     } catch (error) {
       console.error('Error deleting company:', error);
     }
