@@ -106,79 +106,8 @@ public class AuthService {
         );
     }
 
-    /**
-     * Generate password reset token
-     */
-    public void generatePasswordResetToken(String email) {
-        Optional<Customer> customer = customerRepository.findByEmail(email);
-        if (customer.isEmpty()) {
-            throw new RuntimeException("User not found with email: " + email);
-        }
 
-        // Invalidate previous tokens for this email
-        Optional<PasswordResetToken> existingToken = passwordResetTokenRepository.findByEmail(email);
-        existingToken.ifPresent(token -> {
-            passwordResetTokenRepository.delete(token);
-        });
+      .findByToken(resetPasswordRequest.getToken());
 
-        // Create new reset token
-        String token = UUID.randomUUID().toString();
-        PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken(token);
-        resetToken.setEmail(email);
-        resetToken.setExpiryDate(LocalDateTime.now().plusHours(1)); // Valid for 1 hour
-        resetToken.setUsed(false);
 
-        passwordResetTokenRepository.save(resetToken);
-
-        // TODO: Send email with reset link
-        // emailService.sendPasswordResetEmail(email, token);
-    }
-
-    /**
-     * Validate password reset token
-     */
-    public boolean validatePasswordResetToken(String token) {
-        Optional<PasswordResetToken> resetToken = passwordResetTokenRepository.findByToken(token);
-        if (resetToken.isEmpty()) {
-            return false;
-        }
-
-        PasswordResetToken rt = resetToken.get();
-        return rt.isValid();
-    }
-
-    /**
-     * Reset password with token
-     */
-    public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        Optional<PasswordResetToken> resetToken = passwordResetTokenRepository
-                .findByToken(resetPasswordRequest.getToken());
-
-        if (resetToken.isEmpty()) {
-            throw new RuntimeException("Invalid reset token");
-        }
-
-        PasswordResetToken rt = resetToken.get();
-        if (!rt.isValid()) {
-            throw new RuntimeException("Reset token has expired");
-        }
-
-        if (!rt.getEmail().equals(resetPasswordRequest.getEmail())) {
-            throw new RuntimeException("Email does not match token");
-        }
-
-        Optional<Customer> customer = customerRepository.findByEmail(resetPasswordRequest.getEmail());
-        if (customer.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
-
-        Customer c = customer.get();
-        c.setPassword(passwordEncoder.encode(resetPasswordRequest.getNewPassword()));
-        customerRepository.save(c);
-
-        // Mark token as used
-        rt.setUsed(true);
-        passwordResetTokenRepository.save(rt);
-    }
 }

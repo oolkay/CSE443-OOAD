@@ -33,10 +33,11 @@ export default function VerifyCode() {
     // Call backend to verify code
     const result = await authService.verifyResetCode(email, code);
 
-    if (result.success) {
+    if (result.success && result.sessionToken) {
+      const sessionToken = result.sessionToken;
       // Navigate to new password page with email and verified code
       navigate("/enter-new-password", { 
-        state: { email, code } 
+        state: { email, code, sessionToken } 
       });
     } else {
       setError(result.error || "Doğrulama kodu geçersiz. Lütfen tekrar deneyin.");
@@ -81,7 +82,7 @@ export default function VerifyCode() {
             type="text"
             placeholder="6 haneli kod"
             value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(e) => setCode(e.target.value.slice(0, 6))}
             required
             disabled={loading}
             maxLength={6}
