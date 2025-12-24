@@ -106,8 +106,4 @@ public class AuthService {
         );
     }
 
-
-      .findByToken(resetPasswordRequest.getToken());
-
-
 }
