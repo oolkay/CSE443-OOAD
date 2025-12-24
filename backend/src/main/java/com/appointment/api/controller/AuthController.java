@@ -1,38 +1,83 @@
 package com.appointment.api.controller;
 
 import com.appointment.api.dto.*;
-import com.appointment.api.entity.PasswordResetToken;
 import com.appointment.api.entity.User;
+import com.appointment.api.entity.PasswordResetToken;
 import com.appointment.api.repository.UserRepository;
+import com.appointment.api.service.AuthService;
 import com.appointment.api.service.EmailNotificationService;
 import com.appointment.api.service.PasswordResetService;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import lombok.extern.slf4j.Slf4j;
+
 import java.util.Optional;
 
 /**
- * Controller for password reset operations
+ * Authentication Controller
+ * Handles login, registration, and password reset endpoints
  */
-@Slf4j
 @RestController
-@RequestMapping("/api/auth/password-reset")
-@RequiredArgsConstructor
-public class PasswordResetController {
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
+public class AuthController {
 
-    private final PasswordResetService passwordResetService;
-    private final UserRepository userRepository;
-    private final EmailNotificationService emailNotificationService;
-    private final PasswordEncoder passwordEncoder;
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
+    @Autowired
+    private AuthService authService;
+    @Autowired
+    private PasswordResetService passwordResetService;
+    @Autowired
+    private EmailNotificationService emailNotificationService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserRepository userRepository;
+
 
     /**
+     * Login endpoint
+     * POST /api/auth/login
+     */
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+        try {
+            LoginResponse loginResponse = authService.login(loginRequest);
+            return ResponseEntity.ok(loginResponse);
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(false, "Invalid email or password: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Register endpoint (FR-SYS-005)
+     * POST /api/auth/register
+     */
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        try {
+            LoginResponse loginResponse = authService.register(registerRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(loginResponse);
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Registration failed: " + e.getMessage()));
+        }
+    }
+
+     /**
      * Step 1: Request a password reset code
      * POST /api/auth/password-reset/request
      */
-    @PostMapping("/request")
+    @PostMapping("/password-reset/request")
     public ResponseEntity<PasswordResetResponseDTO> requestPasswordReset(
             @RequestBody PasswordResetRequestDTO request) {
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
@@ -62,11 +107,12 @@ public class PasswordResetController {
         );
     }
 
+    
     /**
      * Step 2: Verify the 6-character code and return a session token
      * POST /api/auth/password-reset/verify-code
      */
-    @PostMapping("/verify-code")
+    @PostMapping("/password-reset/verify-code")
     public ResponseEntity<VerifyCodeResponseDTO> verifyResetCode(
             @RequestBody VerifyCodeDTO request) {
         
@@ -104,11 +150,12 @@ public class PasswordResetController {
         );
     }
 
+    
     /**
      * Step 3: Reset password using the session token
      * POST /api/auth/password-reset/reset
      */
-    @PostMapping("/reset")
+    @PostMapping("/password-reset/reset")
     public ResponseEntity<PasswordResetResponseDTO> resetPassword(
             @RequestBody ResetPasswordDTO request) {
         
@@ -140,51 +187,6 @@ public class PasswordResetController {
             new PasswordResetResponseDTO(true, "Password has been reset successfully")
         );
     }
-    
-    /**
-     * DEPRECATED: Old combined endpoint - kept for backward compatibility
-     * Use /verify-code and /reset instead
-     * POST /api/auth/password-reset/verify
-     */
-    @Deprecated
-    @PostMapping("/verify")
-    public ResponseEntity<PasswordResetResponseDTO> verifyAndResetPassword(
-            @RequestBody PasswordResetVerifyDTO request) {
-        log.info("Using deprecated verify endpoint for email: {}", request.getEmail());
-        log.info("Code: {}", request.getCode());
-        
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
-        
-        if (userOpt.isEmpty()) {
-            log.warn("User not found for email: {}", request.getEmail());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new PasswordResetResponseDTO(false, "Invalid email or reset code"));
-        }
-        
-        User user = userOpt.get();
-        Optional<PasswordResetToken> tokenOpt = passwordResetService.validateResetCode(
-            request.getCode(), user
-        );
-        
-        if (tokenOpt.isEmpty()) {
-            log.warn("Invalid or expired reset code for user: {}", request.getEmail());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new PasswordResetResponseDTO(false, "Invalid or expired reset code"));
-        }
-        
-        PasswordResetToken token = tokenOpt.get();
-        
-        // Update the user's password
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
-        
-        // Mark the token as used
-        passwordResetService.markTokenAsUsed(token);
-        
-        return ResponseEntity.ok(
-            new PasswordResetResponseDTO(true, "Password has been reset successfully")
-        );
-    }
 
     /**
      * Helper method to send reset code email using the professional HTML template
@@ -193,4 +195,3 @@ public class PasswordResetController {
         emailNotificationService.sendPasswordResetEmail(user.getEmail(), user.getName(), code);
     }
 }
-

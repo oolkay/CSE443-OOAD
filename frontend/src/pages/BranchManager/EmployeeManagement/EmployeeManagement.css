@@ -24,32 +24,93 @@ body {
 }
 
 /* --- HEADER & ACTION BAR --- */
-.main-header h1 { font-size: 1.75rem; font-weight: 800; margin: 0 0 0.5rem 0; color: #1f2937; }
-.main-header p { color: var(--text-secondary); margin: 0 0 2rem 0; }
-
-.action-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
-.search-wrapper { flex: 1; }
-.search-input {
-    width: 100%; padding: 12px 16px; border: 1px solid var(--border-light);
-    border-radius: var(--radius); font-size: 1rem; box-sizing: border-box;
+.main-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    color: #1f2937;
 }
+
+.main-header p {
+    color: var(--text-secondary);
+    margin: 0 0 2rem 0;
+}
+
+.action-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.search-wrapper {
+    flex: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    box-sizing: border-box;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+}
+
 .btn-add {
-    background-color: var(--primary-color); color: white; border: none;
-    padding: 0 20px; border-radius: var(--radius); font-weight: 600; cursor: pointer; white-space: nowrap;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
 }
 
 /* --- TABLE CARD --- */
 .table-card {
-    background: var(--white); border-radius: var(--radius);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
-.custom-table { width: 100%; border-collapse: collapse; }
-.custom-table tr { border-bottom: 1px solid var(--border-light); }
-.custom-table tr:last-child { border-bottom: none; }
-.custom-table td, .custom-table th { padding: 1rem; text-align: left; }
 
-.clickable-row { cursor: pointer; }
-.clickable-row:active { background-color: #f9fafb; }
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.custom-table tr {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.custom-table tr:last-child {
+    border-bottom: none;
+}
+
+.custom-table td,
+.custom-table th {
+    padding: 1rem;
+    text-align: left;
+}
+
+.clickable-row {
+    cursor: pointer;
+}
+
+.clickable-row:active {
+    background-color: #f9fafb;
+}
 
 /* --- AVATAR DÜZELTMELERİ --- */
 .emp-name-cell {
@@ -59,167 +120,483 @@ body {
 }
 
 .avatar-placeholder {
-    width: 40px; height: 40px; min-width: 40px;
-    background-color: #e0f2fe; color: #0369a1; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 1.1rem; line-height: 1;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1;
 }
 
 .detail-avatar-large {
-    width: 80px; height: 80px;
-    background: #e0f2fe; color: #0369a1;
-    font-size: 2.5rem; font-weight: 700; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 2.5rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin: 0 auto 1rem auto;
 }
 
 /* --- MODAL VE SCROLL YAPISI --- */
 .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    display: flex; justify-content: center; align-items: flex-end;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
     z-index: 100;
 }
-@media (min-width: 640px) { .modal-overlay { align-items: center; } }
+
+@media (min-width: 640px) {
+    .modal-overlay {
+        align-items: center;
+    }
+}
 
 .modal-content {
-    background: var(--white); width: 100%; max-height: 90vh;
+    background: var(--white);
+    width: 100%;
+    max-height: 90vh;
     border-radius: 20px 20px 0 0;
-    display: flex; flex-direction: column; overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
-@media (min-width: 640px) { .modal-content { max-width: 500px; border-radius: 16px; } }
+
+@media (min-width: 640px) {
+    .modal-content {
+        max-width: 500px;
+        border-radius: 16px;
+    }
+}
 
 .modal-header {
-    padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-light);
-    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     flex-shrink: 0;
 }
 
 .modal-form-flex {
-    display: flex; flex-direction: column; height: 100%;
-    overflow: hidden; min-height: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .modal-body {
-    padding: 1.5rem; overflow-y: auto; flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .modal-footer {
-    padding: 1rem 1.5rem; border-top: 1px solid var(--border-light);
-    background-color: #f9fafb; display: flex; gap: 1rem;
-    flex-shrink: 0; padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-light);
+    background-color: #f9fafb;
+    display: flex;
+    gap: 1rem;
+    flex-shrink: 0;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
 
 /* --- TAGS & DETAIL VIEW --- */
 .tags-container {
-    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
 }
+
 .service-tag {
-    background: #f3f4f6; color: #374151; padding: 6px 12px;
-    border-radius: 6px; font-size: 0.85rem; border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    color: #374151;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border: 1px solid #e5e7eb;
     display: inline-block;
 }
 
+.text-muted {
+    color: #9ca3af;
+}
+
 .schedule-list-view {
-    background: #f3f4f6; padding: 10px 20px; border-radius: 12px;
-    text-align: left; margin-bottom: 1rem;
+    background: #f3f4f6;
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-align: left;
+    margin-bottom: 1rem;
 }
+
 .schedule-list-item {
-    display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
 }
-.sched-day { font-weight: 600; width: 40px; }
-.sched-time { color: var(--text-secondary); }
+
+.sched-day {
+    font-weight: 600;
+    width: 40px;
+    color: #111827;
+    /* Darker color */
+}
+
+.sched-time {
+    color: #4b5563;
+    /* Slightly lighter but visible */
+}
+
+.detail-role {
+    color: #4b5563;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
 
 /* --- HAFTALIK PROGRAM TOGGLE SWITCH (YENİ) --- */
 .schedule-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 0; border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .switch-label {
-    position: relative; cursor: pointer; display: inline-flex; align-items: center;
+    position: relative;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
 }
-.switch-label input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+
+.switch-label input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
 
 .day-name {
-    position: relative; padding-left: 44px; font-weight: 600;
-    color: var(--text-main); user-select: none; line-height: 24px;
+    position: relative;
+    padding-left: 44px;
+    font-weight: 600;
+    color: var(--text-main);
+    user-select: none;
+    line-height: 24px;
 }
+
 /* Switch Arka Plan */
 .day-name::before {
-    content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-    width: 36px; height: 20px; background-color: #e5e7eb; border-radius: 20px;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 20px;
+    background-color: #e5e7eb;
+    border-radius: 20px;
     transition: background-color 0.2s ease;
 }
+
 /* Switch Yuvarlak */
 .day-name::after {
-    content: ''; position: absolute; left: 2px; top: 50%; transform: translateY(-50%);
-    width: 16px; height: 16px; background-color: white; border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: left 0.2s ease;
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: left 0.2s ease;
 }
 
 /* Seçili Durumlar */
-.switch-label input:checked + .day-name::before { background-color: var(--primary-color); }
-.switch-label input:checked + .day-name::after { left: 18px; }
+.switch-label input:checked+.day-name::before {
+    background-color: var(--primary-color);
+}
+
+.switch-label input:checked+.day-name::after {
+    left: 18px;
+}
 
 /* Saat Inputları */
-.schedule-col-inputs { display: flex; align-items: center; gap: 6px; }
+.schedule-col-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .mini-time-input {
-    border: 1px solid #d1d5db; border-radius: 6px; padding: 4px;
-    font-family: inherit; width: 85px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 4px;
+    font-family: inherit;
+    width: 85px;
+    font-size: 1rem;
+    /* Prevent zoom on iOS */
 }
 
 /* --- SKILL CHECKBOX (HİZMETLER) (YENİ) --- */
 .skills-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
 }
 
 .skill-check-label {
-    display: flex; align-items: center; padding: 12px;
-    border: 1px solid var(--border-light); border-radius: 8px;
-    cursor: pointer; font-size: 0.9rem; background: #fff;
-    transition: all 0.2s ease; position: relative; user-select: none;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    background: #fff;
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: none;
+    /* Minimize tap delay */
+    touch-action: manipulation;
 }
-.skill-check-label input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+
+.skill-check-label input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
 
 /* Kutu Tasarımı */
 .skill-check-label::before {
-    content: ''; width: 20px; height: 20px; border: 2px solid #d1d5db;
-    border-radius: 6px; margin-right: 12px; background-color: white;
-    transition: all 0.2s; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    margin-right: 12px;
+    background-color: white;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Seçili Durum */
 .skill-check-label.selected {
-    background-color: #ecfeff; border-color: var(--primary-color);
-    color: var(--primary-hover); font-weight: 600;
+    background-color: #ecfeff;
+    border-color: var(--primary-color);
+    color: var(--primary-hover);
+    font-weight: 600;
 }
+
 .skill-check-label.selected::before {
-    background-color: var(--primary-color); border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-    background-size: 14px; background-position: center; background-repeat: no-repeat;
+    background-size: 14px;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* --- FORM ELEMANLARI --- */
-.form-group { margin-bottom: 1rem; }
-.form-group label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; }
-.form-group input, .form-group select {
-    width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box;
+.form-group {
+    margin-bottom: 1rem;
 }
-.form-row { display: flex; gap: 1rem; }
-.form-group.half { flex: 1; }
 
-.btn-cancel, .btn-delete { flex: 1; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid #d1d5db; background: white; }
-.btn-save, .btn-edit { flex: 2; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; background: var(--primary-color); color: white; }
-.btn-delete { background: #fee2e2; color: #991b1b; border: none; }
-.btn-edit { background: #111827; }
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+}
 
-/* --- MOBILE --- */
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    /* Prevent zoom on mobile */
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-group.half {
+    flex: 1;
+}
+
+.btn-cancel,
+.btn-delete {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    background: white;
+    font-size: 1rem;
+    min-height: 48px;
+    /* Accessible touch target */
+}
+
+.btn-save,
+.btn-edit {
+    flex: 2;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    font-size: 1rem;
+    min-height: 48px;
+    /* Accessible touch target */
+}
+
+.btn-delete {
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+}
+
+.btn-edit {
+    background: #111827;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.off-duty {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* --- MOBILE OPTIMIZATIONS --- */
 @media (max-width: 480px) {
-    .modal-footer { flex-direction: column; gap: 10px; }
-    .modal-footer button { width: 100%; padding: 14px; }
-    .btn-cancel { order: 2; border: none; color: #6b7280; }
-    .btn-save, .btn-edit, .btn-delete { order: 1; }
-    .schedule-col-inputs { flex-direction: column; align-items: flex-end; }
+    .layout-container {
+        padding: 1rem;
+    }
+
+    .main-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .action-bar {
+        flex-direction: column;
+    }
+
+    .search-wrapper {
+        order: 2;
+    }
+
+    .btn-add {
+        order: 1;
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        min-height: 48px;
+    }
+
+    /* Modal Layout on Mobile */
+    .modal-content {
+        height: 95vh;
+        max-height: 95vh;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .modal-footer button {
+        width: 100%;
+    }
+
+    .btn-cancel {
+        order: 2;
+        border: none;
+        color: #6b7280;
+    }
+
+    .btn-save,
+    .btn-edit,
+    .btn-delete {
+        order: 1;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-group.half {
+        margin-bottom: 1rem;
+    }
+
+    /* Schedule Mobile Layout */
+    .schedule-col-inputs {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .mini-time-input {
+        width: 80px;
+        text-align: center;
+    }
+
+    .separator {
+        display: none;
+    }
+
+    /* Better spacing for touch */
+    .skill-check-label {
+        padding: 14px;
+        margin-bottom: 4px;
+    }
 }
