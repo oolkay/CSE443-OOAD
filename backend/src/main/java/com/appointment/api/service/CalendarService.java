@@ -24,6 +24,8 @@ public class CalendarService {
     
     private final CalendarRepository calendarRepository;
     private final ObjectMapper objectMapper;
+    // TOOD: Tested email here
+    // private final EmailNotificationService emailNotificationService;
     
     /**
      * Get calendar data with appointments
@@ -41,7 +43,9 @@ public class CalendarService {
             Integer interval,
             String companyId,
             String employeeId) {
-        
+
+        // TODO: Tested email here 
+        // emailNotificationService.sendCustomEmail("musabkardes@gmail.com", "Test Subject", "Test Message");
         // Validate interval
         if (interval % 15 != 0) {
             throw new RuntimeException("Interval must be a multiple of 15 minutes");

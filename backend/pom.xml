@@ -49,6 +49,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         
+        <!-- Spring Boot Mail (for email notifications) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        
         <!-- PostgreSQL Driver (or use MySQL/H2 as needed) -->
         <dependency>
             <groupId>org.postgresql</groupId>
