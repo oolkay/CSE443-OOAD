@@ -154,6 +154,17 @@ public class ServiceService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get services by Company ID.
+     */
+    @Transactional(readOnly = true)
+    public List<ServiceResponseDTO> getServicesByCompany(Long companyId) {
+        return serviceRepository.findByCompany_CompanyId(companyId)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     // --- Helper Methods ---
 
     private void validateServiceNameUnique(String name) {

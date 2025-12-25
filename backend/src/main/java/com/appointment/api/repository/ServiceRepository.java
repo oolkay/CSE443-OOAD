@@ -15,9 +15,10 @@ import java.util.List;
 public interface ServiceRepository extends JpaRepository<Service, Long> {
 
     // Custom query methods - Spring Data JPA generates SQL automatically
-    
-    List<Service> findByNameContainingIgnoreCase(String name);
-    
-    boolean existsByName(String name);
-}
 
+    List<Service> findByNameContainingIgnoreCase(String name);
+
+    boolean existsByName(String name);
+
+    List<Service> findByCompany_CompanyId(Long companyId);
+}
