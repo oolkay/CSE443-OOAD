@@ -115,6 +115,12 @@ public class EmployeeService {
         return mapToResponseDTO(employee);
     }
 
+    public List<EmployeeResponseDTO> getEmployeesByCompany(Long companyId) {
+        return employeeRepository.findByCompany_CompanyId(companyId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     private EmployeeResponseDTO mapToResponseDTO(Employee employee) {
         EmployeeResponseDTO dto = new EmployeeResponseDTO();
         dto.setId(employee.getUserId());

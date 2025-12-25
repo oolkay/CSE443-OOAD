@@ -52,4 +52,10 @@ public class EmployeeController {
         employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/company/{companyId}")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<List<EmployeeResponseDTO>> getEmployeesByCompany(@PathVariable Long companyId) {
+        return ResponseEntity.ok(employeeService.getEmployeesByCompany(companyId));
+    }
 }

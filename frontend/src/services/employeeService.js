@@ -26,6 +26,11 @@ const employeeService = {
     deleteEmployee: async (id) => {
         const response = await axios.delete(`${EMPLOYEE_URL}/${id}`);
         return response.data;
+    },
+
+    getEmployeesByCompany: async (companyId) => {
+        const response = await axios.get(`${EMPLOYEE_URL}/company/${companyId}`);
+        return response.data;
     }
 };
 
