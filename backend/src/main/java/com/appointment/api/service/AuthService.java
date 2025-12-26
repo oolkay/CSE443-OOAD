@@ -58,25 +58,24 @@ public class AuthService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
+                        loginRequest.getPassword()));
 
-        String token = jwtTokenProvider.generateToken(authentication);
-        String roles = jwtTokenProvider.getRolesFromToken(token);
-
-        // Find user (supports all user types)
+        // Find user first to get userId (supports all user types)
         Optional<User> userOpt = userRepository.findByEmail(loginRequest.getEmail());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            
+
+            // Generate token with userId claim
+            String token = jwtTokenProvider.generateToken(authentication, user.getUserId());
+            String roles = jwtTokenProvider.getRolesFromToken(token);
+
             return new LoginResponse(
                     token,
                     user.getUserId(),
                     user.getEmail(),
                     user.getName(),
                     roles,
-                    jwtExpirationMs / 1000  // Convert to seconds
+                    jwtExpirationMs / 1000 // Convert to seconds
             );
         }
 
@@ -103,7 +102,10 @@ public class AuthService {
 
         // Generate token for newly registered user
         String roles = "ROLE_CUSTOMER";
-        String token = jwtTokenProvider.generateTokenFromUsername(savedCustomer.getEmail(), roles);
+        String token = jwtTokenProvider.generateTokenFromUsername(
+                savedCustomer.getEmail(),
+                savedCustomer.getUserId(),
+                roles);
 
         return new LoginResponse(
                 token,
@@ -111,8 +113,7 @@ public class AuthService {
                 savedCustomer.getEmail(),
                 savedCustomer.getName(),
                 roles,
-                jwtExpirationMs / 1000
-        );
+                jwtExpirationMs / 1000);
     }
 
 }
