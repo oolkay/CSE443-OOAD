@@ -30,20 +30,22 @@ public class JwtTokenProvider {
 
     /**
      * Generate JWT token from Authentication
+     * Note: Cannot extract userId from Authentication, use
+     * generateTokenFromUsername with userId instead
      */
-    public String generateToken(Authentication authentication) {
+    public String generateToken(Authentication authentication, Long userId) {
         String username = authentication.getName();
         String roles = authentication.getAuthorities().stream()
                 .map(auth -> auth.getAuthority())
                 .collect(Collectors.joining(","));
 
-        return generateTokenFromUsername(username, roles);
+        return generateTokenFromUsername(username, userId, roles);
     }
 
     /**
      * Generate JWT token from username and roles
      */
-    public String generateTokenFromUsername(String username, String roles) {
+    public String generateTokenFromUsername(String username, Long userId, String roles) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
@@ -51,6 +53,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setSubject(username)
+                .claim("userId", userId)
                 .claim("roles", roles)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
@@ -90,6 +93,31 @@ public class JwtTokenProvider {
                     .get("roles");
         } catch (JwtException e) {
             logger.error("Failed to extract roles from JWT token: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get userId from JWT token
+     */
+    public Long getUserIdFromToken(String token) {
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            Object userIdObj = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("userId");
+
+            if (userIdObj instanceof Integer) {
+                return ((Integer) userIdObj).longValue();
+            } else if (userIdObj instanceof Long) {
+                return (Long) userIdObj;
+            }
+            return null;
+        } catch (JwtException e) {
+            logger.error("Failed to extract userId from JWT token: {}", e.getMessage());
             return null;
         }
     }

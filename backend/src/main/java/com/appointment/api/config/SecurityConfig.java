@@ -51,33 +51,37 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                // Public endpoints - no authentication required
-                .requestMatchers("/api/auth/login", "/api/auth/register", 
-                        "/api/auth/password-reset/**", "/h2-console/**").permitAll()
-                
-                // Super Admin endpoints
-                .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
-                
-                // Manager endpoints
-                .requestMatchers("/api/manager/**").hasAnyRole("MANAGER", "SUPER_ADMIN")
-                
-                // Employee endpoints
-                .requestMatchers("/api/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "SUPER_ADMIN")
-                
-                // Customer endpoints
-                .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "SUPER_ADMIN")
-                
-                // All other requests require authentication
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin())
-            );
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints - no authentication required
+                        .requestMatchers("/api/auth/login", "/api/auth/register",
+                                "/api/auth/password-reset/**", "/h2-console/**")
+                        .permitAll()
+
+                        // Super Admin endpoints
+                        .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
+
+                        // Manager endpoints
+                        .requestMatchers("/api/manager/**").hasAnyRole("MANAGER", "SUPER_ADMIN")
+
+                        // Employee endpoints
+                        .requestMatchers("/api/employee/**").hasAnyRole("EMPLOYEE", "MANAGER", "SUPER_ADMIN")
+
+                        // Customer endpoints
+                        .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "SUPER_ADMIN")
+
+                        // Appointment endpoints - role-based access
+                        .requestMatchers("/api/appointments/customer/**").hasAnyRole("CUSTOMER", "SUPER_ADMIN")
+                        .requestMatchers("/api/appointments/employee/**").hasAnyRole("EMPLOYEE", "SUPER_ADMIN")
+                        .requestMatchers("/api/appointments/manager/**").hasAnyRole("MANAGER", "SUPER_ADMIN")
+                        .requestMatchers("/api/appointments/**").authenticated()
+
+                        // All other requests require authentication
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
         // Add JWT filter before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -93,4 +97,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import companyService from "../services/companyService";
 import serviceService from "../services/serviceService";
 import employeeService from "../services/employeeService";
@@ -49,79 +49,55 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
   const [selectedDate, setSelectedDate] = useState(null); // Format: YYYY-MM-DD
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null); // Full Slot Object
 
-  // Fetch Companies on Open
-  useEffect(() => {
-    if (isOpen && step === 1) {
-      fetchCompanies();
-    }
-  }, [isOpen, step]);
+  // Error/Success States
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
-  // Fetch Services when Company Selected
-  useEffect(() => {
-    if (selectedCompany && step === 2) {
-      fetchServices();
-    }
-  }, [selectedCompany, step]);
-
-  // Fetch Employees when Service Selected
-  useEffect(() => {
-    if (selectedService && step === 3) {
-      fetchEmployees();
-    }
-  }, [selectedService, step]);
-
-  // Fetch Availability when Date & Employee Selected
-  useEffect(() => {
-    if (selectedEmployee && selectedDate && step === 4) {
-      fetchAvailability();
-    }
-  }, [selectedEmployee, selectedDate, step]);
-
-  const fetchCompanies = async () => {
+  // Fetch functions defined before useEffects
+  const fetchCompanies = useCallback(async () => {
     setLoadingCompanies(true);
     try {
       const data = await companyService.getAllCompanies();
       setCompanies(data);
     } catch (error) {
-      console.error("Failed to fetch companies:", error);
+      // Silently fail
     } finally {
       setLoadingCompanies(false);
     }
-  };
+  }, []);
 
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     setLoadingServices(true);
     try {
       const data = await serviceService.getServicesByCompany(selectedCompany.companyId);
       setServices(data);
     } catch (error) {
-      console.error("Failed to fetch services:", error);
+      // Silently fail
     } finally {
       setLoadingServices(false);
     }
-  };
+  }, [selectedCompany]);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     setLoadingEmployees(true);
     try {
       // Fetch all employees of the company
       const allEmployees = await employeeService.getEmployeesByCompany(selectedCompany.companyId);
 
       // Filter employees who can perform the selected service
-      // Assuming employee.assignedServices contains the list of services they can do
       const qualifiedEmployees = allEmployees.filter(emp =>
         emp.assignedServices && emp.assignedServices.some(s => s.id === selectedService.id)
       );
 
       setEmployees(qualifiedEmployees);
     } catch (error) {
-      console.error("Failed to fetch employees:", error);
+      // Silently fail
     } finally {
       setLoadingEmployees(false);
     }
-  };
+  }, [selectedCompany, selectedService]);
 
-  const fetchAvailability = async () => {
+  const fetchAvailability = useCallback(async () => {
     setLoadingAvailability(true);
     setAvailableSlots([]);
     try {
@@ -132,11 +108,39 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
       );
       setAvailableSlots(data.availableSlots || []);
     } catch (error) {
-      console.error("Failed to fetch availability:", error);
+      // Silently fail
     } finally {
       setLoadingAvailability(false);
     }
-  };
+  }, [selectedEmployee, selectedDate, selectedService]);
+
+  // Fetch Companies on Open
+  useEffect(() => {
+    if (isOpen && step === 1) {
+      fetchCompanies();
+    }
+  }, [isOpen, step, fetchCompanies]);
+
+  // Fetch Services when Company Selected
+  useEffect(() => {
+    if (selectedCompany && step === 2) {
+      fetchServices();
+    }
+  }, [selectedCompany, step, fetchServices]);
+
+  // Fetch Employees when Service Selected
+  useEffect(() => {
+    if (selectedService && step === 3) {
+      fetchEmployees();
+    }
+  }, [selectedService, step, fetchEmployees]);
+
+  // Fetch Availability when Date & Employee Selected
+  useEffect(() => {
+    if (selectedEmployee && selectedDate && step === 4) {
+      fetchAvailability();
+    }
+  }, [selectedEmployee, selectedDate, step, fetchAvailability]);
 
   // Calendar State
   const today = new Date();
@@ -161,6 +165,17 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
 
   const handleDayClick = (day) => {
     if (day === 0) return;
+
+    // Prevent selecting past dates
+    const selectedFullDate = new Date(year, month, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to midnight for comparison
+
+    if (selectedFullDate < today) {
+      setErrorMessage("Geçmiş tarihler için randevu oluşturamazsınız");
+      return;
+    }
+
     setCalendarDay(day);
     const mm = String(month + 1).padStart(2, "0");
     const dd = String(day).padStart(2, "0");
@@ -176,14 +191,29 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
     setSelectedDate(null);
     setSelectedTimeSlot(null);
     setAvailableSlots([]);
+    setErrorMessage(null);
+    setSuccessMessage(null);
     onClose();
   };
 
   const handleNext = () => {
-    if (step === 1 && !selectedCompany) return alert("Lütfen bir şirket seçin");
-    if (step === 2 && !selectedService) return alert("Lütfen bir hizmet seçin");
-    if (step === 3 && !selectedEmployee) return alert("Lütfen bir çalışan seçin");
-    if (step === 4 && !selectedTimeSlot) return alert("Lütfen bir saat seçin");
+    setErrorMessage(null);
+    if (step === 1 && !selectedCompany) {
+      setErrorMessage("Lütfen bir şirket seçin");
+      return;
+    }
+    if (step === 2 && !selectedService) {
+      setErrorMessage("Lütfen bir hizmet seçin");
+      return;
+    }
+    if (step === 3 && !selectedEmployee) {
+      setErrorMessage("Lütfen bir çalışan seçin");
+      return;
+    }
+    if (step === 4 && !selectedTimeSlot) {
+      setErrorMessage("Lütfen bir saat seçin");
+      return;
+    }
     setStep(step + 1);
   };
 
@@ -199,28 +229,35 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
 
   const handleConfirm = async () => {
     if (!user) {
-      alert("Randevu almak için giriş yapmalısınız.");
+      setErrorMessage("Randevu almak için giriş yapmalısınız.");
       return;
     }
 
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
     try {
+      // Ensure startTime is in ISO format and in the future
+      const startTime = selectedTimeSlot.startTime;
+
       const appointmentData = {
-        customerId: user.userId, // Assuming user context has userId
+        customerId: user.userId,
         companyId: selectedCompany.companyId,
         serviceId: selectedService.id,
         employeeId: selectedEmployee.id,
-        startTime: selectedTimeSlot.startTime, // ISO String required by backend? DTO expects LocalDateTime which usually maps from ISO string
-        status: "PENDING"
+        startTime: startTime // Should be ISO 8601 format: 2025-01-15T10:00:00
       };
 
       await appointmentService.createAppointment(appointmentData);
 
-      alert("Randevu talebiniz başarıyla oluşturuldu!");
-      if (onComplete) onComplete();
-      handleClose();
+      setSuccessMessage("Randevu talebiniz başarıyla oluşturuldu.");
+      setTimeout(() => {
+        if (onComplete) onComplete();
+        handleClose();
+      }, 2000);
     } catch (error) {
-      console.error("Randevu oluşturulurken hata:", error);
-      alert("Randevu oluşturulamadı: " + (error.response?.data?.message || error.message));
+      // Simple user-friendly message without technical details
+      setErrorMessage("Randevu oluşturulamadı. Lütfen bilgileri kontrol edip tekrar deneyin.");
     }
   };
 
@@ -249,6 +286,36 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
             </React.Fragment>
           ))}
         </div>
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div style={{
+            backgroundColor: '#fff5f5',
+            border: '1px solid #fc8181',
+            borderRadius: '6px',
+            padding: '10px 14px',
+            margin: '12px 0',
+            color: '#c53030',
+            fontSize: '13px'
+          }}>
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div style={{
+            backgroundColor: '#f0fff4',
+            border: '1px solid #68d391',
+            borderRadius: '6px',
+            padding: '10px 14px',
+            margin: '12px 0',
+            color: '#2f855a',
+            fontSize: '13px'
+          }}>
+            {successMessage}
+          </div>
+        )}
 
         <div className="wizard-body">
           {/* Step 1: Company Selection */}
@@ -361,15 +428,21 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
                     <div className="cal-days">
                       {weeks.map((week, i) => (
                         <div key={i} className="cal-week">
-                          {week.map((day, j) => (
-                            <div
-                              key={j}
-                              className={`cal-day ${day === 0 ? "empty" : ""} ${day === calendarDay ? "selected" : ""}`}
-                              onClick={() => handleDayClick(day)}
-                            >
-                              {day || ""}
-                            </div>
-                          ))}
+                          {week.map((day, j) => {
+                            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                            const isPast = day > 0 && new Date(year, month, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+                            return (
+                              <div
+                                key={j}
+                                className={`cal-day ${day === 0 ? "empty" : ""} ${day === calendarDay ? "selected" : ""} ${isPast ? "disabled" : ""} ${isToday ? "today" : ""}`}
+                                onClick={() => handleDayClick(day)}
+                                style={isPast ? { cursor: 'not-allowed', opacity: 0.3 } : {}}
+                              >
+                                {day || ""}
+                              </div>
+                            );
+                          })}
                         </div>
                       ))}
                     </div>

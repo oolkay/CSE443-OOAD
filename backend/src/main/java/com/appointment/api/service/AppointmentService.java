@@ -3,9 +3,11 @@ package com.appointment.api.service;
 import com.appointment.api.dto.AppointmentRequestDTO;
 import com.appointment.api.dto.AppointmentResponse;
 import com.appointment.api.dto.AvailableSlotDTO;
+import com.appointment.api.dto.EmailTemplateData;
 import com.appointment.api.dto.EmployeeAvailabilityResponse;
 import com.appointment.api.entity.*;
 import com.appointment.api.exception.AppointmentCancellationException;
+import com.appointment.api.provider.EmailNotificationProvider;
 import com.appointment.api.repository.AppointmentRepository;
 import com.appointment.api.repository.BranchManagerRepository;
 import com.appointment.api.repository.CustomerRepository;
@@ -19,7 +21,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,10 +35,15 @@ public class AppointmentService {
     private final EmployeeRepository employeeRepository;
     private final ServiceRepository serviceRepository;
     private final BranchManagerRepository branchManagerRepository;
-    // private final EmailService emailService; // Implement email service
+    private final EmailNotificationProvider emailNotificationProvider;
 
     @Transactional
     public AppointmentResponse createAppointment(AppointmentRequestDTO request) {
+        // Validate that appointment is not in the past
+        if (request.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Cannot create appointments for past dates");
+        }
+
         // Fetch customer
         Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + request.getCustomerId()));
@@ -66,8 +75,8 @@ public class AppointmentService {
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        // Send email notification
-        // emailService.sendAppointmentConfirmation(customer.getEmail(), savedAppointment);
+        // Send confirmation email
+        sendAppointmentConfirmationEmail(savedAppointment);
 
         return mapToResponse(savedAppointment);
     }
@@ -104,12 +113,13 @@ public class AppointmentService {
         // Update time if changed
         if (request.getStartTime() != null && !request.getStartTime().equals(appointment.getStartTime())) {
             LocalDateTime endTime = request.getStartTime().plusMinutes(appointment.getService().getTimeDuration());
-            
+
             // Check if employee is available
-            if (!isEmployeeAvailable(appointment.getEmployee().getUserId(), request.getStartTime(), endTime, appointmentId)) {
+            if (!isEmployeeAvailable(appointment.getEmployee().getUserId(), request.getStartTime(), endTime,
+                    appointmentId)) {
                 throw new RuntimeException("Employee is not available at the requested time");
             }
-            
+
             appointment.setStartTime(request.getStartTime());
             appointment.setEndTime(endTime);
             appointment.setStatus(AppointmentStatus.PENDING);
@@ -118,7 +128,8 @@ public class AppointmentService {
         Appointment updatedAppointment = appointmentRepository.save(appointment);
 
         // Send email notification
-        // emailService.sendAppointmentUpdate(appointment.getCustomer().getEmail(), updatedAppointment);
+        // emailService.sendAppointmentUpdate(appointment.getCustomer().getEmail(),
+        // updatedAppointment);
 
         return mapToResponse(updatedAppointment);
     }
@@ -132,19 +143,18 @@ public class AppointmentService {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime appointmentTime = appointment.getStartTime();
         long hoursUntilAppointment = java.time.Duration.between(now, appointmentTime).toHours();
-        
+
         if (hoursUntilAppointment < 24 && hoursUntilAppointment >= 0) {
             throw new AppointmentCancellationException(
-                "Cannot cancel appointment: Less than 24 hours remainining. Please contact with the company."
-            );
+                    "Cannot cancel appointment: Less than 24 hours remainining. Please contact with the company.");
         }
 
         // Instead of deleting, mark as cancelled
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
 
-        // Send email notification
-        // emailService.sendAppointmentCancellation(appointment.getCustomer().getEmail(), appointment);
+        // Send cancellation email
+        sendAppointmentCancellationEmail(appointment);
     }
 
     public AppointmentResponse getAppointmentById(Long appointmentId) {
@@ -176,7 +186,7 @@ public class AppointmentService {
         // Get all appointments for this employee on this date
         LocalDateTime dayStart = date.atStartOfDay();
         LocalDateTime dayEnd = date.atTime(23, 59, 59);
-        
+
         List<Appointment> appointments = appointmentRepository
                 .findByEmployee_UserIdAndStartTimeBetween(employeeId, dayStart, dayEnd)
                 .stream()
@@ -211,15 +221,15 @@ public class AppointmentService {
      */
     public List<EmployeeAvailabilityResponse> getEmployeeAvailabilityRange(
             Long employeeId, LocalDate startDate, LocalDate endDate, Long serviceDuration) {
-        
+
         List<EmployeeAvailabilityResponse> availabilities = new ArrayList<>();
         LocalDate currentDate = startDate;
-        
+
         while (!currentDate.isAfter(endDate)) {
             availabilities.add(getEmployeeAvailability(employeeId, currentDate, serviceDuration));
             currentDate = currentDate.plusDays(1);
         }
-        
+
         return availabilities;
     }
 
@@ -227,55 +237,56 @@ public class AppointmentService {
      * Calculate available time slots based on working hours and booked appointments
      */
     private List<AvailableSlotDTO> calculateAvailableSlots(
-            LocalDate date, LocalTime workStart, LocalTime workEnd, 
+            LocalDate date, LocalTime workStart, LocalTime workEnd,
             List<AvailableSlotDTO> bookedSlots, Long serviceDuration) {
-        
+
         List<AvailableSlotDTO> availableSlots = new ArrayList<>();
         LocalDateTime slotStart = date.atTime(workStart);
         LocalDateTime workEndDateTime = date.atTime(workEnd);
-        
+
         // Slot interval in minutes (e.g., 15 or 30 minutes)
         int slotInterval = 30;
-        
-        while (slotStart.plusMinutes(serviceDuration).isBefore(workEndDateTime) 
-               || slotStart.plusMinutes(serviceDuration).equals(workEndDateTime)) {
-            
+
+        while (slotStart.plusMinutes(serviceDuration).isBefore(workEndDateTime)
+                || slotStart.plusMinutes(serviceDuration).equals(workEndDateTime)) {
+
             LocalDateTime slotEnd = slotStart.plusMinutes(serviceDuration);
             final LocalDateTime finalSlotStart = slotStart;
             final LocalDateTime finalSlotEnd = slotEnd;
-            
+
             // Check if this slot conflicts with any booked appointment
             boolean isAvailable = bookedSlots.stream()
-                    .noneMatch(booked -> hasTimeConflict(finalSlotStart, finalSlotEnd, 
-                                                         booked.getStartTime(), booked.getEndTime()));
-            
+                    .noneMatch(booked -> hasTimeConflict(finalSlotStart, finalSlotEnd,
+                            booked.getStartTime(), booked.getEndTime()));
+
             if (isAvailable) {
                 availableSlots.add(AvailableSlotDTO.builder()
                         .startTime(slotStart)
                         .endTime(slotEnd)
                         .build());
             }
-            
+
             slotStart = slotStart.plusMinutes(slotInterval);
         }
-        
+
         return availableSlots;
     }
 
     /**
      * Check if two time ranges conflict
      */
-    private boolean hasTimeConflict(LocalDateTime start1, LocalDateTime end1, 
-                                    LocalDateTime start2, LocalDateTime end2) {
-        return !(end1.isBefore(start2) || end1.equals(start2) || 
-                 start1.isAfter(end2) || start1.equals(end2));
+    private boolean hasTimeConflict(LocalDateTime start1, LocalDateTime end1,
+            LocalDateTime start2, LocalDateTime end2) {
+        return !(end1.isBefore(start2) || end1.equals(start2) ||
+                start1.isAfter(end2) || start1.equals(end2));
     }
 
     private boolean isEmployeeAvailable(Long employeeId, LocalDateTime startTime, LocalDateTime endTime) {
         return isEmployeeAvailable(employeeId, startTime, endTime, null);
     }
 
-    private boolean isEmployeeAvailable(Long employeeId, LocalDateTime startTime, LocalDateTime endTime, Long excludeAppointmentId) {
+    private boolean isEmployeeAvailable(Long employeeId, LocalDateTime startTime, LocalDateTime endTime,
+            Long excludeAppointmentId) {
         List<Appointment> conflictingAppointments = appointmentRepository
                 .findByEmployee_UserIdAndStartTimeBetween(employeeId, startTime.minusHours(1), endTime.plusHours(1))
                 .stream()
@@ -284,7 +295,7 @@ public class AppointmentService {
                 .filter(a -> {
                     // Check if there's an overlap
                     return !(endTime.isBefore(a.getStartTime()) || endTime.isEqual(a.getStartTime()) ||
-                             startTime.isAfter(a.getEndTime()) || startTime.isEqual(a.getEndTime()));
+                            startTime.isAfter(a.getEndTime()) || startTime.isEqual(a.getEndTime()));
                 })
                 .collect(Collectors.toList());
 
@@ -339,7 +350,35 @@ public class AppointmentService {
     /**
      * Get conflicting appointments for a specific time slot
      */
-    public List<AppointmentResponse> getConflictingAppointments(Long managerId, Long employeeId, LocalDateTime startTime, LocalDateTime endTime) {
+    public List<AppointmentResponse> getConflictingAppointments(Long employeeId,
+            LocalDateTime startTime, LocalDateTime endTime) {
+        // Verify employee exists
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
+
+        // Find all PENDING appointments that conflict with this time slot
+        List<Appointment> conflicts = appointmentRepository
+                .findByEmployee_UserIdAndStartTimeBetween(employeeId, startTime.minusHours(1), endTime.plusHours(1))
+                .stream()
+                .filter(a -> a.getStatus() == AppointmentStatus.PENDING)
+                .filter(a -> {
+                    // Check if there's an overlap
+                    return !(endTime.isBefore(a.getStartTime()) || endTime.isEqual(a.getStartTime()) ||
+                            startTime.isAfter(a.getEndTime()) || startTime.isEqual(a.getEndTime()));
+                })
+                .collect(Collectors.toList());
+
+        return conflicts.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get conflicting appointments for a specific time slot (Manager version)
+     * Manager can check conflicts for any employee in their company
+     */
+    public List<AppointmentResponse> getConflictingAppointmentsForManager(Long managerId, Long employeeId,
+            LocalDateTime startTime, LocalDateTime endTime) {
         // Verify manager has access to this employee
         BranchManager manager = branchManagerRepository.findById(managerId)
                 .orElseThrow(() -> new RuntimeException("Branch manager not found with id: " + managerId));
@@ -359,7 +398,7 @@ public class AppointmentService {
                 .filter(a -> {
                     // Check if there's an overlap
                     return !(endTime.isBefore(a.getStartTime()) || endTime.isEqual(a.getStartTime()) ||
-                             startTime.isAfter(a.getEndTime()) || startTime.isEqual(a.getEndTime()));
+                            startTime.isAfter(a.getEndTime()) || startTime.isEqual(a.getEndTime()));
                 })
                 .collect(Collectors.toList());
 
@@ -370,18 +409,19 @@ public class AppointmentService {
 
     /**
      * Approve an appointment (automatically rejects conflicting ones)
+     * Now handled by Employee instead of BranchManager
      */
     @Transactional
-    public AppointmentResponse approveAppointment(Long managerId, Long appointmentId) {
-        BranchManager manager = branchManagerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Branch manager not found with id: " + managerId));
+    public AppointmentResponse approveAppointment(Long employeeId, Long appointmentId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appointmentId));
 
-        // Verify manager has access to this appointment
-        if (!appointment.getEmployee().getCompany().getCompanyId().equals(manager.getCompany().getCompanyId())) {
-            throw new RuntimeException("Unauthorized: This appointment does not belong to your company");
+        // Verify employee is the assigned employee for this appointment
+        if (!appointment.getEmployee().getUserId().equals(employeeId)) {
+            throw new RuntimeException("Unauthorized: You can only approve your own appointments");
         }
 
         // Can only approve PENDING appointments
@@ -400,8 +440,10 @@ public class AppointmentService {
                 .filter(a -> !a.getAppointmentId().equals(appointmentId))
                 .filter(a -> {
                     // Check if there's an overlap
-                    return !(appointment.getEndTime().isBefore(a.getStartTime()) || appointment.getEndTime().isEqual(a.getStartTime()) ||
-                             appointment.getStartTime().isAfter(a.getEndTime()) || appointment.getStartTime().isEqual(a.getEndTime()));
+                    return !(appointment.getEndTime().isBefore(a.getStartTime())
+                            || appointment.getEndTime().isEqual(a.getStartTime()) ||
+                            appointment.getStartTime().isAfter(a.getEndTime())
+                            || appointment.getStartTime().isEqual(a.getEndTime()));
                 })
                 .collect(Collectors.toList());
 
@@ -409,16 +451,16 @@ public class AppointmentService {
         for (Appointment conflict : conflicts) {
             conflict.setStatus(AppointmentStatus.REJECTED);
             appointmentRepository.save(conflict);
-            // TODO: Send rejection email to customer
-            // emailService.sendAppointmentRejection(conflict.getCustomer().getEmail(), conflict, "Conflicting with approved appointment");
+            // Send rejection email
+            sendAppointmentRejectionEmail(conflict, "Conflicting with approved appointment");
         }
 
         // Approve the appointment
         appointment.setStatus(AppointmentStatus.APPROVED);
         Appointment approvedAppointment = appointmentRepository.save(appointment);
 
-        // TODO: Send approval email to customer
-        // emailService.sendAppointmentApproval(appointment.getCustomer().getEmail(), approvedAppointment);
+        // Send approval email
+        sendAppointmentApprovalEmail(approvedAppointment);
 
         return mapToResponse(approvedAppointment);
     }
@@ -427,16 +469,16 @@ public class AppointmentService {
      * Reject an appointment
      */
     @Transactional
-    public AppointmentResponse rejectAppointment(Long managerId, Long appointmentId) {
-        BranchManager manager = branchManagerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Branch manager not found with id: " + managerId));
+    public AppointmentResponse rejectAppointment(Long employeeId, Long appointmentId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appointmentId));
 
-        // Verify manager has access to this appointment
-        if (!appointment.getEmployee().getCompany().getCompanyId().equals(manager.getCompany().getCompanyId())) {
-            throw new RuntimeException("Unauthorized: This appointment does not belong to your company");
+        // Verify employee is the assigned employee for this appointment
+        if (!appointment.getEmployee().getUserId().equals(employeeId)) {
+            throw new RuntimeException("Unauthorized: You can only reject your own appointments");
         }
 
         // Can only reject PENDING appointments
@@ -448,9 +490,74 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.REJECTED);
         Appointment rejectedAppointment = appointmentRepository.save(appointment);
 
-        // TODO: Send rejection email to customer
-        // emailService.sendAppointmentRejection(appointment.getCustomer().getEmail(), rejectedAppointment, "Rejected by branch manager");
+        // Send rejection email
+        sendAppointmentRejectionEmail(rejectedAppointment, "Rejected by employee");
 
         return mapToResponse(rejectedAppointment);
+    }
+
+    // Helper methods for sending emails
+    private void sendAppointmentConfirmationEmail(Appointment appointment) {
+        try {
+            EmailTemplateData data = buildEmailTemplateData(appointment);
+            emailNotificationProvider.sendTemplatedNotification(
+                    appointment.getCustomer().getEmail(),
+                    "appointment-confirmation",
+                    data);
+        } catch (Exception e) {
+            // Log error but don't fail the appointment creation
+            System.err.println("Failed to send confirmation email: " + e.getMessage());
+        }
+    }
+
+    private void sendAppointmentApprovalEmail(Appointment appointment) {
+        try {
+            EmailTemplateData data = buildEmailTemplateData(appointment);
+            emailNotificationProvider.sendTemplatedNotification(
+                    appointment.getCustomer().getEmail(),
+                    "appointment-approval",
+                    data);
+        } catch (Exception e) {
+            System.err.println("Failed to send approval email: " + e.getMessage());
+        }
+    }
+
+    private void sendAppointmentRejectionEmail(Appointment appointment, String reason) {
+        try {
+            EmailTemplateData data = buildEmailTemplateData(appointment);
+            Map<String, Object> additionalData = new HashMap<>();
+            additionalData.put("rejectionReason", reason);
+            data.setAdditionalData(additionalData);
+
+            emailNotificationProvider.sendTemplatedNotification(
+                    appointment.getCustomer().getEmail(),
+                    "appointment-rejection",
+                    data);
+        } catch (Exception e) {
+            System.err.println("Failed to send rejection email: " + e.getMessage());
+        }
+    }
+
+    private void sendAppointmentCancellationEmail(Appointment appointment) {
+        try {
+            EmailTemplateData data = buildEmailTemplateData(appointment);
+            emailNotificationProvider.sendTemplatedNotification(
+                    appointment.getCustomer().getEmail(),
+                    "appointment-cancellation",
+                    data);
+        } catch (Exception e) {
+            System.err.println("Failed to send cancellation email: " + e.getMessage());
+        }
+    }
+
+    private EmailTemplateData buildEmailTemplateData(Appointment appointment) {
+        return EmailTemplateData.builder()
+                .customerName(appointment.getCustomer().getName())
+                .serviceName(appointment.getService().getName())
+                .employeeName(appointment.getEmployee().getName())
+                .companyName(appointment.getEmployee().getCompany().getName())
+                .appointmentDate(appointment.getStartTime().toLocalDate())
+                .appointmentTime(appointment.getStartTime().toLocalTime())
+                .build();
     }
 }

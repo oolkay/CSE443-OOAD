@@ -1,6 +1,5 @@
 package com.appointment.api.dto;
 
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,17 +11,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AppointmentRequestDTO {
-    
+
     @NotNull(message = "Customer ID is required")
     private Long customerId;
-    
+
     @NotNull(message = "Employee ID is required")
     private Long employeeId;
-    
+
     @NotNull(message = "Service ID is required")
     private Long serviceId;
-    
+
+    // Optional: can be derived from service, but useful for validation
+    private Long companyId;
+
     @NotNull(message = "Start time is required")
-    @Future(message = "Start time must be in the future")
     private LocalDateTime startTime;
 }
