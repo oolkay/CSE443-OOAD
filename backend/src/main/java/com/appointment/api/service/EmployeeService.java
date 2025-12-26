@@ -11,6 +11,7 @@ import com.appointment.api.exception.ResourceNotFoundException;
 import com.appointment.api.repository.CompanyRepository;
 import com.appointment.api.repository.EmployeeRepository;
 import com.appointment.api.repository.ServiceRepository;
+import com.appointment.api.dto.WorkingShiftResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,8 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final ServiceRepository serviceRepository;
+    private final WorkingShiftService workingShiftService;
+
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -61,11 +64,21 @@ public class EmployeeService {
         }
 
         Employee savedEmployee = employeeRepository.save(employee);
+
+        // Save schedule if provided
+        if (requestDTO.getSchedule() != null && !requestDTO.getSchedule().isEmpty()) {
+            workingShiftService.defineWeeklySchedule(savedEmployee.getUserId(), requestDTO.getSchedule());
+        }
+
         return mapToResponseDTO(savedEmployee);
     }
 
     @Transactional
     public EmployeeResponseDTO updateEmployee(Long id, EmployeeRequestDTO requestDTO) {
+
+        /* print the request */
+        System.out.println("\n\nRequest: " + requestDTO);
+
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
 
@@ -93,9 +106,16 @@ public class EmployeeService {
         }
 
         Employee updatedEmployee = employeeRepository.save(employee);
+
+        // Update schedule if provided
+        if (requestDTO.getSchedule() != null && !requestDTO.getSchedule().isEmpty()) {
+            workingShiftService.defineWeeklySchedule(updatedEmployee.getUserId(), requestDTO.getSchedule());
+        }
+
         return mapToResponseDTO(updatedEmployee);
     }
 
+    @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> getAllEmployees() {
         return employeeRepository.findAll().stream()
                 .map(this::mapToResponseDTO)
@@ -109,12 +129,14 @@ public class EmployeeService {
         employeeRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponseDTO getEmployeeById(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
         return mapToResponseDTO(employee);
     }
 
+    @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> getEmployeesByCompany(Long companyId) {
         return employeeRepository.findByCompany_CompanyId(companyId).stream()
                 .map(this::mapToResponseDTO)
@@ -143,6 +165,21 @@ public class EmployeeService {
                 .collect(Collectors.toList());
 
         dto.setAssignedServices(serviceDTOs);
+
+        // Map schedule
+        List<WorkingShiftResponseDTO> scheduleDTOs = workingShiftService.getScheduleForEmployee(employee.getUserId())
+                .stream()
+                .map(shift -> {
+                    WorkingShiftResponseDTO shiftDTO = new WorkingShiftResponseDTO();
+                    shiftDTO.setDayOfWeek(shift.getDayOfWeek());
+                    shiftDTO.setStartTime(shift.getStartTime());
+                    shiftDTO.setEndTime(shift.getEndTime());
+                    shiftDTO.setShiftName(shift.getShiftName());
+                    return shiftDTO;
+                })
+                .collect(Collectors.toList());
+        dto.setSchedule(scheduleDTOs);
+
         return dto;
     }
 }

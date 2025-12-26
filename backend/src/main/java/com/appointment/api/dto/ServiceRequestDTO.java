@@ -35,7 +35,6 @@ public class ServiceRequestDTO {
     @Digits(integer = 10, fraction = 2, message = "Price format is invalid")
     private BigDecimal price;
 
-    @NotNull(message = "Company ID is required")
     private Long companyId;
 
 }

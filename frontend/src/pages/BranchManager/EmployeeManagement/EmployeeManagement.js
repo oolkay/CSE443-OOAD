@@ -8,7 +8,20 @@ import ConfirmationModal from '../../../components/UI/ConfirmationModal';
 const EmployeeManager = () => {
     const DAYS_ORDER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
-    // Varsayılan boş program (Yeni çalışan için - Sadece UI için)
+    // Gün Mapping (TR -> EN ve EN -> TR)
+    const DAY_MAPPING = {
+        'Pazartesi': 'MONDAY',
+        'Salı': 'TUESDAY',
+        'Çarşamba': 'WEDNESDAY',
+        'Perşembe': 'THURSDAY',
+        'Cuma': 'FRIDAY',
+        'Cumartesi': 'SATURDAY',
+        'Pazar': 'SUNDAY'
+    };
+
+    const REVERSE_DAY_MAPPING = Object.fromEntries(Object.entries(DAY_MAPPING).map(([k, v]) => [v, k]));
+
+    // Varsayılan boş program
     const DEFAULT_SCHEDULE = {
         Pazartesi: { active: true, start: '09:00', end: '18:00' },
         Salı: { active: true, start: '09:00', end: '18:00' },
@@ -42,7 +55,6 @@ const EmployeeManager = () => {
         password: '', // Password is required for creation
         role: 'Employee',
         status: 'Active',
-        companyId: 1, // Hardcoded for now, should come from context/auth
         serviceIds: [],
         schedule: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE))
     };
@@ -65,7 +77,7 @@ const EmployeeManager = () => {
             const mappedEmployees = empData.map(emp => ({
                 ...emp,
                 // Default schedule for UI if not present (backend doesn't verify this)
-                schedule: DEFAULT_SCHEDULE,
+                schedule: transformScheduleFromApi(emp.schedule),
                 serviceIds: emp.assignedServices ? emp.assignedServices.map(s => s.id) : [],
                 serviceNames: emp.assignedServices ? emp.assignedServices.map(s => s.name) : []
             }));
@@ -109,9 +121,8 @@ const EmployeeManager = () => {
                 password: '', // Don't allow editing password directly here or leave empty to keep same
                 role: employee.role || 'Employee', // Backend might not send role yet if not User entity field
                 status: employee.status || 'Active',
-                companyId: employee.companyId || 1,
                 serviceIds: employee.serviceIds || [],
-                schedule: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE))
+                schedule: employee.schedule ? JSON.parse(JSON.stringify(employee.schedule)) : JSON.parse(JSON.stringify(DEFAULT_SCHEDULE))
             });
         } else {
             setIsEditing(false);
@@ -173,9 +184,8 @@ const EmployeeManager = () => {
             name: formData.name,
             email: formData.email,
             password: formData.password || null, // Send null if empty string
-            companyId: formData.companyId,
-            serviceIds: formData.serviceIds
-            // schedule ignored
+            serviceIds: formData.serviceIds,
+            schedule: transformScheduleToApi(formData.schedule)
         };
 
         // If editing and password is empty, don't send it (or backend should handle null)
@@ -241,6 +251,52 @@ const EmployeeManager = () => {
     const filteredEmployees = employees.filter(emp =>
         emp.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // --- HELPERS ---
+
+    // UI Format (Day Key -> {active, start, end}) TO API Format (List of DTOs)
+    const transformScheduleToApi = (scheduleObj) => {
+        const apiList = [];
+        Object.keys(scheduleObj).forEach(dayTr => {
+            const dayData = scheduleObj[dayTr];
+            if (dayData.active) {
+                // Backend requires MONDAY, TUESDAY etc.
+                const dayEn = DAY_MAPPING[dayTr];
+                if (dayEn) {
+                    apiList.push({
+                        dayOfWeek: dayEn,
+                        startTime: dayData.start.length === 5 ? dayData.start + ":00" : dayData.start, // HH:mm -> HH:mm:ss
+                        endTime: dayData.end.length === 5 ? dayData.end + ":00" : dayData.end,
+                        shiftName: 'Shift' // Optional
+                    });
+                }
+            }
+        });
+        return apiList;
+    };
+
+    // API Format TO UI Format
+    const transformScheduleFromApi = (apiList) => {
+        // Start with default empty schedule
+        const uiSchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+
+        // Reset all days to inactive first
+        Object.keys(uiSchedule).forEach(d => uiSchedule[d].active = false);
+
+        if (!apiList || !Array.isArray(apiList)) return uiSchedule;
+
+        apiList.forEach(shift => {
+            const dayTr = REVERSE_DAY_MAPPING[shift.dayOfWeek];
+            if (dayTr && uiSchedule[dayTr]) {
+                uiSchedule[dayTr].active = true;
+                // Cut seconds from time if present (09:00:00 -> 09:00)
+                uiSchedule[dayTr].start = shift.startTime.substring(0, 5);
+                uiSchedule[dayTr].end = shift.endTime.substring(0, 5);
+            }
+        });
+
+        return uiSchedule;
+    };
 
     return (
         <div className="layout-container">
@@ -321,7 +377,7 @@ const EmployeeManager = () => {
 
                             {/* Detaylı Program Görünümü (Sadece UI) */}
                             <div className="detail-section">
-                                <span className="label-block" style={{ textAlign: 'center', marginBottom: '10px' }}>Haftalık Program (Temsili)</span>
+                                <span className="label-block" style={{ textAlign: 'center', marginBottom: '10px' }}>Haftalık Program</span>
                                 <div className="schedule-list-view">
                                     {DAYS_ORDER.map(day => {
                                         const s = selectedEmployee.schedule[day];
