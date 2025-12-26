@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import authService from "../../services/authService";
 import "./AdminLayout.css";
 
 export default function AdminLayout() {
@@ -16,17 +17,12 @@ export default function AdminLayout() {
     { id: "settings", label: "Settings", path: "/admin/settings", icon: "⚙️" },
   ];
 
-  // Fetch user info from database (mock for now, replace with real API call)
+  // Fetch user info from localStorage (set during login)
   useEffect(() => {
-    // In real implementation, fetch from API:
-    // fetch('/api/super-admin/profile')
-    //   .then(res => res.json())
-    //   .then(data => setUserInfo(data))
-
-    // Mock data for now
-    setTimeout(() => {
-      setUserInfo({ name: "Super Admin", email: "admin@appointment.com" });
-    }, 1000);
+    const user = authService.getCurrentUser();
+    if (user) {
+      setUserInfo({ name: user.name, email: user.email });
+    }
   }, []);
 
   const handleLogout = () => {

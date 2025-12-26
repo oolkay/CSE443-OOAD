@@ -14,6 +14,7 @@ export default function SetNewPassword() {
 
   const email = location.state?.email || "";
   const code = location.state?.code || "";
+  const sessionToken = location.state?.sessionToken || "";
 
   // If no email or code is provided, redirect back
   useEffect(() => {
@@ -41,7 +42,7 @@ export default function SetNewPassword() {
     setLoading(true);
 
     // Call backend reset password API with code
-    const result = await authService.resetPasswordWithCode(email, code, password);
+    const result = await authService.resetPassword(sessionToken, password);
 
     if (result.success) {
       setMessage(

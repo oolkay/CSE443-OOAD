@@ -21,7 +21,13 @@ export default function Login() {
     if (result.success) {
       // Redirect based on user role
       const user = authService.getCurrentUser();
-      navigate("/appointments");
+
+      // Super Admin goes to admin home, others go to appointments
+      if (user.role === "ROLE_SUPER_ADMIN") {
+        navigate("/admin/home");
+      } else {
+        navigate("/appointments");
+      }
     } else {
       setError(result.error || "Giriş başarısız");
     }

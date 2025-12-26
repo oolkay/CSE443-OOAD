@@ -38,7 +38,6 @@ public class CompanyController {
      * Get all companies
      */
     @GetMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<CompanyResponseDTO>> getAllCompanies() {
         List<Company> companies = companyRepository.findAll();
         List<CompanyResponseDTO> response = companies.stream()
@@ -51,7 +50,6 @@ public class CompanyController {
      * Get company by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<CompanyResponseDTO> getCompanyById(@PathVariable Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + id));
@@ -109,7 +107,6 @@ public class CompanyController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    
     /**
      * Update company
      */
@@ -124,7 +121,7 @@ public class CompanyController {
 
         // Check if email already exists for another company
         if (!existingCompany.getEmail().equals(companyDTO.getEmail()) &&
-            companyRepository.existsByEmail(companyDTO.getEmail())) {
+                companyRepository.existsByEmail(companyDTO.getEmail())) {
             throw new DuplicateResourceException("Company with this email already exists");
         }
 

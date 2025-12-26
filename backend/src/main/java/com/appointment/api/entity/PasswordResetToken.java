@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * Password Reset Token Entity
- * Stores temporary tokens for password reset functionality
+ * Entity for storing password reset tokens
+ * Stores one-time 6-character codes for password reset functionality
  */
 @Entity
 @Table(name = "password_reset_tokens")
@@ -22,30 +22,47 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 500)
-    private String token;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
-
-    @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    @Column(nullable = false, length = 6)
+    private String code;
 
     @Column(nullable = false)
-    private boolean used = false;
+    private LocalDateTime expiresAt;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private boolean used;
+
+    // Session token for password reset (generated after code verification)
+    @Column(length = 64, unique = true)
+    private String sessionToken;
+
+    @Column
+    private LocalDateTime sessionExpiresAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        used = false;
     }
 
     /**
-     * Check if token is valid (not expired and not used)
+     * Check if the token is expired
+     */
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    /**
+     * Check if the token is valid (not used and not expired)
      */
     public boolean isValid() {
-        return !used && LocalDateTime.now().isBefore(expiryDate);
+        return !used && !isExpired();
     }
 }
+

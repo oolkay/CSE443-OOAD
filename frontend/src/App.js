@@ -44,7 +44,7 @@ function App() {
             <Route path="/service-management" element={<ServiceManager />} />
             <Route path="/request-management" element={<RequestManagement />} />
             <Route path="/resource-management" element={<ResourceManager />} />
-            <Route path="/reset" element={<ResetPassword />} />
+            {/* <Route path="/reset" element={<ResetPassword />} /> */}
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>

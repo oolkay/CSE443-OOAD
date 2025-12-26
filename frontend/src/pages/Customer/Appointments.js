@@ -3,105 +3,23 @@ import { Link } from "react-router-dom";
 import "./Appointments.css";
 import BookingWizard from "../../components/BookingWizard";
 
-const initialUpcoming = [
-  {
-    id: 1,
-    service: "Saç Kesimi",
-    date: "2024-11-15",
-    time: "10:00 - 11:00",
-    employee: "Ayşe Yılmaz",
-    status: "Onaylandı",
-  },
-  {
-    id: 2,
-    service: "Manikür",
-    date: "2024-11-16",
-    time: "14:30 - 15:30",
-    employee: "Zeynep Kaya",
-    status: "Beklemede",
-  },
-  {
-    id: 3,
-    service: "Cilt Bakımı",
-    date: "2024-11-20",
-    time: "09:00 - 10:30",
-    employee: "Mehmet Demir",
-    status: "Onaylandı",
-  },
-  {
-    id: 4,
-    service: "Masaj",
-    date: "2024-11-22",
-    time: "16:00 - 17:00",
-    employee: "Ayşe Yılmaz",
-    status: "Beklemede",
-  },
-];
-
-const initialPrevious = [
-  {
-    id: 101,
-    service: "Saç Kesimi",
-    date: "2024-10-01",
-    time: "10:00 - 11:00",
-    employee: "Ayşe Yılmaz",
-    status: "Tamamlandı",
-  },
-  {
-    id: 102,
-    service: "Pedikür",
-    date: "2024-09-20",
-    time: "13:00 - 14:00",
-    employee: "Zeynep Kaya",
-    status: "Tamamlandı",
-  },
-  {
-    id: 103,
-    service: "Botox",
-    date: "2024-08-10",
-    time: "11:00 - 12:00",
-    employee: "Mehmet Demir",
-    status: "Cancelled",
-  },
-  {
-    id: 104,
-    service: "Blow-dry",
-    date: "2024-07-05",
-    time: "17:00 - 17:30",
-    employee: "Ayşe Yılmaz",
-    status: "Completed",
-  },
-  {
-    id: 105,
-    service: "Nail Art",
-    date: "2024-06-12",
-    time: "14:00 - 15:00",
-    employee: "Zeynep Kaya",
-    status: "Completed",
-  },
-];
-
 function StatusBadge({ status }) {
   const cls =
     status === "Approved" || status === "Onaylandı"
       ? "badge approved"
       : status === "Pending" || status === "Beklemede"
-      ? "badge pending"
-      : status === "Completed" || status === "Tamamlandı"
-      ? "badge completed"
-      : "badge cancelled";
+        ? "badge pending"
+        : status === "Completed" || status === "Tamamlandı"
+          ? "badge completed"
+          : "badge cancelled";
 
   // Display Turkish status
   const displayStatus =
-    status === "Approved"
-      ? "Onaylandı"
-      : status === "Pending"
-      ? "Beklemede"
-      : status === "Completed"
-      ? "Tamamlandı"
-      : status === "Cancelled"
-      ? "İptal Edildi"
-      : status;
+    status === "Approved" ? "Onaylandı" :
+      status === "Pending" ? "Beklemede" :
+        status === "Completed" ? "Tamamlandı" :
+          status === "Cancelled" ? "İptal Edildi" :
+            status;
 
   return <span className={cls}>{displayStatus}</span>;
 }
@@ -213,7 +131,7 @@ export default function Appointments() {
       );
 
       localStorage.removeItem("lastCancelledAppointment");
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // keep localStorage in sync when lists change (fallback persistence)
@@ -223,7 +141,7 @@ export default function Appointments() {
         "upcomingAppointments",
         JSON.stringify(upcomingList)
       );
-    } catch (e) {}
+    } catch (e) { }
   }, [upcomingList]);
 
   React.useEffect(() => {
@@ -232,7 +150,7 @@ export default function Appointments() {
         "previousAppointments",
         JSON.stringify(previousList)
       );
-    } catch (e) {}
+    } catch (e) { }
   }, [previousList]);
 
   // Create appointment modal state
@@ -263,15 +181,10 @@ export default function Appointments() {
           const item = {
             id: a.appointmentId,
             service: a.serviceName,
-            date: a.startTime ? a.startTime.split("T")[0] : "",
-            time:
-              a.startTime && a.endTime
-                ? `${a.startTime.split("T")[1].slice(0, 5)} - ${a.endTime
-                    .split("T")[1]
-                    .slice(0, 5)}`
-                : "",
-            employee: a.employeeName || "",
-            status: status,
+            date: a.startTime ? a.startTime.split('T')[0] : '',
+            time: a.startTime && a.endTime ? `${a.startTime.split('T')[1].slice(0, 5)} - ${a.endTime.split('T')[1].slice(0, 5)}` : '',
+            employee: a.employeeName || '',
+            status: status
           };
           if (status === "PENDING" || status === "APPROVED")
             upcoming.push(item);
@@ -378,22 +291,11 @@ export default function Appointments() {
         <div className="sidebar-title">Randevu İşlemleri</div>
         <ul className="sidebar-list">
           <li className="active">Randevu Yönetimi</li>
-          <li
-            style={{
-              marginTop: "auto",
-              borderTop: "1px solid rgba(255,255,255,0.1)",
-              paddingTop: "10px",
-            }}
-          >
-            <Link
-              to="/"
-              onClick={() => {
-                localStorage.removeItem("user");
-                localStorage.removeItem("authToken");
-              }}
-              className="sidebar-link"
-              style={{ color: "#ff6b6b" }}
-            >
+          <li style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '10px' }}>
+            <Link to="/" onClick={() => {
+              localStorage.removeItem('user');
+              localStorage.removeItem('authToken');
+            }} className="sidebar-link" style={{ color: '#ff6b6b' }}>
               Çıkış Yap
             </Link>
           </li>
@@ -483,13 +385,7 @@ export default function Appointments() {
               </div>
             ))}
             {upcomingList.length === 0 && (
-              <p
-                style={{
-                  textAlign: "center",
-                  color: "#666",
-                  padding: "20px 0",
-                }}
-              >
+              <p style={{ textAlign: 'center', color: '#666', padding: '20px 0' }}>
                 Yaklaşan randevu bulunmamaktadır.
               </p>
             )}
@@ -556,13 +452,7 @@ export default function Appointments() {
               </div>
             ))}
             {previousList.length === 0 && (
-              <p
-                style={{
-                  textAlign: "center",
-                  color: "#666",
-                  padding: "20px 0",
-                }}
-              >
+              <p style={{ textAlign: 'center', color: '#666', padding: '20px 0' }}>
                 Geçmiş randevu bulunmamaktadır.
               </p>
             )}

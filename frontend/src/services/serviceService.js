@@ -33,6 +33,11 @@ const serviceService = {
             params: { name }
         });
         return response.data;
+    },
+
+    getServicesByCompany: async (companyId) => {
+        const response = await axios.get(`${SERVICE_URL}/company/${companyId}`);
+        return response.data;
     }
 };
 

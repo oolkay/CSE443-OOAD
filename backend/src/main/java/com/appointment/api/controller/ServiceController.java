@@ -84,4 +84,15 @@ public class ServiceController {
         List<ServiceResponseDTO> services = serviceService.searchServicesByName(name);
         return ResponseEntity.ok(services);
     }
+
+    /**
+     * Get services by Company ID.
+     * GET /api/services/company/{companyId}
+     */
+    @GetMapping("/company/{companyId}")
+    @org.springframework.security.access.prepost.PreAuthorize("permitAll()")
+    public ResponseEntity<List<ServiceResponseDTO>> getServicesByCompany(@PathVariable Long companyId) {
+        List<ServiceResponseDTO> services = serviceService.getServicesByCompany(companyId);
+        return ResponseEntity.ok(services);
+    }
 }
