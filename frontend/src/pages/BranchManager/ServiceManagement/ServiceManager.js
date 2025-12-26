@@ -148,8 +148,7 @@ const ServiceManager = () => {
             name: formData.name,
             description: formData.description,
             durationMinutes: durationVal,
-            price: priceVal,
-            companyId: 4
+            price: priceVal
         };
 
         try {
@@ -211,7 +210,8 @@ const ServiceManager = () => {
             fetchServices();
         } catch (err) {
             console.error("Error deleting service:", err);
-            const msg = err.response?.data?.message || "Silme işlemi başarısız.";
+            // Axios interceptor returns { message, data, status }, not the original response object
+            const msg = err.message || err.data?.message || "Silme işlemi başarısız.";
             addToast('error', msg);
         } finally {
             setServiceToDelete(null);

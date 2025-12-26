@@ -20,15 +20,17 @@ public class EmployeeRequestDTO {
 
     // Şifre: Oluştururken zorunlu, güncellerken opsiyonel (Service katmanında
     // kontrol edilecek)
-    @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")
+    @Size(min = 8, message = "Şifre en az 8 karakter olmalıdır")
     private String password;
 
     // İlişkisel ID'ler
-    @NotNull(message = "Şirket ID alanı zorunludur")
     private Long companyId; // Zorunlu (Hata almamak için)
 
     private Long managerId; // Opsiyonel
 
     // Çoklu seçim: Çalışanın verebileceği hizmetlerin ID listesi
     private List<Long> serviceIds;
+
+    // Çalışma Saatleri (İsteğe bağlı)
+    private List<WorkingShiftRequestDTO> schedule;
 }

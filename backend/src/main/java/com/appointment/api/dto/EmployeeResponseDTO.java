@@ -9,7 +9,10 @@ public class EmployeeResponseDTO {
     private String name;
     private String email;
     private String companyName;
-    
+
     // Atanmış hizmetlerin listesi
-    private List<ServiceResponseDTO> assignedServices; 
+    private List<ServiceResponseDTO> assignedServices;
+
+    // Çalışma Saatleri
+    private List<WorkingShiftResponseDTO> schedule;
 }

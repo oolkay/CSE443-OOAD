@@ -2,7 +2,10 @@ package com.appointment.api.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -37,6 +40,8 @@ public class Company {
     private String phoneNumber;
 
     @OneToOne(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private BranchManager branchManager;
 
     @Column(nullable = false, updatable = false)

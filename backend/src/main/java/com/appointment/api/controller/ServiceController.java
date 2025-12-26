@@ -10,6 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.security.Principal;
+import org.springframework.security.access.AccessDeniedException;
+import com.appointment.api.entity.User;
+import com.appointment.api.repository.UserRepository;
+import com.appointment.api.entity.BranchManager;
+import com.appointment.api.entity.SuperAdmin;
 
 /**
  * REST Controller for Service endpoints.
@@ -22,13 +28,16 @@ import java.util.List;
 public class ServiceController {
 
     private final ServiceService serviceService;
+    private final UserRepository userRepository;
 
     /**
      * Create a new service.
      * POST /api/services
      */
     @PostMapping
-    public ResponseEntity<ServiceResponseDTO> createService(@Valid @RequestBody ServiceRequestDTO requestDTO) {
+    public ResponseEntity<ServiceResponseDTO> createService(@Valid @RequestBody ServiceRequestDTO requestDTO,
+            Principal principal) {
+        setCompanyIdFromPrincipal(requestDTO, principal);
         ServiceResponseDTO response = serviceService.createService(requestDTO);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -60,7 +69,9 @@ public class ServiceController {
     @PutMapping("/{id}")
     public ResponseEntity<ServiceResponseDTO> updateService(
             @PathVariable Long id,
-            @Valid @RequestBody ServiceRequestDTO requestDTO) {
+            @Valid @RequestBody ServiceRequestDTO requestDTO,
+            Principal principal) {
+        setCompanyIdFromPrincipal(requestDTO, principal);
         ServiceResponseDTO response = serviceService.updateService(id, requestDTO);
         return ResponseEntity.ok(response);
     }
@@ -94,5 +105,21 @@ public class ServiceController {
     public ResponseEntity<List<ServiceResponseDTO>> getServicesByCompany(@PathVariable Long companyId) {
         List<ServiceResponseDTO> services = serviceService.getServicesByCompany(companyId);
         return ResponseEntity.ok(services);
+    }
+
+    private void setCompanyIdFromPrincipal(ServiceRequestDTO requestDTO, Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user instanceof BranchManager) {
+            BranchManager manager = (BranchManager) user;
+            requestDTO.setCompanyId(manager.getCompany().getCompanyId());
+        } else if (user instanceof SuperAdmin) {
+            if (requestDTO.getCompanyId() == null) {
+                throw new IllegalArgumentException("Company ID is required for Super Admin");
+            }
+        } else {
+            throw new AccessDeniedException("Unauthorized access");
+        }
     }
 }

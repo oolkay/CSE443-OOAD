@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.appointment.api.dto.WorkingShiftResponseDTO;
 import java.util.List;
+import java.util.stream.Collectors;
 import jakarta.validation.Valid;
 
 @RestController
@@ -18,27 +20,43 @@ public class WorkingShiftController {
     private final WorkingShiftService workingShiftService;
 
     @PostMapping("/{employeeId}")
-    public ResponseEntity<WorkingShift> defineShift(
+    public ResponseEntity<WorkingShiftResponseDTO> defineShift(
             @PathVariable Long employeeId,
             @Valid @RequestBody WorkingShiftRequestDTO request) {
-        
+
         WorkingShift definedShift = workingShiftService.defineWorkingShift(employeeId, request);
-        return ResponseEntity.ok(definedShift);
+        return ResponseEntity.ok(mapToResponseDTO(definedShift));
     }
 
     @PostMapping("/{employeeId}/weekly")
-    public ResponseEntity<List<WorkingShift>> defineWeeklySchedule(
+    public ResponseEntity<List<WorkingShiftResponseDTO>> defineWeeklySchedule(
             @PathVariable Long employeeId,
             @Valid @RequestBody List<WorkingShiftRequestDTO> requests) {
-        
+
         List<WorkingShift> weeklySchedule = workingShiftService.defineWeeklySchedule(employeeId, requests);
-        return ResponseEntity.ok(weeklySchedule);
+        List<WorkingShiftResponseDTO> response = weeklySchedule.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{employeeId}")
-    public ResponseEntity<List<WorkingShift>> getEmployeeSchedule(@PathVariable Long employeeId) {
-        // Service katmanında "findByEmployee_UserId" metodunu kullandığımız varsayılmıştır.
+    public ResponseEntity<List<WorkingShiftResponseDTO>> getEmployeeSchedule(@PathVariable Long employeeId) {
+        // Service katmanında "findByEmployee_UserId" metodunu kullandığımız
+        // varsayılmıştır.
         List<WorkingShift> schedule = workingShiftService.getScheduleForEmployee(employeeId);
-        return ResponseEntity.ok(schedule);
+        List<WorkingShiftResponseDTO> response = schedule.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    private WorkingShiftResponseDTO mapToResponseDTO(WorkingShift shift) {
+        WorkingShiftResponseDTO dto = new WorkingShiftResponseDTO();
+        dto.setDayOfWeek(shift.getDayOfWeek());
+        dto.setStartTime(shift.getStartTime());
+        dto.setEndTime(shift.getEndTime());
+        dto.setShiftName(shift.getShiftName());
+        return dto;
     }
 }

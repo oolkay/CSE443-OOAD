@@ -260,12 +260,10 @@ body {
     font-weight: 600;
     width: 40px;
     color: #111827;
-    /* Darker color */
 }
 
 .sched-time {
     color: #4b5563;
-    /* Slightly lighter but visible */
 }
 
 .detail-role {
@@ -274,7 +272,7 @@ body {
     font-size: 1rem;
 }
 
-/* --- HAFTALIK PROGRAM TOGGLE SWITCH (YENİ) --- */
+/* --- HAFTALIK PROGRAM TOGGLE SWITCH --- */
 .schedule-row {
     display: flex;
     align-items: center;
@@ -350,19 +348,23 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0; /* Inputların sıkışmasını önler */
 }
 
+/* ----- GÜNCELLENEN KISIM (FIX) ----- */
 .mini-time-input {
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    padding: 4px;
+    padding: 4px 8px; /* Padding artırıldı */
     font-family: inherit;
-    width: 85px;
+    width: 115px; /* GENİŞLİK ARTIRILDI (Eski: 85px) - Sorunu çözen kısım */
     font-size: 1rem;
-    /* Prevent zoom on iOS */
+    cursor: pointer;
+    flex-shrink: 0; /* Sıkışmayı önler */
+    color-scheme: light; /* Browser uyumluluğu için */
 }
 
-/* --- SKILL CHECKBOX (HİZMETLER) (YENİ) --- */
+/* --- SKILL CHECKBOX (HİZMETLER) --- */
 .skills-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -381,7 +383,6 @@ body {
     transition: all 0.2s ease;
     position: relative;
     user-select: none;
-    /* Minimize tap delay */
     touch-action: manipulation;
 }
 
@@ -448,7 +449,6 @@ body {
     font-size: 1rem;
     background-color: #ffffff !important;
     color: #111827 !important;
-    /* Prevent zoom on mobile */
 }
 
 .form-row {
@@ -471,7 +471,6 @@ body {
     background: white;
     font-size: 1rem;
     min-height: 48px;
-    /* Accessible touch target */
 }
 
 .btn-save,
@@ -486,7 +485,6 @@ body {
     color: white;
     font-size: 1rem;
     min-height: 48px;
-    /* Accessible touch target */
 }
 
 .btn-delete {
@@ -586,7 +584,7 @@ body {
     }
 
     .mini-time-input {
-        width: 80px;
+        width: 115px; /* Mobil için de genişletildi */
         text-align: center;
     }
 

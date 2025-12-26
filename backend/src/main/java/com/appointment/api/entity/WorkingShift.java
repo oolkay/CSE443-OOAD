@@ -3,6 +3,8 @@ package com.appointment.api.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -24,6 +26,8 @@ public class WorkingShift {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Employee employee;
 
     @Column(nullable = false, length = 50)

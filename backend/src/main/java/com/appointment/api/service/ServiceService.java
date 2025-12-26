@@ -69,6 +69,7 @@ public class ServiceService {
         log.debug("Fetching all services");
         return serviceRepository.findAll()
                 .stream()
+                .sorted(java.util.Comparator.comparing(Service::getServiceId))
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -161,6 +162,7 @@ public class ServiceService {
     public List<ServiceResponseDTO> getServicesByCompany(Long companyId) {
         return serviceRepository.findByCompany_CompanyId(companyId)
                 .stream()
+                .sorted(java.util.Comparator.comparing(Service::getServiceId))
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
