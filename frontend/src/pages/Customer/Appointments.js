@@ -6,54 +6,54 @@ import BookingWizard from "../../components/BookingWizard";
 const initialUpcoming = [
   {
     id: 1,
-    service: "Haircut",
+    service: "Saç Kesimi",
     date: "2024-11-15",
     time: "10:00 - 11:00",
     employee: "Ayşe Yılmaz",
-    status: "Approved",
+    status: "Onaylandı",
   },
   {
     id: 2,
-    service: "Manicure",
+    service: "Manikür",
     date: "2024-11-16",
     time: "14:30 - 15:30",
     employee: "Zeynep Kaya",
-    status: "Pending",
+    status: "Beklemede",
   },
   {
     id: 3,
-    service: "Skincare",
+    service: "Cilt Bakımı",
     date: "2024-11-20",
     time: "09:00 - 10:30",
     employee: "Mehmet Demir",
-    status: "Approved",
+    status: "Onaylandı",
   },
   {
     id: 4,
-    service: "Massage",
+    service: "Masaj",
     date: "2024-11-22",
     time: "16:00 - 17:00",
     employee: "Ayşe Yılmaz",
-    status: "Pending",
+    status: "Beklemede",
   },
 ];
 
 const initialPrevious = [
   {
     id: 101,
-    service: "Haircut",
+    service: "Saç Kesimi",
     date: "2024-10-01",
     time: "10:00 - 11:00",
     employee: "Ayşe Yılmaz",
-    status: "Completed",
+    status: "Tamamlandı",
   },
   {
     id: 102,
-    service: "Pedicure",
+    service: "Pedikür",
     date: "2024-09-20",
     time: "13:00 - 14:00",
     employee: "Zeynep Kaya",
-    status: "Completed",
+    status: "Tamamlandı",
   },
   {
     id: 103,
@@ -90,15 +90,19 @@ function StatusBadge({ status }) {
       : status === "Completed" || status === "Tamamlandı"
       ? "badge completed"
       : "badge cancelled";
-  
+
   // Display Turkish status
-  const displayStatus = 
-    status === "Approved" ? "Onaylandı" :
-    status === "Pending" ? "Beklemede" :
-    status === "Completed" ? "Tamamlandı" :
-    status === "Cancelled" ? "İptal Edildi" :
-    status;
-  
+  const displayStatus =
+    status === "Approved"
+      ? "Onaylandı"
+      : status === "Pending"
+      ? "Beklemede"
+      : status === "Completed"
+      ? "Tamamlandı"
+      : status === "Cancelled"
+      ? "İptal Edildi"
+      : status;
+
   return <span className={cls}>{displayStatus}</span>;
 }
 
@@ -240,36 +244,44 @@ export default function Appointments() {
     async function fetchAppointments() {
       try {
         // try to read customer id from localStorage (set by login flow)
-        const stored = localStorage.getItem('customerId') || localStorage.getItem('userId');
+        const stored =
+          localStorage.getItem("customerId") || localStorage.getItem("userId");
         const cid = stored ? Number(stored) : null;
         if (!cid) return; // nothing to fetch
-        
-        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+
+        const BASE_URL =
+          process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
         const res = await fetch(`${BASE_URL}/api/appointments/customer/${cid}`);
-        if (!res.ok) throw new Error('Failed to fetch');
+        if (!res.ok) throw new Error("Failed to fetch");
         const appts = await res.json();
-        
+
         // split into upcoming (pending/approved) and previous (completed/cancelled/no-show)
         const upcoming = [];
         const previous = [];
-        appts.forEach(a => {
-          const status = a.status ? String(a.status) : '';
+        appts.forEach((a) => {
+          const status = a.status ? String(a.status) : "";
           const item = {
             id: a.appointmentId,
             service: a.serviceName,
-            date: a.startTime ? a.startTime.split('T')[0] : '',
-            time: a.startTime && a.endTime ? `${a.startTime.split('T')[1].slice(0,5)} - ${a.endTime.split('T')[1].slice(0,5)}` : '',
-            employee: a.employeeName || '',
-            status: status
+            date: a.startTime ? a.startTime.split("T")[0] : "",
+            time:
+              a.startTime && a.endTime
+                ? `${a.startTime.split("T")[1].slice(0, 5)} - ${a.endTime
+                    .split("T")[1]
+                    .slice(0, 5)}`
+                : "",
+            employee: a.employeeName || "",
+            status: status,
           };
-          if (status === 'PENDING' || status === 'APPROVED') upcoming.push(item);
+          if (status === "PENDING" || status === "APPROVED")
+            upcoming.push(item);
           else previous.push(item);
         });
         if (upcoming.length) setUpcomingList(upcoming);
         if (previous.length) setPreviousList(previous);
       } catch (e) {
         // silently ignore network errors; keep mock/local data
-        console.warn('Failed to load appointments from API', e);
+        console.warn("Failed to load appointments from API", e);
       }
     }
     fetchAppointments();
@@ -341,38 +353,49 @@ export default function Appointments() {
         <div className="user-info">
           <div className="user-avatar">
             {(() => {
-                const userStr = localStorage.getItem('user');
-                const user = userStr ? JSON.parse(userStr) : {};
-                return (user.name || 'K').charAt(0).toUpperCase();
+              const userStr = localStorage.getItem("user");
+              const user = userStr ? JSON.parse(userStr) : {};
+              return (user.name || "K").charAt(0).toUpperCase();
             })()}
           </div>
           <div className="user-details">
             <div className="user-name">
-                {(() => {
-                    const userStr = localStorage.getItem('user');
-                    const user = userStr ? JSON.parse(userStr) : {};
-                    return user.name || 'Kullanıcı';
-                })()}
+              {(() => {
+                const userStr = localStorage.getItem("user");
+                const user = userStr ? JSON.parse(userStr) : {};
+                return user.name || "Kullanıcı";
+              })()}
             </div>
             <div className="user-email">
-                {(() => {
-                    const userStr = localStorage.getItem('user');
-                    const user = userStr ? JSON.parse(userStr) : {};
-                    return user.email || 'email@example.com';
-                })()}
+              {(() => {
+                const userStr = localStorage.getItem("user");
+                const user = userStr ? JSON.parse(userStr) : {};
+                return user.email || "email@example.com";
+              })()}
             </div>
           </div>
         </div>
         <div className="sidebar-title">Randevu İşlemleri</div>
         <ul className="sidebar-list">
           <li className="active">Randevu Yönetimi</li>
-          <li style={{marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '10px'}}>
-             <Link to="/" onClick={() => {
-                 localStorage.removeItem('user');
-                 localStorage.removeItem('authToken');
-             }} className="sidebar-link" style={{color: '#ff6b6b'}}>
-               Çıkış Yap
-             </Link>
+          <li
+            style={{
+              marginTop: "auto",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              paddingTop: "10px",
+            }}
+          >
+            <Link
+              to="/"
+              onClick={() => {
+                localStorage.removeItem("user");
+                localStorage.removeItem("authToken");
+              }}
+              className="sidebar-link"
+              style={{ color: "#ff6b6b" }}
+            >
+              Çıkış Yap
+            </Link>
           </li>
         </ul>
       </aside>
@@ -460,7 +483,13 @@ export default function Appointments() {
               </div>
             ))}
             {upcomingList.length === 0 && (
-              <p style={{textAlign: 'center', color: '#666', padding: '20px 0'}}>
+              <p
+                style={{
+                  textAlign: "center",
+                  color: "#666",
+                  padding: "20px 0",
+                }}
+              >
                 Yaklaşan randevu bulunmamaktadır.
               </p>
             )}
@@ -527,7 +556,13 @@ export default function Appointments() {
               </div>
             ))}
             {previousList.length === 0 && (
-              <p style={{textAlign: 'center', color: '#666', padding: '20px 0'}}>
+              <p
+                style={{
+                  textAlign: "center",
+                  color: "#666",
+                  padding: "20px 0",
+                }}
+              >
                 Geçmiş randevu bulunmamaktadır.
               </p>
             )}

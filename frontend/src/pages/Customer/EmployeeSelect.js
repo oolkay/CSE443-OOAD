@@ -7,10 +7,10 @@ function useQuery() {
 }
 
 const employees = [
-  { id: "e1", name: "Musab", title: "Stylist Expert" },
-  { id: "e2", name: "Ayşe", title: "Hair Coloring Expert" },
-  { id: "e3", name: "Mehmet", title: "Modern Haircut Expert" },
-  { id: "e4", name: "Zeynep", title: "Hair Care Therapist" },
+  { id: "e1", name: "Musab", title: "Stil Uzmanı" },
+  { id: "e2", name: "Ayşe", title: "Saç Boyama Uzmanı" },
+  { id: "e3", name: "Mehmet", title: "Modern Saç Kesimi Uzmanı" },
+  { id: "e4", name: "Zeynep", title: "Saç Bakım Terapisti" },
 ];
 
 export default function EmployeeSelect() {
@@ -34,13 +34,13 @@ export default function EmployeeSelect() {
   return (
     <div className="employee-page">
       <div className="employee-container">
-        <h2 className="employee-title">employee Choice</h2>
+        <h2 className="employee-title">Çalışan Seçimi</h2>
         <p className="employee-sub">
-          Select an employee for your service or skip this step.
+          Hizmetiniz için bir çalışan seçin veya bu adımı atlayın.
         </p>
 
         <div className="selected-service">
-          Selected Service:
+          Seçilen Hizmet:
           <br />
           <strong>
             {service} - {time}
@@ -54,7 +54,7 @@ export default function EmployeeSelect() {
               <div className="emp-name">{emp.name}</div>
               <div className="emp-title">{emp.title}</div>
               <button className="select-emp" onClick={() => handleSelect(emp)}>
-                Select
+                Seç
               </button>
             </div>
           ))}
@@ -62,7 +62,7 @@ export default function EmployeeSelect() {
 
         <div className="employee-actions">
           <button className="back-btn" onClick={() => navigate(-1)}>
-            Back
+            Geri
           </button>
           <button
             className="skip-btn"
@@ -73,7 +73,7 @@ export default function EmployeeSelect() {
               navigate(`/times?${params.toString()}`);
             }}
           >
-            Skip
+            Atla
           </button>
         </div>
       </div>

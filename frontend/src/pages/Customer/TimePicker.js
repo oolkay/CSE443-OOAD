@@ -77,15 +77,22 @@ export default function TimePicker() {
     let cancelled = false;
     async function loadAvailability() {
       // detect numeric id
-      const empId = employee && /^\d+$/.test(employee) ? Number(employee) : null;
+      const empId =
+        employee && /^\d+$/.test(employee) ? Number(employee) : null;
       if (!empId) return; // not a numeric id - keep mock
       try {
-        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
-        const serviceDuration = q.get('timeDuration') || q.get('serviceDuration') || '30';
-        const date = `${year}-${String(month+1).padStart(2,'0')}-${String(selectedDay).padStart(2,'0')}`;
+        const BASE_URL =
+          process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+        const serviceDuration =
+          q.get("timeDuration") || q.get("serviceDuration") || "30";
+        const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+          selectedDay
+        ).padStart(2, "0")}`;
         const params = new URLSearchParams({ date, serviceDuration });
-        const res = await fetch(`${BASE_URL}/api/appointments/availability/employee/${empId}?${params.toString()}`);
-        if (!res.ok) throw new Error('Failed to fetch');
+        const res = await fetch(
+          `${BASE_URL}/api/appointments/availability/employee/${empId}?${params.toString()}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch");
         const resp = await res.json();
         if (cancelled) return;
         if (resp && resp.slots) {
@@ -93,22 +100,28 @@ export default function TimePicker() {
           // backend EmployeeAvailabilityResponse contains slots: list of AvailableSlotDTO with startTime,endTime
           // Map TIMES by presence of any slot at that hour:minute
           const slots = resp.slots || [];
-          const slotSet = new Set(slots.map(s => s.startTime && s.startTime.split('T')[1].slice(0,5)));
+          const slotSet = new Set(
+            slots.map(
+              (s) => s.startTime && s.startTime.split("T")[1].slice(0, 5)
+            )
+          );
           for (const t of TIMES) {
             // map e.g. "09:00 AM" -> "09:00"
             const match = t.match(/(\d{2}:\d{2})/);
             const key = t;
-            if (match && slotSet.has(match[1])) newAvail[key] = 'available';
-            else newAvail[key] = 'unavailable';
+            if (match && slotSet.has(match[1])) newAvail[key] = "available";
+            else newAvail[key] = "unavailable";
           }
           setAvailabilityState(newAvail);
         }
       } catch (e) {
-        console.warn('Failed to load availability from API', e);
+        console.warn("Failed to load availability from API", e);
       }
     }
     loadAvailability();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [employee, selectedDay, month, year, q]);
 
   // local state to hold availability when fetched from API
@@ -150,7 +163,7 @@ export default function TimePicker() {
   return (
     <div className="time-page">
       <div className="time-container">
-        <h2>Select Appointment Time</h2>
+        <h2>Randevu Saati Seçin</h2>
         <div className="time-grid">
           <div className="calendar-card">
             <div className="cal-header">
@@ -169,13 +182,13 @@ export default function TimePicker() {
             </div>
             <div className="cal-weeks">
               <div className="cal-weekday-row">
-                <div>Su</div>
-                <div>Mo</div>
-                <div>Tu</div>
-                <div>We</div>
-                <div>Th</div>
-                <div>Fr</div>
-                <div>Sa</div>
+                <div>Paz</div>
+                <div>Pzt</div>
+                <div>Sal</div>
+                <div>Çar</div>
+                <div>Per</div>
+                <div>Cum</div>
+                <div>Cmt</div>
               </div>
               {weeks.map((week, wi) => (
                 <div className="cal-week" key={wi}>
@@ -196,7 +209,7 @@ export default function TimePicker() {
           </div>
 
           <div className="times-card">
-            <h4>Select Time Zone</h4>
+            <h4>Saat Seçin</h4>
             <div className="times-list">
               {TIMES.map((t, idx) => {
                 const state = mergedAvailability[t];
@@ -220,10 +233,10 @@ export default function TimePicker() {
 
         <div className="time-actions">
           <button className="back-btn" onClick={() => navigate(-1)}>
-            ‹ Back
+            ‹ Geri
           </button>
           <button className="next-btn" onClick={handleConfirm}>
-            Next ›
+            Sonraki ›
           </button>
         </div>
       </div>

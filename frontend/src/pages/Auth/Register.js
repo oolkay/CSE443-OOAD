@@ -18,12 +18,12 @@ export default function Register() {
     setError("");
 
     if (password !== confirm) {
-      setError("Passwords do not match");
+      setError("Şifreler eşleşmiyor");
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError("Şifre en az 8 karakter olmalıdır");
       return;
     }
 
@@ -36,7 +36,7 @@ export default function Register() {
       // Redirect to appointments after successful registration
       navigate("/appointments");
     } else {
-      setError(result.error || "Registration failed");
+      setError(result.error || "Kayıt başarısız");
     }
 
     setLoading(false);
@@ -45,63 +45,63 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card register-card">
-        <h2 className="auth-title">Register</h2>
+        <h2 className="auth-title">Kayıt Ol</h2>
         <p className="auth-desc">
-          To use our services, create a new account by entering your
-          information.
+          Hizmetlerimizi kullanmak için bilgilerinizi girerek yeni bir hesap
+          oluşturun.
         </p>
 
         {error && <div className="auth-error">{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label className="auth-label">Name - Last Name</label>
+          <label className="auth-label">Ad - Soyadı</label>
           <input
             className="auth-input"
             type="text"
-            placeholder="Enter your name and last name"
+            placeholder="Adınız ve soyadınızı girin"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             disabled={loading}
           />
 
-          <label className="auth-label">E-Mail Address</label>
+          <label className="auth-label">E-Posta Adresi</label>
           <input
             className="auth-input"
             type="email"
-            placeholder="Enter your email"
+            placeholder="E-postanızı girin"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading}
           />
 
-          <label className="auth-label">Phone Number</label>
+          <label className="auth-label">Telefon Numarası</label>
           <input
             className="auth-input"
             type="tel"
-            placeholder="Enter your phone number (ex: +905001234567)"
+            placeholder="Telefon numaranızı girin (örn: +905001234567)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             disabled={loading}
           />
 
-          <label className="auth-label">Password</label>
+          <label className="auth-label">Şifre</label>
           <input
             className="auth-input"
             type="password"
-            placeholder="Enter a new password"
+            placeholder="Yeni bir şifre girin"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={loading}
           />
 
-          <label className="auth-label">Confirm Password</label>
+          <label className="auth-label">Şifreyi Onayla</label>
           <input
             className="auth-input"
             type="password"
-            placeholder="Enter your password again"
+            placeholder="Şifrenizi tekrar girin"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required
@@ -109,12 +109,12 @@ export default function Register() {
           />
 
           <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading ? "Hesap Oluşturuluyor..." : "Hesap Oluştur"}
           </button>
         </form>
 
         <div style={{ textAlign: "center", marginTop: 12, fontSize: 13 }}>
-          Have you already an account? <Link to="/">Login</Link>
+          Zaten bir hesabınız var mı? <Link to="/">Giriş Yap</Link>
         </div>
       </div>
 
