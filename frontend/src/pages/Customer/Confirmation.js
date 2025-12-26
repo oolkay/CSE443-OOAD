@@ -153,7 +153,7 @@ export default function Confirmation() {
       date,
       time,
       employee,
-      status: "Pending",
+      status: "Beklemede",
     };
     try {
       const rawUp = localStorage.getItem("upcomingAppointments");
@@ -169,28 +169,27 @@ export default function Confirmation() {
   return (
     <div className="confirm-page">
       <div className="confirm-box">
-        <h2>Appointment Confirmation</h2>
+        <h2>Randevu Onayı</h2>
         <div className="status-row">
-          Appointment Status{" "}
-          <span className="status-badge pending">Pending</span>
+          Randevu Durumu <span className="status-badge pending">Beklemede</span>
         </div>
 
         <div className="confirm-grid">
-          <div className="label">Company:</div>
+          <div className="label">Şirket:</div>
           <div className="value">{company}</div>
-          <div className="label">Service:</div>
+          <div className="label">Hizmet:</div>
           <div className="value">{service}</div>
-          <div className="label">Employee:</div>
+          <div className="label">Çalışan:</div>
           <div className="value">{employee}</div>
-          <div className="label">Date:</div>
+          <div className="label">Tarih:</div>
           <div className="value">{prettyDate}</div>
-          <div className="label">Time:</div>
+          <div className="label">Saat:</div>
           <div className="value">{time}</div>
         </div>
 
         <p className="note">
-          A confirmation email will be sent to your email address. Please check
-          your mailbox.
+          E-posta adresinize onay e-postası gönderilecektir. Lütfen gelen
+          kutunuzu kontrol edin.
         </p>
 
         <div className="confirm-actions">

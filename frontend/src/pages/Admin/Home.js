@@ -15,9 +15,8 @@ export default function Home() {
   return (
     <div className="admin-home">
       <div className="home-content">
-        <h2>Hi, {currentUser.name} 👋</h2>
-        <p>Welcome to Super Admin Dashboard</p>
-        <p>Manage your appointment system from here.</p>
+        <h2>Süper Yönetici Paneline Hoş Geldiniz</h2>
+        <p>Randevu sisteminizi buradan yönetin.</p>
       </div>
     </div>
   );

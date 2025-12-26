@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import "./Appointments.css";
 import BookingWizard from "../../components/BookingWizard";
 
-
 function StatusBadge({ status }) {
   const cls =
     status === "Approved" || status === "Onaylandı"
@@ -163,20 +162,22 @@ export default function Appointments() {
     async function fetchAppointments() {
       try {
         // try to read customer id from localStorage (set by login flow)
-        const stored = localStorage.getItem('customerId') || localStorage.getItem('userId');
+        const stored =
+          localStorage.getItem("customerId") || localStorage.getItem("userId");
         const cid = stored ? Number(stored) : null;
         if (!cid) return; // nothing to fetch
 
-        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+        const BASE_URL =
+          process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
         const res = await fetch(`${BASE_URL}/api/appointments/customer/${cid}`);
-        if (!res.ok) throw new Error('Failed to fetch');
+        if (!res.ok) throw new Error("Failed to fetch");
         const appts = await res.json();
 
         // split into upcoming (pending/approved) and previous (completed/cancelled/no-show)
         const upcoming = [];
         const previous = [];
-        appts.forEach(a => {
-          const status = a.status ? String(a.status) : '';
+        appts.forEach((a) => {
+          const status = a.status ? String(a.status) : "";
           const item = {
             id: a.appointmentId,
             service: a.serviceName,
@@ -185,14 +186,15 @@ export default function Appointments() {
             employee: a.employeeName || '',
             status: status
           };
-          if (status === 'PENDING' || status === 'APPROVED') upcoming.push(item);
+          if (status === "PENDING" || status === "APPROVED")
+            upcoming.push(item);
           else previous.push(item);
         });
         if (upcoming.length) setUpcomingList(upcoming);
         if (previous.length) setPreviousList(previous);
       } catch (e) {
         // silently ignore network errors; keep mock/local data
-        console.warn('Failed to load appointments from API', e);
+        console.warn("Failed to load appointments from API", e);
       }
     }
     fetchAppointments();
@@ -264,24 +266,24 @@ export default function Appointments() {
         <div className="user-info">
           <div className="user-avatar">
             {(() => {
-              const userStr = localStorage.getItem('user');
+              const userStr = localStorage.getItem("user");
               const user = userStr ? JSON.parse(userStr) : {};
-              return (user.name || 'K').charAt(0).toUpperCase();
+              return (user.name || "K").charAt(0).toUpperCase();
             })()}
           </div>
           <div className="user-details">
             <div className="user-name">
               {(() => {
-                const userStr = localStorage.getItem('user');
+                const userStr = localStorage.getItem("user");
                 const user = userStr ? JSON.parse(userStr) : {};
-                return user.name || 'Kullanıcı';
+                return user.name || "Kullanıcı";
               })()}
             </div>
             <div className="user-email">
               {(() => {
-                const userStr = localStorage.getItem('user');
+                const userStr = localStorage.getItem("user");
                 const user = userStr ? JSON.parse(userStr) : {};
-                return user.email || 'email@example.com';
+                return user.email || "email@example.com";
               })()}
             </div>
           </div>

@@ -9,39 +9,39 @@ function useQuery() {
 const sampleServices = [
   {
     id: "s1",
-    title: "Haircut",
-    desc: "Classic or modern haircuts from our expert stylists",
-    time: "30 minutes",
+    title: "Saç Kesimi",
+    desc: "Uzman kuaförlerimizden klasik veya modern saç kesimi",
+    time: "30 dakika",
   },
   {
     id: "s2",
-    title: "Beard Shaving",
-    desc: "Smooth beard shave using traditional techniques",
-    time: "20 minutes",
+    title: "Sakal Tıraşı",
+    desc: "Geleneksel teknikler kullanılarak yumuşak sakal tıraşı",
+    time: "20 dakika",
   },
   {
     id: "s3",
-    title: "Hair Wash & Blow-dry",
-    desc: "Refreshing hair wash and stylish blow dry",
-    time: "15 minutes",
+    title: "Saç Yıkama & Kurutma",
+    desc: "Ferahlatıcı saç yıkaması ve şık kurutma",
+    time: "15 dakika",
   },
   {
     id: "s4",
-    title: "Children Haircut",
-    desc: "Special haircuts for children in a fun atmosphere",
-    time: "25 minutes",
+    title: "Çocuk Saç Kesimi",
+    desc: "Çocuklar için eğlenceli bir ortamda özel saç kesimi",
+    time: "25 dakika",
   },
   {
     id: "s5",
-    title: "Hair Coloring",
-    desc: "Add new vitality to your hair with our colorists",
-    time: "90 minutes",
+    title: "Saç Boyama",
+    desc: "Saçlarınıza yeni hayat katın - renk uzmanlarımız",
+    time: "90 dakika",
   },
   {
     id: "s6",
-    title: "Special Care Package",
-    desc: "Deep care and relaxing massage special for your hair",
-    time: "60 minutes",
+    title: "Özel Bakım Paketi",
+    desc: "Saçlarınız için derin bakım ve rahatlatıcı masaj",
+    time: "60 dakika",
   },
 ];
 
@@ -53,10 +53,10 @@ export default function ServiceList() {
   return (
     <div className="service-page">
       <div className="service-container">
-        <h2 className="service-title">Select Service</h2>
+        <h2 className="service-title">Hizmet Seçin</h2>
         <p className="service-sub">
-          Choose from our wide range of services for a personalized experience.
-          After selection you can move on to the next step.
+          Kişiselleştirilmiş bir deneyim için geniş hizmetlerimizden seçin.
+          Seçtikten sonra sonraki adıma geçebilirsiniz.
         </p>
 
         <div className="service-grid">
@@ -66,7 +66,7 @@ export default function ServiceList() {
               <div className="service-body">
                 <h4>{s.title}</h4>
                 <p className="service-desc">{s.desc}</p>
-                <p className="service-time">Time: {s.time}</p>
+                <p className="service-time">Süre: {s.time}</p>
                 <button
                   className="select-service"
                   onClick={() =>
@@ -79,7 +79,7 @@ export default function ServiceList() {
                     )
                   }
                 >
-                  Select Service
+                  Hizmet Seç
                 </button>
               </div>
             </div>
@@ -88,7 +88,7 @@ export default function ServiceList() {
 
         <div style={{ textAlign: "center", marginTop: 18 }}>
           <button className="back-btn" onClick={() => navigate(-1)}>
-            Back
+            Geri
           </button>
         </div>
       </div>

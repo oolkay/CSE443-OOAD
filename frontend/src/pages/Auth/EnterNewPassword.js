@@ -23,7 +23,7 @@ export default function EnterNewPassword() {
 
   const validateToken = async () => {
     if (!token) {
-      setError("Invalid reset link. Missing token.");
+      setError("Geçersiz sıfırlama bağlantısı. Token eksik.");
       setTokenValid(false);
       return;
     }
@@ -36,7 +36,7 @@ export default function EnterNewPassword() {
     } else {
       setError(
         result.error ||
-          "Your reset link has expired or is invalid. Please request a new one."
+          "Sıfırlama bağlantınızın süresi dolmuş veya geçersiz. Lütfen yeni bir tane isteyin."
       );
       setTokenValid(false);
     }
@@ -49,12 +49,12 @@ export default function EnterNewPassword() {
 
     // Validation
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError("Şifre en az 8 karakter olmalıdır.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Şifreler eşleşmiyor.");
       return;
     }
 
@@ -65,13 +65,15 @@ export default function EnterNewPassword() {
 
     if (result.success) {
       setMessage(
-        "Your password has been successfully reset. Redirecting to login..."
+        "Şifreniz başarıyla sıfırlandı. Giriş sayfasına yönlendiriliyorsunuz..."
       );
       setTimeout(() => {
         navigate("/");
       }, 2000);
     } else {
-      setError(result.error || "Failed to reset password. Please try again.");
+      setError(
+        result.error || "Şifre sıfırlama başarısız oldu. Lütfen tekrar deneyin."
+      );
     }
 
     setLoading(false);
@@ -86,9 +88,9 @@ export default function EnterNewPassword() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <h2 className="auth-title">Validating Reset Link...</h2>
+          <h2 className="auth-title">Sıfırlama Bağlantısı Doğrulanıyor...</h2>
           <p className="auth-desc">
-            Please wait while we validate your reset link.
+            Lütfen sıfırlama bağlantınız doğrulanırken bekleyin.
           </p>
         </div>
       </div>
@@ -100,13 +102,13 @@ export default function EnterNewPassword() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <h2 className="auth-title">Invalid Reset Link</h2>
+          <h2 className="auth-title">Geçersiz Sıfırlama Bağlantısı</h2>
           <p className="auth-desc">{error}</p>
           <button className="auth-button" onClick={() => navigate("/reset")}>
-            Request New Reset Link
+            Yeni Sıfırlama Bağlantısı İste
           </button>
           <button className="auth-back" onClick={handleBack}>
-            ← Back to Login
+            ← Giriş Sayfasına Dön
           </button>
         </div>
       </div>
@@ -117,30 +119,30 @@ export default function EnterNewPassword() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2 className="auth-title">Reset Your Password</h2>
-        <p className="auth-desc">Enter your new password below.</p>
+        <h2 className="auth-title">Şifrenizi Sıfırlayın</h2>
+        <p className="auth-desc">Yeni şifrenizi aşağıya girin.</p>
 
         {message && <div className="auth-success-message">{message}</div>}
         {error && <div className="auth-error-message">{error}</div>}
 
         {!message && (
           <form className="auth-form" onSubmit={handleReset}>
-            <label className="auth-label">New Password</label>
+            <label className="auth-label">Yeni Şifre</label>
             <input
               className="auth-input"
               type="password"
-              placeholder="Enter new password (min. 8 characters)"
+              placeholder="Yeni şifre girin (en az 8 karakter)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
             />
 
-            <label className="auth-label">Confirm Password</label>
+            <label className="auth-label">Şifreyi Onayla</label>
             <input
               className="auth-input"
               type="password"
-              placeholder="Confirm new password"
+              placeholder="Yeni şifreyi onayla"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -148,13 +150,13 @@ export default function EnterNewPassword() {
             />
 
             <button type="submit" className="auth-button" disabled={loading}>
-              {loading ? "Resetting..." : "Reset Password"}
+              {loading ? "Sıfırlanıyor..." : "Şifreyi Sıfırla"}
             </button>
           </form>
         )}
 
         <button className="auth-back" onClick={handleBack}>
-          ← Back to Login
+          ← Giriş Sayfasına Dön
         </button>
       </div>
     </div>

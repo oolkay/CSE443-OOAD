@@ -5,8 +5,8 @@ export default function Settings() {
   return (
     <div className="admin-settings">
       <div className="settings-content">
-        <h2>Settings</h2>
-        <p>Configure your system settings here.</p>
+        <h2>Ayarlar</h2>
+        <p>Sistem ayarlarınızı burada yapılandırın.</p>
       </div>
     </div>
   );

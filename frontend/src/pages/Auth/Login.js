@@ -29,7 +29,7 @@ export default function Login() {
         navigate("/appointments");
       }
     } else {
-      setError(result.error || "Login failed");
+      setError(result.error || "Giriş başarısız");
     }
 
     setLoading(false);
@@ -38,10 +38,10 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2 className="auth-title">Login</h2>
+        <h2 className="auth-title">Giriş Yap</h2>
         {error && <div className="auth-error">{error}</div>}
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label className="auth-label">E-mail</label>
+          <label className="auth-label">E-posta</label>
           <input
             className="auth-input"
             type="email"
@@ -52,11 +52,11 @@ export default function Login() {
             disabled={loading}
           />
 
-          <label className="auth-label">Password</label>
+          <label className="auth-label">Şifre</label>
           <input
             className="auth-input"
             type="password"
-            placeholder="Enter your password"
+            placeholder="Şifrenizi girin"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -70,12 +70,12 @@ export default function Login() {
           </div>
 
           <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
           </button>
         </form>
       </div>
       <Link to="/register" className="auth-register-top">
-        Register
+        Kayıt Ol
       </Link>
     </div>
   );
