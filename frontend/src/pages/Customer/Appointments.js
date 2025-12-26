@@ -28,17 +28,15 @@ export default function Appointments() {
   const [upcomingList, setUpcomingList] = useState(() => {
     try {
       const raw = localStorage.getItem("upcomingAppointments");
-      return raw ? JSON.parse(raw) : initialUpcoming;
+      return raw ? JSON.parse(raw) : [];
     } catch (e) {
-      return initialUpcoming;
     }
   });
   const [previousList, setPreviousList] = useState(() => {
     try {
       const raw = localStorage.getItem("previousAppointments");
-      return raw ? JSON.parse(raw) : initialPrevious;
+      return raw ? JSON.parse(raw) : [];
     } catch (e) {
-      return initialPrevious;
     }
   });
 
@@ -78,7 +76,7 @@ export default function Appointments() {
     try {
       localStorage.setItem("upcomingAppointments", JSON.stringify(newUpcoming));
       const rawPrev = localStorage.getItem("previousAppointments");
-      const prevArr = rawPrev ? JSON.parse(rawPrev) : initialPrevious;
+      const prevArr = rawPrev ? JSON.parse(rawPrev) : [];
       localStorage.setItem(
         "previousAppointments",
         JSON.stringify([cancelled, ...prevArr])

@@ -33,8 +33,18 @@ export default function Register() {
     const result = await authService.registerUser(name, email, password, phone);
 
     if (result.success) {
-      // Redirect to appointments after successful registration
-      navigate("/appointments");
+      // Get user data to determine role-based redirect
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      // Role-based redirect
+      if (user.role === 'ADMIN') {
+        navigate("/admin/home");
+      } else if (user.role === 'BRANCH_MANAGER') {
+        navigate("/calendar");
+      } else {
+        // Default to appointments for CUSTOMER role
+        navigate("/appointments");
+      }
     } else {
       setError(result.error || "Kayıt başarısız");
     }

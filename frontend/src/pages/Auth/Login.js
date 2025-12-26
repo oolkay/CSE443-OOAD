@@ -22,10 +22,13 @@ export default function Login() {
       // Redirect based on user role
       const user = authService.getCurrentUser();
 
-      // Super Admin goes to admin home, others go to appointments
-      if (user.role === "ROLE_SUPER_ADMIN") {
+      // Role-based navigation
+      if (user.role === "ADMIN" || user.role === "ROLE_SUPER_ADMIN") {
         navigate("/admin/home");
+      } else if (user.role === "BRANCH_MANAGER") {
+        navigate("/calendar");
       } else {
+        // Default to appointments for CUSTOMER role
         navigate("/appointments");
       }
     } else {
