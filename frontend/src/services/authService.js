@@ -52,6 +52,7 @@ export const loginUser = async (email, password) => {
           email: data.email,
           name: data.name,
           role: data.role,
+          companyId: data.companyId ? data.companyId : undefined,
         })
       );
       return { success: true, data };

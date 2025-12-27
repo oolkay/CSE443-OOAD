@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './Calendar.css';
 import { axios } from '../../../index';
+import employeeService from "../../../services/employeeService";
+import authService from "../../../services/authService";
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, addHours } from 'date-fns';
 
 const Calendar = () => {
@@ -14,20 +16,17 @@ const Calendar = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCalendarCell, setSelectedCalendarCell] = useState(null);
     const [isAppointmentsModalOpen, setIsAppointmentsModalOpen] = useState(false);
-    
-    // --- MOCK DATA ---
-    const MOCK_EMPLOYEES = [
-        {company_id: 1,	manager_id: 2, user_id:	6, name:	"User Six", email:"user6@example.com", phone: "555-0006"},
-        {company_id: 1,	manager_id: 2, user_id:	7, name:	"User Seven", email:"user7@example.com", phone: "555-0007"},
-        {company_id: 1,	manager_id: 2, user_id:	8, name:	"User Eight", email:"user8@example.com", phone: ""},
-        {company_id: 2,	manager_id: 3, user_id:	9, name:	"User Nine", email:"user9@example.com", phone: "555-0009"},
-        {company_id: 2,	manager_id: 3, user_id:	10, name:	"User Ten", email:"user10@example.com", phone: "555-0010"},
-        {company_id: 2,	manager_id: 3, user_id:	11, name:	"User Eleven", email:"user11@example.com", phone: "555-0011"},
-        {company_id: 3,	manager_id: 4, user_id:	12, name:	"User Twelve", email:"user12@example.com", phone: ""},
-        {company_id: 4,	manager_id: 5, user_id:	13, name:	"User Thirteen", email:"user13@example.com", phone: "555-0013"},
-        {company_id: 4,	manager_id: 5, user_id:	14, name:	"User Fourteen", email:"user14@example.com", phone: "555-0014"},
-        {company_id: 4,	manager_id: 5, user_id:	15, name:	"User Fifteen", email:"user15@example.com", phone: ""}
-    ]
+    const user = authService.getCurrentUser();
+
+    const getEmployees = async () => {
+        if (user && user.companyId) {
+            const employees = await employeeService.getEmployeesByCompany(user.companyId);
+            setEmployees(employees);
+            if (user.role === 'ROLE_EMPLOYEE') {
+                setSelectedEmployee(employees.find(emp => emp.id === user.userId));
+            }
+        }
+    }
 
     const getCalendarData = async () => {
         const dateStart = new Date(currentDate);
@@ -49,9 +48,8 @@ const Calendar = () => {
                 start_time: startTime.toISOString(),
                 end_time: endTime.toISOString(),
                 interval: interval,
-                /* TODO: The company id should be in the local storage cookie or sth. (From the user data) */
-                company_id: 2,
-                employee_id: selectedEmployee !== 'all' ? selectedEmployee.user_id : undefined 
+                company_id: user.companyId,
+                employee_id: selectedEmployee !== 'all' ? selectedEmployee.id : undefined 
             }
         })
         let appointmentIds = [];
@@ -75,7 +73,8 @@ const Calendar = () => {
     // --- LIFECYCLE ---
     useEffect(() => {
         // In production, fetch from API
-        setEmployees(MOCK_EMPLOYEES);
+        getEmployees();
+        // setEmployees(MOCK_EMPLOYEES);
     }, []);
 
     // --- DATE UTILITIES ---
@@ -498,12 +497,12 @@ const Calendar = () => {
                 <div className="header-right">
                     <select 
                         className="employee-filter"
-                        value={selectedEmployee.user_id}
-                        onChange={(e) => setSelectedEmployee(e.target.value === 'all' ? 'all' : employees.find(emp => emp.user_id === parseInt(e.target.value)))}
+                        value={selectedEmployee.id}
+                        onChange={(e) => setSelectedEmployee(e.target.value === 'all' ? 'all' : employees.find(emp => emp.id === parseInt(e.target.value)))}
                     >
                         <option value="all">Tüm Personel</option>
                         {employees.map(emp => (
-                            <option key={emp.user_id} value={emp.user_id}>
+                            <option key={emp.id} value={emp.id}>
                                 {emp.name}
                             </option>
                         ))}

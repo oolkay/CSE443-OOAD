@@ -108,7 +108,7 @@ function App() {
             <Route
               path="/request-management"
               element={
-                <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
+                <PrivateRoute allowedRoles={[ROLES.MANAGER, ROLES.EMPLOYEE]}>
                   <RequestManagement />
                 </PrivateRoute>
               }

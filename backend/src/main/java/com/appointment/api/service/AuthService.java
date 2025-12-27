@@ -68,13 +68,29 @@ public class AuthService {
             String token = jwtTokenProvider.generateToken(authentication, user.getUserId());
             String roles = jwtTokenProvider.getRolesFromToken(token);
 
+            // Check if user is BranchManager or Employee and extract company info
+            Long companyId = null;
+
+            if (user instanceof BranchManager) {
+                BranchManager manager = (BranchManager) user;
+                if (manager.getCompany() != null) {
+                    companyId = manager.getCompany().getCompanyId();
+                }
+            } else if (user instanceof Employee) {
+                Employee employee = (Employee) user;
+                if (employee.getCompany() != null) {
+                    companyId = employee.getCompany().getCompanyId();
+                }
+            }
+
             return new LoginResponse(
-                    token,
-                    user.getUserId(),
-                    user.getEmail(),
-                    user.getName(),
-                    roles,
-                    jwtExpirationMs / 1000 // Convert to seconds
+                token,
+                user.getUserId(),
+                user.getEmail(),
+                user.getName(),
+                roles,
+                jwtExpirationMs / 1000, // Convert to seconds
+                companyId
             );
         }
 

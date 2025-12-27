@@ -14,6 +14,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByCustomer_UserId(Long customerId);
 
     List<Appointment> findByEmployee_UserId(Long employeeId);
+    
+    List<Appointment> findByService_ServiceId(Long serviceId);
 
     List<Appointment> findByStatus(AppointmentStatus status);
 
