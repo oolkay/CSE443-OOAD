@@ -3,7 +3,21 @@ import './ToastNotification.css';
 
 import ReactDOM from 'react-dom';
 
-const ToastNotification = ({ toasts, removeToast }) => {
+const ToastNotification = ({ toasts, removeToast, message, type, onClose }) => {
+    // Handle both array of toasts and single toast
+    if (message !== undefined) {
+        // Single toast mode (legacy support)
+        return ReactDOM.createPortal(
+            <div className="toast-container">
+                <Toast id={Date.now()} type={type} message={message} removeToast={onClose} />
+            </div>,
+            document.body
+        );
+    }
+
+    // Multiple toasts mode
+    if (!toasts || toasts.length === 0) return null;
+
     return ReactDOM.createPortal(
         <div className="toast-container">
             {toasts.map((toast) => (
