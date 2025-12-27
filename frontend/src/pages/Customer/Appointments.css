@@ -2,8 +2,9 @@
   display: flex;
   gap: 20px;
   padding: 20px;
-  min-height: calc(100vh - 40px);
+  min-height: 100vh;
   background: #f7f7fb;
+  box-sizing: border-box;
 }
 
 .appointments-sidebar {
@@ -37,7 +38,7 @@
 .logout-btn {
   display: block;
   width: 100%;
-  padding: 8px 16px;
+  padding: 10px 12px;
   background: #fff;
   border: 1px solid #ff6b6b;
   border-radius: 6px;
@@ -47,6 +48,7 @@
   font-weight: 600;
   font-size: 13px;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .logout-btn:hover {
@@ -87,15 +89,24 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .create-btn {
   background: #00c7ed;
   color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 16px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.create-btn:hover {
+  background: #00b3d6;
 }
 
 .card {
@@ -293,11 +304,33 @@
   .appointments-page {
     flex-direction: column;
     padding: 12px;
+    gap: 12px;
   }
 
   .appointments-sidebar {
     width: 100%;
     padding: 12px;
+    box-sizing: border-box;
+  }
+
+  .user-info {
+    padding: 14px;
+    margin-bottom: 0;
+  }
+
+  .user-name {
+    font-size: 14px;
+  }
+
+  .user-email {
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .logout-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    margin-top: 8px;
   }
 
   .appointments-header {
@@ -355,6 +388,8 @@
   .appt-card-mobile .appt-value {
     color: #333;
     text-align: right;
+    word-break: break-word;
+    max-width: 60%;
   }
 
   .appt-card-mobile .cancel-btn {
@@ -363,9 +398,22 @@
     padding: 10px;
   }
 
+  .card {
+    padding: 14px;
+  }
+
   .modal {
     width: calc(100% - 40px);
     max-width: 360px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal .btn,
+  .modal .btn-danger {
+    width: 100%;
   }
 
   .snackbar {
@@ -393,5 +441,67 @@
   .badge {
     font-size: 11px;
     padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .appointments-page {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .appointments-sidebar {
+    padding: 10px;
+  }
+
+  .user-info {
+    padding: 12px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  .user-email {
+    font-size: 11px;
+  }
+
+  .logout-btn {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+
+  .appointments-header h1 {
+    font-size: 1.15rem;
+  }
+
+  .create-btn {
+    padding: 11px;
+    font-size: 15px;
+  }
+
+  .card {
+    padding: 10px;
+  }
+
+  .card h3 {
+    font-size: 1.05rem;
+  }
+
+  .appt-card-mobile {
+    padding: 12px;
+  }
+
+  .appt-card-mobile .appt-row {
+    font-size: 13px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 4px 7px;
+  }
+
+  .cancel-btn {
+    font-size: 13px;
   }
 }

@@ -248,6 +248,14 @@
   margin-left: 12px;
 }
 
+.service-price {
+  font-size: 14px;
+  color: #333;
+  font-weight: 700;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
 /* Employee list */
 .employee-list {
   display: flex;
@@ -549,37 +557,174 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .wizard-overlay {
+    padding: 10px;
+  }
+
   .wizard-modal {
-    max-width: 95%;
+    max-width: 100%;
+    max-height: 95vh;
   }
 
   .datetime-container {
     flex-direction: column;
+    gap: 16px;
   }
 
-  .service-list {
+  .service-list,
+  .company-list,
+  .employee-list {
     max-height: 300px;
+  }
+
+  .service-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .service-time,
+  .service-price {
+    margin-left: 0;
+  }
+
+  .wizard-progress {
+    padding: 16px 20px;
+    gap: 6px;
+  }
+
+  .progress-step {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .progress-line {
+    width: 30px;
+  }
+}
+
+@media (max-width: 600px) {
+  .wizard-header {
+    padding: 14px 16px;
+  }
+
+  .wizard-title {
+    font-size: 17px;
+  }
+
+  .wizard-body {
+    padding: 16px;
+  }
+
+  .wizard-footer {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+  }
+
+  .wizard-btn {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .company-item,
+  .service-item,
+  .employee-item {
+    padding: 12px;
+  }
+
+  .company-icon,
+  .employee-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .company-info h4,
+  .service-info h4,
+  .employee-info h4 {
+    font-size: 14px;
+  }
+
+  .company-info p,
+  .service-info p,
+  .employee-info p {
+    font-size: 12px;
+  }
+
+  .cal-weekday {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+
+  .cal-day {
+    font-size: 12px;
+  }
+
+  .timeslot-list {
+    max-height: 250px;
+  }
+
+  .confirm-details {
+    padding: 16px;
+  }
+
+  .confirm-row {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .confirm-value {
+    font-weight: 600;
   }
 }
 
 @media (max-width: 480px) {
   .wizard-header {
-    padding: 16px 20px;
+    padding: 12px 14px;
   }
 
   .wizard-title {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .wizard-body {
-    padding: 20px;
+    padding: 14px;
   }
 
   .wizard-footer {
-    padding: 16px 20px;
+    padding: 12px 14px;
+  }
+
+  .wizard-btn {
+    padding: 10px 16px;
+    font-size: 13px;
   }
 
   .progress-line {
-    width: 24px;
+    width: 20px;
+  }
+
+  .progress-step {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .wizard-progress {
+    padding: 12px 14px;
+    gap: 4px;
+  }
+
+  .step-label {
+    font-size: 12px;
+  }
+
+  .loading-message,
+  .error-message,
+  .no-slots,
+  .info-result {
+    font-size: 13px;
+    padding: 12px;
   }
 }
