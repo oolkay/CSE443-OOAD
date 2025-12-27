@@ -48,8 +48,7 @@ const Calendar = () => {
                 start_time: startTime.toISOString(),
                 end_time: endTime.toISOString(),
                 interval: interval,
-                /* TODO: The company id should be in the local storage cookie or sth. (From the user data) */
-                company_id: 2,
+                company_id: user.companyId,
                 employee_id: selectedEmployee !== 'all' ? selectedEmployee.id : undefined 
             }
         })

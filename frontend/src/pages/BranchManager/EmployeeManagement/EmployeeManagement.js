@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './EmployeeManagement.css';
 import employeeService from '../../../services/employeeService';
 import serviceService from '../../../services/serviceService'; // We need services list too
+import authService from '../../../services/authService';
 import ToastNotification from '../../../components/UI/ToastNotification';
 import ConfirmationModal from '../../../components/UI/ConfirmationModal';
 
@@ -32,6 +33,7 @@ const EmployeeManager = () => {
         Pazar: { active: false, start: '09:00', end: '18:00' }
     };
 
+    const user = authService.getCurrentUser();
     // --- STATE ---
     const [employees, setEmployees] = useState([]);
     const [services, setServices] = useState([]); // Available services
@@ -66,11 +68,17 @@ const EmployeeManager = () => {
     }, []);
 
     const fetchData = async () => {
+        if (!user || !user.companyId) {
+            alert('Kullanıcının şirket bilgisi bulunamadı.');
+            return;
+        }
         setLoading(true);
         try {
             const [empData, srvData] = await Promise.all([
-                employeeService.getAllEmployees(),
-                serviceService.getAllServices()
+                // employeeService.getAllEmployees(),
+                // serviceService.getAllServices()
+                employeeService.getEmployeesByCompany(user.companyId),
+                serviceService.getServicesByCompany(user.companyId)
             ]);
 
             // Map backend response to frontend structure

@@ -10,6 +10,7 @@ import com.appointment.api.exception.ResourceNotFoundException;
 import com.appointment.api.repository.BranchManagerRepository;
 import com.appointment.api.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  * Super Admin can create and manage branch managers
  */
 @RestController
+@Slf4j
 @RequestMapping("/api/managers")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
@@ -39,7 +41,9 @@ public class ManagerController {
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<ManagerResponseDTO>> getAllManagers() {
+        log.info("GET /api/managers - Fetching all managers");
         List<BranchManager> managers = managerRepository.findAll();
+        log.info("Found {} managers", managers.size());
         List<ManagerResponseDTO> response = managers.stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
@@ -63,8 +67,11 @@ public class ManagerController {
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ManagerResponseDTO> createManager(@RequestBody ManagerRequestDTO managerDTO) {
+        log.info("Creating manager: {}", managerDTO);
+        
         // Check if email already exists
         if (managerRepository.existsByEmail(managerDTO.getEmail())) {
+            log.error("Manager with this email already exists: {}", managerDTO.getEmail());
             throw new DuplicateResourceException("Manager with this email already exists");
         }
 
@@ -80,6 +87,7 @@ public class ManagerController {
         manager.setCompany(company);
 
         BranchManager savedManager = managerRepository.save(manager);
+        log.info("Manager created successfully with id: {}", savedManager.getUserId());
         return new ResponseEntity<>(convertToResponseDTO(savedManager), HttpStatus.CREATED);
     }
 
@@ -91,22 +99,31 @@ public class ManagerController {
     public ResponseEntity<ManagerResponseDTO> updateManager(
             @PathVariable Long id,
             @RequestBody ManagerRequestDTO managerDTO) {
+        
+        log.info("Updating manager with id: {}", id);
+        log.info("Manager data: {}", managerDTO);
 
         BranchManager existingManager = managerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Manager not found with id: " + id));
 
         // Check if email already exists for another manager
-        if (!existingManager.getEmail().equals(managerDTO.getEmail()) &&
+        if (managerDTO.getEmail() != null && !existingManager.getEmail().equals(managerDTO.getEmail()) &&
             managerRepository.existsByEmail(managerDTO.getEmail())) {
             throw new DuplicateResourceException("Manager with this email already exists");
         }
 
-        // Update manager fields
-        existingManager.setName(managerDTO.getName());
-        existingManager.setEmail(managerDTO.getEmail());
+        // Update manager fields if provided
+        if (managerDTO.getName() != null && !managerDTO.getName().isEmpty()) {
+            existingManager.setName(managerDTO.getName());
+        }
+        
+        if (managerDTO.getEmail() != null && !managerDTO.getEmail().isEmpty()) {
+            existingManager.setEmail(managerDTO.getEmail());
+        }
 
-        // Update company if changed
-        if (!existingManager.getCompany().getCompanyId().equals(managerDTO.getCompanyId())) {
+        // Update company if provided and changed
+        if (managerDTO.getCompanyId() != null && 
+            !existingManager.getCompany().getCompanyId().equals(managerDTO.getCompanyId())) {
             Company newCompany = companyRepository.findById(managerDTO.getCompanyId())
                     .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + managerDTO.getCompanyId()));
             existingManager.setCompany(newCompany);
@@ -117,7 +134,13 @@ public class ManagerController {
             existingManager.setPassword(passwordEncoder.encode(managerDTO.getPassword()));
         }
 
+        // Update phone number if provided
+        if (managerDTO.getPhoneNumber() != null && !managerDTO.getPhoneNumber().isEmpty()) {
+            existingManager.setPhoneNumber(managerDTO.getPhoneNumber());
+        }
+
         BranchManager updatedManager = managerRepository.save(existingManager);
+        log.info("Manager updated successfully: {}", updatedManager.getUserId());
         return ResponseEntity.ok(convertToResponseDTO(updatedManager));
     }
 
@@ -127,10 +150,12 @@ public class ManagerController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> deleteManager(@PathVariable Long id) {
+        log.info("Deleting manager with id: {}", id);
         BranchManager manager = managerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Manager not found with id: " + id));
 
         managerRepository.delete(manager);
+        log.info("Manager deleted successfully: {}", id);
         return ResponseEntity.noContent().build();
     }
 
@@ -158,6 +183,7 @@ public class ManagerController {
         dto.setId(manager.getUserId());
         dto.setName(manager.getName());
         dto.setEmail(manager.getEmail());
+        dto.setPhoneNumber(manager.getPhoneNumber());
         dto.setCompanyId(manager.getCompany().getCompanyId());
         dto.setCompanyName(manager.getCompany().getName());
         dto.setUserType(manager.getUserType());

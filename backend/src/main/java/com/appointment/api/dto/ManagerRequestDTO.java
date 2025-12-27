@@ -11,4 +11,5 @@ public class ManagerRequestDTO {
     private String email;
     private String password;
     private Long companyId;
+    private String phoneNumber;
 }

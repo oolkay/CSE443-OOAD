@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import authService from "../../services/authService";
 import companyService from "../../services/companyService";
+import managerService from "../../services/managerService";
 import "./Companies.css";
 
 export default function Companies() {
@@ -189,7 +190,7 @@ export default function Companies() {
       name: company.managerName || "",
       email: company.managerEmail || "",
       password: "",
-      phoneNumber: "",
+      phoneNumber: company.managerPhoneNumber || "",
     });
     setIsManagerModalOpen(true);
   };
@@ -517,29 +518,11 @@ export default function Companies() {
                 };
 
                 try {
-                  const response = await fetch('http://localhost:8080/api/companies', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(companyData)
-                  });
+                  await companyService.createCompany(companyData);
 
-                  if (response.ok) {
-                    alert("Company and manager created successfully!");
-                    await fetchCompanies();
-                    handleModalClose();
-                  } else {
-                    const errorText = await response.text();
-                    let errorMessage = `Failed to create company and manager (${response.status}): ${errorText}`;
-                    try {
-                      const errorJson = await response.json();
-                      if (errorJson.message) {
-                        errorMessage = `Failed to create company and manager: ${errorJson.message}`;
-                      }
-                    } catch (e) {
-                      // If not JSON, use text error
-                    }
-                    alert(errorMessage);
-                  }
+                  alert("Company and manager created successfully!");
+                  await fetchCompanies();
+                  handleModalClose();
                 } catch (error) {
                   console.error('Error creating company with manager:', error);
                   alert(`Error creating company and manager: ${error.message}`);
@@ -647,34 +630,12 @@ export default function Companies() {
                   try {
                     if (selectedCompany) {
                       // Update existing company's manager
-                      const response = await fetch('http://localhost:8080/api/managers', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          name: managerData.name,
-                          email: managerData.email,
-                          password: managerData.password,
-                          phoneNumber: managerData.phoneNumber,
-                          companyId: selectedCompany.companyId
-                        })
-                      });
+                      const response = await managerService.updateManager(selectedCompany.managerId, managerData);
 
-                      if (response.ok) {
+                      if (response) {
                         alert(selectedCompany.managerName ? "Manager updated successfully!" : "Branch manager assigned successfully!");
                         await fetchCompanies();
                         handleCloseManagerModal();
-                      } else {
-                        const errorText = await response.text();
-                        let errorMessage = `Failed to ${selectedCompany.managerName ? 'update' : 'assign'} manager (${response.status}): ${errorText}`;
-                        try {
-                          const errorJson = await response.json();
-                          if (errorJson.message) {
-                            errorMessage = `Failed to ${selectedCompany.managerName ? 'update' : 'assign'} manager: ${errorJson.message}`;
-                          }
-                        } catch (e) {
-                          // If not JSON, use text error
-                        }
-                        alert(errorMessage);
                       }
                     } else {
                       // Save manager data locally for later company creation

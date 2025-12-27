@@ -12,6 +12,7 @@ public class ManagerResponseDTO {
     private Long id;
     private String name;
     private String email;
+    private String phoneNumber;
     private Long companyId;
     private String companyName;
     private String userType;
