@@ -16,6 +16,7 @@ const Calendar = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCalendarCell, setSelectedCalendarCell] = useState(null);
     const [isAppointmentsModalOpen, setIsAppointmentsModalOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const user = authService.getCurrentUser();
 
     const getEmployees = async () => {
@@ -49,7 +50,7 @@ const Calendar = () => {
                 end_time: endTime.toISOString(),
                 interval: interval,
                 company_id: user.companyId,
-                employee_id: selectedEmployee !== 'all' ? selectedEmployee.id : undefined 
+                employee_id: selectedEmployee !== 'all' ? selectedEmployee.id : undefined
             }
         })
         let appointmentIds = [];
@@ -66,37 +67,52 @@ const Calendar = () => {
         setCalendarData(calendarData);
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         getCalendarData();
     }, [selectedEmployee, viewMode, currentDate]);
 
     // --- LIFECYCLE ---
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         // In production, fetch from API
         getEmployees();
         // setEmployees(MOCK_EMPLOYEES);
     }, []);
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isDropdownOpen && !event.target.closest('.custom-dropdown')) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [isDropdownOpen]);
+
+
     // --- DATE UTILITIES ---
     const formatDate = (date) => {
-        return date.toLocaleDateString('tr-TR', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
+        return date.toLocaleDateString('tr-TR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
         });
     };
 
     const formatTime = (dateString) => {
-        return new Date(dateString).toLocaleTimeString('tr-TR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+        return new Date(dateString).toLocaleTimeString('tr-TR', {
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
     const isSameDay = (date1, date2) => {
         return date1.getDate() === date2.getDate() &&
-               date1.getMonth() === date2.getMonth() &&
-               date1.getFullYear() === date2.getFullYear();
+            date1.getMonth() === date2.getMonth() &&
+            date1.getFullYear() === date2.getFullYear();
     };
 
     const getWeekDates = (date) => {
@@ -117,7 +133,7 @@ const Calendar = () => {
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         const dates = [];
-        
+
         // Add padding days from previous month
         const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
         for (let i = startDay - 1; i >= 0; i--) {
@@ -125,12 +141,12 @@ const Calendar = () => {
             d.setDate(d.getDate() - i - 1);
             dates.push({ date: d, isCurrentMonth: false });
         }
-        
+
         // Add days of current month
         for (let i = 1; i <= lastDay.getDate(); i++) {
             dates.push({ date: new Date(year, month, i), isCurrentMonth: true });
         }
-        
+
         // Add padding days from next month
         const remaining = 42 - dates.length;
         for (let i = 1; i <= remaining; i++) {
@@ -138,7 +154,7 @@ const Calendar = () => {
             d.setDate(d.getDate() + i);
             dates.push({ date: d, isCurrentMonth: false });
         }
-        
+
         return dates;
     };
 
@@ -164,17 +180,17 @@ const Calendar = () => {
         setSelectedAppointment(appointment);
         setIsModalOpen(true);
     };
-    
+
     const closeModal = () => {
         setIsModalOpen(false);
         setSelectedAppointment(null);
     };
-    
+
     const openAppointmentsModal = (appointment) => {
         setSelectedCalendarCell(appointment);
         setIsAppointmentsModalOpen(true);
     };
-        
+
     const closeAppointmentsModal = () => {
         setIsAppointmentsModalOpen(false);
         setSelectedCalendarCell(null);
@@ -194,19 +210,18 @@ const Calendar = () => {
     // --- HELPER: Calculate appointment position and height ---
     const calculateAppointmentStyle = (appointment) => {
         const startTime = new Date(appointment.startTime);
-        const startHour = startTime.getHours();
         const startMinutes = startTime.getMinutes();
         const durationMinutes = appointment.duration || 60; // Default to 60 if not provided
-        
+
         // Each hour slot is 100px, so each minute is 100/60 ≈ 1.667px
         const pixelsPerMinute = 100 / 60;
-        
+
         // Calculate top position within the hour slot (based on minutes)
         const topPosition = startMinutes * pixelsPerMinute;
-        
+
         // Calculate height based on duration
         const height = durationMinutes * pixelsPerMinute;
-        
+
         return {
             position: 'absolute',
             top: `${topPosition}px`,
@@ -223,15 +238,15 @@ const Calendar = () => {
         const endTime = new Date(apt.endTime);
 
         if (startTime <= now) {
-            if (endTime > now) 
+            if (endTime > now)
                 return 'processing';
             return 'completed';
-        } 
+        }
 
         return apt?.status?.toLowerCase() === 'approved' ? 'approved' :
-               apt?.status?.toLowerCase() === 'rejected' ? 'rejected' :
-               apt?.status?.toLowerCase() === 'cancelled' ? 'cancelled' :
-               'pending';
+            apt?.status?.toLowerCase() === 'rejected' ? 'rejected' :
+                apt?.status?.toLowerCase() === 'cancelled' ? 'cancelled' :
+                    'pending';
     };
 
     // --- RENDER TIME SLOTS ---
@@ -248,14 +263,14 @@ const Calendar = () => {
                             <div className="slot-content">
                                 {calendarData
                                     .filter(cdata => new Date(cdata.timestamp).getHours() === hour)
-                                    .map((cdata, idx)=> {
+                                    .map((cdata, idx) => {
                                         if (selectedEmployee === 'all') {
                                             const appointmentCount = cdata?.appointments?.length;
                                             if (appointmentCount <= 0) {
                                                 return null;
                                             }
                                             return (
-                                                <div 
+                                                <div
                                                     key={idx}
                                                     className={`aggregated-appointment-block`}
                                                     onClick={() => openAppointmentsModal(cdata)}
@@ -270,18 +285,18 @@ const Calendar = () => {
                                                 return null;
                                             }
                                             insertedAppointmentIds.push(apt.appointmentId);
-                                            
+
                                             const appointmentStyle = calculateAppointmentStyle(apt);
                                             const duration = apt.duration || 60;
-                                            
+
                                             // Adjust content based on duration
                                             const isVeryShort = duration <= 15;
                                             const isShort = duration <= 30;
                                             const showFullDetails = duration >= 60;
                                             const showMediumDetails = duration >= 45;
-                                            
+
                                             return (
-                                                <div 
+                                                <div
                                                     key={apt.appointmentId}
                                                     className={`appointment-block ${findApppointmentClass(apt)} ${isVeryShort ? 'very-short' : isShort ? 'short' : ''}`}
                                                     style={appointmentStyle}
@@ -304,8 +319,9 @@ const Calendar = () => {
                                                         </>
                                                     )}
                                                 </div>
-                                            )})
-                                        }
+                                            )
+                                        })
+                                    }
                                     )
                                 }
                             </div>
@@ -356,7 +372,7 @@ const Calendar = () => {
                                                     return null;
                                                 }
                                                 return (
-                                                    <div 
+                                                    <div
                                                         key={cdataIdx}
                                                         className="aggregated-appointment-block small"
                                                         onClick={() => openAppointmentsModal(cdata)}
@@ -372,7 +388,7 @@ const Calendar = () => {
                                                 }
                                                 insertedAppointmentIds.push(apt.appointmentId);
                                                 return (
-                                                    <div 
+                                                    <div
                                                         key={apt.appointmentId}
                                                         className={`appointment-block small ${findApppointmentClass(apt)}`}
                                                         onClick={() => openAppointmentModal(apt)}
@@ -410,7 +426,7 @@ const Calendar = () => {
                     {monthDates.map((item, idx) => {
                         const { date, isCurrentMonth } = item;
                         const isToday = isSameDay(date, new Date());
-                        
+
                         // Filter calendarData for this specific date
                         const dayCalendarData = calendarData.filter(cdata => {
                             const cdataDate = new Date(cdata.timestamp);
@@ -424,17 +440,17 @@ const Calendar = () => {
                                 dayAppointments.push(...cdata.appointments);
                             }
                         });
-                        
+
                         return (
-                            <div 
-                                key={idx} 
+                            <div
+                                key={idx}
                                 className={`month-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
                             >
                                 <div className="date-number">{date.getDate()}</div>
                                 <div className="day-appointments">
                                     {selectedEmployee === 'all' && dayAppointments.length > 0 ? (
                                         <>
-                                            <div 
+                                            <div
                                                 className="apt-indicator aggregated"
                                                 onClick={() => {
                                                     // Open modal with all appointments for this day
@@ -452,7 +468,7 @@ const Calendar = () => {
                                     ) : (
                                         <>
                                             {dayAppointments.slice(0, 3).map(apt => (
-                                                <div 
+                                                <div
                                                     key={apt.appointmentId}
                                                     className={`apt-indicator ${findApppointmentClass(apt)}`}
                                                     onClick={() => openAppointmentModal(apt)}
@@ -462,7 +478,7 @@ const Calendar = () => {
                                                 </div>
                                             ))}
                                             {dayAppointments.length > 3 && (
-                                                <div 
+                                                <div
                                                     className="more-indicator"
                                                     onClick={() => {
                                                         const combinedData = {
@@ -492,21 +508,42 @@ const Calendar = () => {
             <header className="calendar-header">
                 <div className="header-left">
                     <h1>Takvim</h1>
-                    <p>Personel ve randevu yönetimi</p>
                 </div>
                 <div className="header-right">
-                    <select 
-                        className="employee-filter"
-                        value={selectedEmployee.id}
-                        onChange={(e) => setSelectedEmployee(e.target.value === 'all' ? 'all' : employees.find(emp => emp.id === parseInt(e.target.value)))}
-                    >
-                        <option value="all">Tüm Personel</option>
-                        {employees.map(emp => (
-                            <option key={emp.id} value={emp.id}>
-                                {emp.name}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="custom-dropdown">
+                        <div
+                            className="dropdown-selected"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        >
+                            <span>{selectedEmployee === 'all' ? 'Tüm Personel' : selectedEmployee.name}</span>
+                            <span className="dropdown-arrow">{isDropdownOpen ? '▲' : '▼'}</span>
+                        </div>
+                        {isDropdownOpen && (
+                            <div className="dropdown-menu">
+                                <div
+                                    className={`dropdown-item ${selectedEmployee === 'all' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setSelectedEmployee('all');
+                                        setIsDropdownOpen(false);
+                                    }}
+                                >
+                                    Tüm Personel
+                                </div>
+                                {employees.map(emp => (
+                                    <div
+                                        key={emp.id}
+                                        className={`dropdown-item ${selectedEmployee !== 'all' && selectedEmployee.id === emp.id ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedEmployee(emp);
+                                            setIsDropdownOpen(false);
+                                        }}
+                                    >
+                                        {emp.name}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -524,21 +561,21 @@ const Calendar = () => {
                     </button>
                     <span className="current-date-display">{formatDate(currentDate)}</span>
                 </div>
-                
+
                 <div className="view-mode-toggle">
-                    <button 
+                    <button
                         className={`view-btn ${viewMode === 'daily' ? 'active' : ''}`}
                         onClick={() => setViewMode('daily')}
                     >
                         Günlük
                     </button>
-                    <button 
+                    <button
                         className={`view-btn ${viewMode === 'weekly' ? 'active' : ''}`}
                         onClick={() => setViewMode('weekly')}
                     >
                         Haftalık
                     </button>
-                    <button 
+                    <button
                         className={`view-btn ${viewMode === 'monthly' ? 'active' : ''}`}
                         onClick={() => setViewMode('monthly')}
                     >
@@ -564,7 +601,7 @@ const Calendar = () => {
                         </div>
                         <div className="modal-body">
                             <div className="detail-icon-large">📅</div>
-                            
+
                             <div className="detail-grid">
                                 <div className="detail-item">
                                     <span className="label">Hizmet</span>
@@ -590,9 +627,9 @@ const Calendar = () => {
                                     <span className="icon">💼</span>
                                     <div>
                                         <div className="label-small">Personel</div>
-                                        <div 
+                                        <div
                                             className="value-text"
-                                            style={{ 
+                                            style={{
                                                 color: `var(--user-${selectedAppointment.employeeId % 15}-name)`,
                                                 fontWeight: 600
                                             }}
@@ -648,7 +685,7 @@ const Calendar = () => {
                         <div className="modal-body">
                             <div className="modal-appointments">
                                 {selectedCalendarCell.appointments.map(apt => (
-                                    <div 
+                                    <div
                                         key={apt.appointmentId}
                                         className={`appointment-block small ${findApppointmentClass(apt)}`}
                                         onClick={() => openAppointmentModal(apt)}
@@ -659,9 +696,9 @@ const Calendar = () => {
                                     >
                                         <span className="apt-time-small">{formatTime(apt.startTime)} - {formatTime(apt.endTime)}</span>
                                         <div className="apt-employee-service-small">
-                                            <span 
+                                            <span
                                                 className="apt-employee-small"
-                                                style={{ 
+                                                style={{
                                                     padding: '0.15rem 0.35rem',
                                                     borderRadius: '0.25rem',
                                                     background: `var(--user-${apt.employeeId % 15}-bg)`,
