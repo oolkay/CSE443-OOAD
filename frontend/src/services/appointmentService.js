@@ -18,6 +18,16 @@ const appointmentService = {
     getCustomerAppointments: async (customerId) => {
         const response = await axios.get(`${APPOINTMENT_URL}/customer/${customerId}`);
         return response.data;
+    },
+
+    getEmployeeAppointments: async (employeeId) => {
+        const response = await axios.get(`${APPOINTMENT_URL}/employee/${employeeId}`);
+        return response.data;
+    },
+
+    getResourceAppointments: async (resourceId) => {
+        const response = await axios.get(`${APPOINTMENT_URL}/resource/${resourceId}`);
+        return response.data;
     }
 };
 

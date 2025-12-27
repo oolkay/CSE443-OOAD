@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { resourceService, setCurrentCompanyId } from '../../../services/resourceService';
+import appointmentService from '../../../services/appointmentService';
 
 import ConfirmationModal from '../../../components/UI/ConfirmationModal';
 import ToastNotification from '../../../components/UI/ToastNotification';
@@ -17,8 +18,11 @@ const ResourceManager = () => {
 
     // Confirmation Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
+    const [isForceDeleteModalOpen, setIsForceDeleteModalOpen] = useState(false);
+    const [warningMessage, setWarningMessage] = useState('');
     const [resourceToDelete, setResourceToDelete] = useState(null);
+    const [conflictingAppointments, setConflictingAppointments] = useState([]);
+    const [showAppointments, setShowAppointments] = useState(false);
 
     // Toast Notification State
     const [toasts, setToasts] = useState([]);
@@ -209,36 +213,46 @@ const ResourceManager = () => {
     };
 
     // Silme İşlemi Onay
-    const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async (force = false) => {
         if (!resourceToDelete) return;
         try {
-            await resourceService.deleteResource(resourceToDelete);
+            await resourceService.deleteResource(resourceToDelete, force);
             setResources(resources.filter(r => r.resourceId !== resourceToDelete));
+            addToast('success', 'Kaynak başarıyla silindi.');
             closeDetailModal();
+            setIsDeleteModalOpen(false);
+            setIsForceDeleteModalOpen(false);
+            setResourceToDelete(null);
         } catch (err) {
             console.error('Error deleting resource:', err);
 
-            let userMessage = 'Kaynak silinemedi. Lütfen tekrar deneyin.';
-            let title = 'Hata';
-
-            // Extract error message from backend
             const backendMsg = err.data?.message || err.message || '';
 
-            // Check for specific keywords including new backend error
-            if (backendMsg.includes("associated with existing appointments") ||
-                backendMsg.toLowerCase().includes('foreign key') ||
-                backendMsg.toLowerCase().includes('constraint') ||
-                backendMsg.toLowerCase().includes('ilişkili')) {
-                // User requirement: "Cannot delete employee. This employee has associated appointments." (translated for resources)
-                userMessage = 'Cannot delete resource. This resource has associated appointments.';
-            } else {
-                userMessage = `Kaynak silinemedi: ${backendMsg}`;
+            // Check for associated appointments
+            if (!force && (backendMsg.includes("associated with existing appointments") || backendMsg.includes("associated appointments") || backendMsg.includes("randevu") || backendMsg.toLowerCase().includes('ilişkili'))) {
+                setIsDeleteModalOpen(false);
+                setWarningMessage("Bu kaynağa ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek ve müşterilere iptal maili gönderilecektir. Devam etmek istiyor musunuz?");
+                setIsForceDeleteModalOpen(true);
+                setConflictingAppointments([]);
+                setShowAppointments(false);
+                return;
             }
 
+            let userMessage = `Kaynak silinemedi: ${backendMsg}`;
             addToast('error', userMessage);
-        } finally {
-            setIsDeleteModalOpen(false);
-            setResourceToDelete(null);
+            if (!force) setIsDeleteModalOpen(false);
+        }
+    };
+
+    const fetchConflictingAppointments = async () => {
+        if (!resourceToDelete) return;
+        try {
+            const appointments = await appointmentService.getResourceAppointments(resourceToDelete);
+            setConflictingAppointments(appointments || []);
+            setShowAppointments(true);
+        } catch (error) {
+            console.error("Failed to fetch appointments", error);
+            addToast("error", "Randevu listesi alınamadı");
         }
     };
 
@@ -581,6 +595,68 @@ const ResourceManager = () => {
                 onConfirm={handleConfirmDelete}
                 title="Kaynağı Sil"
                 message="Bu kaynağı silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                type="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={isForceDeleteModalOpen}
+                onClose={() => {
+                    setIsForceDeleteModalOpen(false);
+                    setResourceToDelete(null); // Clear selection on cancel
+                    setShowAppointments(false);
+                    setConflictingAppointments([]);
+                }}
+                onConfirm={() => handleConfirmDelete(true)} // Force delete
+                title="Dikkat: Randevular Var"
+                message={
+                    <div className="confirmation-content">
+                        <p className="warning-text">{warningMessage}</p>
+                        {!showAppointments && (
+                            <button
+                                className="action-button view-appointments-btn"
+                                onClick={fetchConflictingAppointments}
+                            >
+                                <span className="icon">📅</span> Randevuları Listele
+                            </button>
+                        )}
+
+                        {showAppointments && conflictingAppointments.length > 0 && (
+                            <div className="appointments-list-container">
+                                <table className="appointments-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Müşteri</th>
+                                            <th>Hizmet</th>
+                                            <th>Çalışan</th>
+                                            <th>Süre</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {conflictingAppointments.map(app => (
+                                            <tr key={app.appointmentId}>
+                                                <td className="date-cell">
+                                                    <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
+                                                    <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </td>
+                                                <td className="customer-cell">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span></span> {app.customerName}
+                                                    </div>
+                                                </td>
+                                                <td className="service-cell">{app.serviceName}</td>
+                                                <td className="employee-cell">{app.employeeName}</td>
+                                                <td className="duration-cell">
+                                                    {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                }
                 type="danger"
             />
 

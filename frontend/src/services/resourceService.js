@@ -135,10 +135,10 @@ export const resourceService = {
   /**
    * Delete a resource
    */
-  async deleteResource(resourceId) {
+  async deleteResource(resourceId, confirm = false) {
     try {
       const companyId = getCurrentCompanyId();
-      const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}`, {
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}?confirm=${confirm}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });

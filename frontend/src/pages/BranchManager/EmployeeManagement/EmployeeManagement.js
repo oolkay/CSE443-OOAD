@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './EmployeeManagement.css';
 import employeeService from '../../../services/employeeService';
 import serviceService from '../../../services/serviceService'; // We need services list too
+import appointmentService from '../../../services/appointmentService';
 import authService from '../../../services/authService';
 import ToastNotification from '../../../components/UI/ToastNotification';
 import ConfirmationModal from '../../../components/UI/ConfirmationModal';
@@ -47,8 +48,13 @@ const EmployeeManager = () => {
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
     // Delete Modal State
+    // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isForceDeleteModalOpen, setIsForceDeleteModalOpen] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
+    const [warningMessage, setWarningMessage] = useState('');
+    const [conflictingAppointments, setConflictingAppointments] = useState([]);
+    const [showAppointments, setShowAppointments] = useState(false);
 
     // Form Verisi
     const initialFormState = {
@@ -240,20 +246,47 @@ const EmployeeManager = () => {
         setIsDetailModalOpen(false);
     };
 
-    const confirmDelete = async () => {
+    const confirmDelete = async (force = false) => {
         if (!employeeToDelete) return;
 
         try {
-            await employeeService.deleteEmployee(employeeToDelete);
+            await employeeService.deleteEmployee(employeeToDelete, force);
             showToast('Çalışan başarıyla silindi.');
             fetchData();
+            setIsDeleteModalOpen(false);
+            setIsForceDeleteModalOpen(false);
+            setEmployeeToDelete(null);
         } catch (error) {
             console.error("Delete error:", error);
-            const errMsg = error.response?.data?.message || error.message || 'Silme işlemi başarısız.';
+            const errMsg = error.response?.data?.message || (error.response?.data && JSON.stringify(error.response.data)) || error.message || 'Silme işlemi başarısız.';
+
+            // Check for associated appointments message
+            if (!force && (errMsg.includes("associated appointments") || errMsg.includes("randevu") || errMsg.includes("ilişkili"))) {
+                setIsDeleteModalOpen(false);
+                setWarningMessage("Bu çalışana ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek ve müşterilere iptal maili gönderilecektir. Devam etmek istiyor musunuz?");
+                setIsForceDeleteModalOpen(true);
+                // Pre-fetch appointments just in case user wants to see them, or fetch on demand
+                setConflictingAppointments([]); // Clear previous
+                setShowAppointments(false);
+                return;
+            }
+
             showToast(errMsg, 'error');
-        } finally {
-            setIsDeleteModalOpen(false);
-            setEmployeeToDelete(null);
+            setIsDeleteModalOpen(false); // Close modal on other errors to avoid stuck state
+        }
+    };
+
+    const fetchConflictingAppointments = async () => {
+        if (!employeeToDelete) return;
+        try {
+            const appointments = await appointmentService.getEmployeeAppointments(employeeToDelete);
+            // Filter only future/pending appointments if needed, but backend force delete deletes all. 
+            // Display pertinent info.
+            setConflictingAppointments(appointments || []);
+            setShowAppointments(true);
+        } catch (error) {
+            console.error("Failed to fetch appointments", error);
+            showToast("Randevu listesi alınamadı", "error");
         }
     };
 
@@ -515,6 +548,66 @@ const EmployeeManager = () => {
                 onConfirm={confirmDelete}
                 title="Çalışanı Sil"
                 message="Bu çalışanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                type="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={isForceDeleteModalOpen}
+                onClose={() => {
+                    setIsForceDeleteModalOpen(false);
+                    setEmployeeToDelete(null); // Clear selection on cancel
+                    setShowAppointments(false);
+                    setConflictingAppointments([]);
+                }}
+                onConfirm={() => confirmDelete(true)} // Force delete
+                title="Dikkat: Randevular Var"
+                message={
+                    <div className="confirmation-content">
+                        <p className="warning-text">{warningMessage}</p>
+                        {!showAppointments && (
+                            <button
+                                className="action-button view-appointments-btn"
+                                onClick={fetchConflictingAppointments}
+                            >
+                                <span className="icon">📅</span> Randevuları Listele
+                            </button>
+                        )}
+
+                        {showAppointments && conflictingAppointments.length > 0 && (
+                            <div className="appointments-list-container">
+                                <table className="appointments-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Müşteri</th>
+                                            <th>Hizmet</th>
+                                            <th>Süre</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {conflictingAppointments.map(app => (
+                                            <tr key={app.appointmentId}>
+                                                <td className="date-cell">
+                                                    <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
+                                                    <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </td>
+                                                <td className="customer-cell">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span></span> {app.customerName}
+                                                    </div>
+                                                </td>
+                                                <td className="service-cell">{app.serviceName}</td>
+                                                <td className="duration-cell">
+                                                    {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                }
                 type="danger"
             />
         </div>
