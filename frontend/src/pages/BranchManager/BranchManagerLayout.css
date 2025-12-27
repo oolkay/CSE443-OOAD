@@ -1,0 +1,4 @@
+/* Inherit Admin Layout Styles */
+@import '../Admin/AdminLayout.css';
+
+/* Add any specific overrides here if needed */

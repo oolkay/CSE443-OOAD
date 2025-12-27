@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom"; // Link no longer needed here since logout is in layout
 import "./Appointments.css";
 import BookingWizard from "../../components/BookingWizard";
 
@@ -192,7 +192,7 @@ export default function Appointments() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   return (
-    <div className="appointments-page">
+    <>
       <BookingWizard
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
@@ -221,21 +221,7 @@ export default function Appointments() {
         </div>
       )}
 
-      <aside className="appointments-sidebar">
-        <div className="user-info">
-          <div className="user-name">{user.name || "Kullanıcı"}</div>
-          <div className="user-email">{user.email || "email@example.com"}</div>
-          <Link to="/" onClick={() => {
-            localStorage.removeItem('user');
-            localStorage.removeItem('authToken');
-          }} className="logout-btn">
-            Çıkış Yap
-          </Link>
-        </div>
-
-      </aside>
-
-      <section className="appointments-main">
+      <div className="appointments-content" style={{ padding: '20px' }}>
         <div className="appointments-header">
           <h1>Randevu Yönetimi</h1>
           <button className="create-btn" onClick={() => setCreateOpen(true)}>
@@ -372,7 +358,7 @@ export default function Appointments() {
             </>
           )}
         </div>
-      </section>
-    </div>
+      </div>
+    </>
   );
 }
