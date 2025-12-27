@@ -18,6 +18,7 @@ public class CompanyResponseDTO {
     private Long managerId;
     private String managerName;
     private String managerEmail;
+    private String managerPhoneNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

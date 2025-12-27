@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './ServiceManager.css';
 import serviceService from '../../../services/serviceService';
+import authService from '../../../services/authService';
 import ToastNotification from '../../../components/UI/ToastNotification';
 import ServiceFormModal from './ServiceFormModal';
 import ServiceDetailModal from './ServiceDetailModal';
 import ConfirmationModal from '../../../components/UI/ConfirmationModal';
 
 const ServiceManager = () => {
+    const user = authService.getCurrentUser();
     // --- STATE ---
     const [services, setServices] = useState([]);
 
@@ -46,9 +48,14 @@ const ServiceManager = () => {
 
     // --- FETCH DATA ---
     const fetchServices = React.useCallback(async () => {
+        if (!user || !user.companyId) {
+            alert('Kullanıcının şirket bilgisi bulunamadı.');
+            return;
+        }
         try {
             setLoading(true);
-            const data = await serviceService.getAllServices();
+            // const data = await serviceService.getAllServices();
+            const data = await serviceService.getServicesByCompany(user.companyId);
             setServices(data);
             setError(null);
         } catch (err) {
