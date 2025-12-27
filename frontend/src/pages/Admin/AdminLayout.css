@@ -12,7 +12,7 @@
   top: 16px;
   left: 16px;
   z-index: 1001;
-  background: #5e6fff;
+  background: #00c7ed;
   color: white;
   border: none;
   border-radius: 8px;
@@ -92,7 +92,7 @@
   transform: translateY(-50%);
   width: 30px;
   height: 30px;
-  background: #5e6fff;
+  background: #00c7ed;
   color: white;
   border: none;
   border-radius: 50%;
@@ -107,7 +107,7 @@
 }
 
 .sidebar-collapse-btn:hover {
-  background: #4c5fd9;
+  background: #00a0be;
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -121,7 +121,7 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5e6fff, #4c5fd9);
+  background: linear-gradient(135deg, #00c7ed, #0099b6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -200,9 +200,9 @@
 }
 
 .admin-menu-item.active {
-  background: #5e6fff;
+  background: #00c7ed;
   color: #fff;
-  box-shadow: 0 2px 8px rgba(94, 111, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 199, 237, 0.3);
 }
 
 .menu-icon {
@@ -504,38 +504,58 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .admin-layout {
-    background: #1a1a1a;
+    background: #111827;
   }
 
   .admin-sidebar {
-    background: #2d2d2d;
-    border-right-color: #404040;
+    background: #1f2937;
+    border-right-color: #374151;
   }
 
   .admin-header {
-    background: #2d2d2d;
-    border-bottom-color: #404040;
+    background: #1f2937;
+    border-bottom-color: #374151;
   }
 
   .admin-main {
-    background: #1a1a1a;
+    background: #111827;
   }
 
   .admin-menu-item {
-    color: #ccc;
+    color: #9ca3af;
   }
 
   .admin-menu-item:hover {
-    background: #3a3a3a;
+    background: #374151;
     color: #fff;
   }
 
   .admin-menu-item.active {
-    background: #5e6fff;
+    background: #00c7ed;
     color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 199, 237, 0.2);
   }
 
   .mobile-menu-toggle {
-    background: #5e6fff;
+    background: #00c7ed;
+  }
+  
+  .admin-page-header {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+  
+  .admin-page-header .btn-logout {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .admin-page-header .btn-logout:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+  }
+  
+  .admin-page-header .btn-logout:hover .logout-icon {
+    color: white;
   }
 }

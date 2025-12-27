@@ -8,10 +8,12 @@ import SetNewPassword from "./pages/Auth/SetNewPassword";
 import EnterNewPassword from "./pages/Auth/EnterNewPassword";
 import Register from "./pages/Auth/Register";
 import Appointments from "./pages/Customer/Appointments";
+import CustomerLayout from "./pages/Customer/CustomerLayout";
 import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
 import RequestManagement from "./pages/BranchManager/RequestManagement/RequestManagement";
 import ResourceManager from "./pages/BranchManager/ResourceManagement/ResourceManager";
+import BranchManagerLayout from "./pages/BranchManager/BranchManagerLayout";
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Home from "./pages/Admin/Home";
 import SuperAdmins from "./pages/Admin/SuperAdmins";
@@ -44,48 +46,63 @@ function App() {
 
             {/* Customer Routes */}
 
-            <Route
-              path="/appointments"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.CUSTOMER]}>
-                  <Appointments />
-                </PrivateRoute>
-              }
-            />
+            {/* Customer Routes */}
+
+            <Route element={<CustomerLayout />}>
+              <Route
+                path="/appointments"
+                element={
+                  <PrivateRoute allowedRoles={[ROLES.CUSTOMER]}>
+                    <Appointments />
+                  </PrivateRoute>
+                }
+              />
+            </Route>
 
             {/* Manager Routes */}
-            <Route
-              path="/employee-management"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
-                  <EmployeeManagement />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/service-management"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
-                  <ServiceManager />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/request-management"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.MANAGER, ROLES.EMPLOYEE]}>
-                  <RequestManagement />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/resource-management"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
-                  <ResourceManager />
-                </PrivateRoute>
-              }
-            />
+            <Route element={<BranchManagerLayout />}>
+              <Route
+                path="/employee-management"
+                element={
+                  <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
+                    <EmployeeManagement />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/service-management"
+                element={
+                  <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
+                    <ServiceManager />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/request-management"
+                element={
+                  <PrivateRoute allowedRoles={[ROLES.MANAGER, ROLES.EMPLOYEE]}>
+                    <RequestManagement />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/resource-management"
+                element={
+                  <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
+                    <ResourceManager />
+                  </PrivateRoute>
+                }
+              />
+              {/* Calendar - Accessible by Manager and Employee */}
+              <Route
+                path="/calendar"
+                element={
+                  <PrivateRoute allowedRoles={[ROLES.MANAGER, ROLES.EMPLOYEE]}>
+                    <Calendar />
+                  </PrivateRoute>
+                }
+              />
+            </Route>
 
             {/* Employee Routes */}
             <Route
@@ -97,15 +114,7 @@ function App() {
               }
             />
 
-            {/* Calendar - Accessible by Manager and Employee */}
-            <Route
-              path="/calendar"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.MANAGER, ROLES.EMPLOYEE]}>
-                  <Calendar />
-                </PrivateRoute>
-              }
-            />
+
 
             {/* Admin Routes */}
             <Route

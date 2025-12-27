@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from '../BranchManager/Calendar/Calendar';
-import './EmployeeDashboard.css';
+import '../Admin/AdminLayout.css';
+import './EmployeeDashboard.css'; // Keep existing specific styles if any, but override layout
 
 export default function EmployeeDashboard() {
     const navigate = useNavigate();
@@ -9,6 +10,8 @@ export default function EmployeeDashboard() {
     const [pendingAppointments, setPendingAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     useEffect(() => {
         const userStr = localStorage.getItem('user');
@@ -50,94 +53,138 @@ export default function EmployeeDashboard() {
         navigate('/');
     };
 
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
+    const toggleSidebarCollapse = () => {
+        setIsSidebarCollapsed(!isSidebarCollapsed);
+    };
+
     return (
-        <div className="employee-page">
-            <aside className="employee-sidebar">
-                <div className="user-info">
-                    <div className="user-name">{employee?.name || 'Çalışan'}</div>
-                    <div className="user-email">{employee?.email || ''}</div>
-                    <button className="logout-btn" onClick={handleLogout}>
-                        Çıkış Yap
+        <div className="admin-layout">
+            {/* Mobile menu toggle button */}
+            <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
+                ☰
+            </button>
+
+            {/* Sidebar */}
+            <aside className={`admin-sidebar ${isMobileMenuOpen ? "mobile-open" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}>
+                <div className="admin-header">
+                    <button className="mobile-close-btn" onClick={toggleMobileMenu}>
+                        ✕
+                    </button>
+                    <div className="admin-logo">
+                        <div className="logo-circle">
+                            <span className="logo-icon">👷</span>
+                        </div>
+                        {!isSidebarCollapsed && (
+                            <div className="user-info">
+                                <div className="user-name">{employee?.name || 'Çalışan'}</div>
+                                <div className="user-email">{employee?.email || ''}</div>
+                            </div>
+                        )}
+                    </div>
+                    {/* Desktop collapse button */}
+                    <button className="sidebar-collapse-btn" onClick={toggleSidebarCollapse} title={isSidebarCollapsed ? "Expand" : "Collapse"}>
+                        {isSidebarCollapsed ? "›" : "‹"}
                     </button>
                 </div>
 
-                <nav className="sidebar-nav">
+                <nav className="admin-menu">
                     <button
-                        className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('dashboard')}
+                        className={`admin-menu-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }}
                     >
-                        Anasayfa
+                        <span className="menu-icon">🏠</span>
+                        {!isSidebarCollapsed && <span className="menu-label">Anasayfa</span>}
                     </button>
                     <button
-                        className={`nav-item ${activeTab === 'calendar' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('calendar')}
+                        className={`admin-menu-item ${activeTab === 'calendar' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('calendar'); setIsMobileMenuOpen(false); }}
                     >
-                        Takvim
+                        <span className="menu-icon">📅</span>
+                        {!isSidebarCollapsed && <span className="menu-label">Takvim</span>}
                     </button>
                 </nav>
             </aside>
 
-            <main className="employee-main">
-                {activeTab === 'dashboard' ? (
-                    <>
-                        <div className="employee-header">
-                            <h1>Çalışan Paneli</h1>
-                        </div>
+            {/* Mobile overlay */}
+            {isMobileMenuOpen && (
+                <div className={`mobile-overlay ${isMobileMenuOpen ? 'show' : ''}`} onClick={toggleMobileMenu} />
+            )}
 
-                        {loading ? (
-                            <div className="loading-state">Yükleniyor...</div>
-                        ) : (
-                            <>
-                                <div className="stats-row">
-                                    <div className="stat-card">
-                                        <div className="stat-label">Bekleyen Talep</div>
-                                        <div className="stat-value">{pendingAppointments.length}</div>
+            {/* Main content area */}
+            <div className={`admin-main ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+                <header className="admin-page-header">
+                    <div className="header-spacer"></div>
+                    <button className="btn-logout" onClick={handleLogout} title="Çıkış Yap">
+                        <span className="logout-icon">⎋</span>
+                    </button>
+                </header>
+                
+                <div style={{ padding: '20px' }}>
+                    {activeTab === 'dashboard' ? (
+                        <>
+                            <div className="employee-header">
+                                <h1>Çalışan Paneli</h1>
+                            </div>
+
+                            {loading ? (
+                                <div className="loading-state">Yükleniyor...</div>
+                            ) : (
+                                <>
+                                    <div className="stats-row">
+                                        <div className="stat-card">
+                                            <div className="stat-label">Bekleyen Talep</div>
+                                            <div className="stat-value">{pendingAppointments.length}</div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="card">
-                                    <h3>Bekleyen Talepler</h3>
-                                    {pendingAppointments.length === 0 ? (
-                                        <p className="empty-message">Bekleyen talep bulunmuyor.</p>
-                                    ) : (
-                                        <table className="appt-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Müşteri</th>
-                                                    <th>Hizmet</th>
-                                                    <th>Tarih</th>
-                                                    <th>Saat</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {pendingAppointments.map(appt => (
-                                                    <tr key={appt.appointmentId}>
-                                                        <td>{appt.customerName}</td>
-                                                        <td>{appt.serviceName}</td>
-                                                        <td>{appt.startTime ? new Date(appt.startTime).toLocaleDateString('tr-TR') : '-'}</td>
-                                                        <td>{appt.startTime ? new Date(appt.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
-                                                        <td>
-                                                            <button
-                                                                className="view-btn"
-                                                                onClick={() => setActiveTab('calendar')}
-                                                            >
-                                                                Detaylar
-                                                            </button>
-                                                        </td>
+                                    <div className="card">
+                                        <h3>Bekleyen Talepler</h3>
+                                        {pendingAppointments.length === 0 ? (
+                                            <p className="empty-message">Bekleyen talep bulunmuyor.</p>
+                                        ) : (
+                                            <table className="appt-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Müşteri</th>
+                                                        <th>Hizmet</th>
+                                                        <th>Tarih</th>
+                                                        <th>Saat</th>
+                                                        <th></th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </>
-                ) : (
-                    <Calendar />
-                )}
-            </main>
+                                                </thead>
+                                                <tbody>
+                                                    {pendingAppointments.map(appt => (
+                                                        <tr key={appt.appointmentId}>
+                                                            <td>{appt.customerName}</td>
+                                                            <td>{appt.serviceName}</td>
+                                                            <td>{appt.startTime ? new Date(appt.startTime).toLocaleDateString('tr-TR') : '-'}</td>
+                                                            <td>{appt.startTime ? new Date(appt.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                                                            <td>
+                                                                <button
+                                                                    className="view-btn"
+                                                                    onClick={() => setActiveTab('calendar')}
+                                                                >
+                                                                    Detaylar
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </>
+                    ) : (
+                        <Calendar />
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
