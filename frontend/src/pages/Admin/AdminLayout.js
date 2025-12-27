@@ -7,17 +7,13 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({ name: "Loading..." });
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   const menuItems = [
-    { id: "home", label: "Dashboard", path: "/admin/home", icon: "🏠" },
-    { id: "companies", label: "Companies", path: "/admin/companies", icon: "🏢" },
-    { id: "super-admins", label: "SuperAdmins", path: "/admin/super-admins", icon: "👥" },
-    { id: "settings", label: "Settings", path: "/admin/settings", icon: "⚙️" },
+    { id: "home", label: "Adminler", path: "/admin/home" },
+    { id: "companies", label: "Şirketler", path: "/admin/companies" },
   ];
 
-  // Fetch user info from localStorage (set during login)
   useEffect(() => {
     const user = authService.getCurrentUser();
     if (user) {
@@ -25,91 +21,52 @@ export default function AdminLayout() {
     }
   }, []);
 
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      // Clear auth tokens/session
-      localStorage.removeItem("authToken");
-      sessionStorage.removeItem("authToken");
-      navigate("/");
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const foundItem = menuItems.find(item => currentPath.includes(item.path));
+    if (foundItem) {
+      setActiveTab(foundItem.id);
     }
+  }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    sessionStorage.removeItem("authToken");
+    navigate("/");
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const toggleSidebarCollapse = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
-
-  const handleMenuClick = (path) => {
-    navigate(path);
-    setIsMobileMenuOpen(false); // Close mobile menu after navigation
+  const handleMenuClick = (item) => {
+    navigate(item.path);
+    setActiveTab(item.id);
   };
 
   return (
     <div className="admin-layout">
-      {/* Mobile menu toggle button */}
-      <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
-        ☰
-      </button>
-
-      {/* Sidebar */}
-      <aside className={`admin-sidebar ${isMobileMenuOpen ? "mobile-open" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}>
-        <div className="admin-header">
-          <button className="mobile-close-btn" onClick={toggleMobileMenu}>
-            ✕
-          </button>
-          <div className="admin-logo">
-            <div className="logo-circle">
-              <span className="logo-icon">👤</span>
-            </div>
-            {!isSidebarCollapsed && (
-              <div className="user-info">
-                <div className="user-name">{userInfo.name}</div>
-                <div className="user-email">{userInfo.email}</div>
-              </div>
-            )}
-          </div>
-          {/* Desktop collapse button */}
-          <button className="sidebar-collapse-btn" onClick={toggleSidebarCollapse} title={isSidebarCollapsed ? "Expand" : "Collapse"}>
-            {isSidebarCollapsed ? "›" : "‹"}
+      <aside className="admin-sidebar">
+        <div className="user-info">
+          <div className="user-name">{userInfo.name}</div>
+          <div className="user-email">{userInfo.email}</div>
+          <button className="logout-btn" onClick={handleLogout}>
+            Çıkış Yap
           </button>
         </div>
 
-        <nav className="admin-menu">
+        <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => handleMenuClick(item.path)}
-              className={`admin-menu-item ${
-                location.pathname === item.path ? "active" : ""
-              }`}
-              title={item.label}
+              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+              onClick={() => handleMenuClick(item)}
             >
-              <span className="menu-icon">{item.icon}</span>
-              {!isSidebarCollapsed && <span className="menu-label">{item.label}</span>}
+              {item.label}
             </button>
           ))}
         </nav>
       </aside>
 
-      {/* Mobile overlay */}
-      {isMobileMenuOpen && (
-        <div className={`mobile-overlay ${isMobileMenuOpen ? 'show' : ''}`} onClick={toggleMobileMenu} />
-      )}
-
-      {/* Main content area */}
-      <div className={`admin-main ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
-        {/* Header with logout button */}
-        <header className="admin-page-header">
-          <div className="header-spacer"></div>
-          <button className="btn-logout" onClick={handleLogout} title="Logout">
-            <span className="logout-icon">⎋</span>
-          </button>
-        </header>
+      <main className="admin-main">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }
