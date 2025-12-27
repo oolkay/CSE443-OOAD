@@ -183,7 +183,7 @@ export default function Companies() {
     setCreatedManagerData(null);
   };
 
-  
+
   const handleOpenManagerModal = (company) => {
     setSelectedCompany(company);
     setManagerData({
