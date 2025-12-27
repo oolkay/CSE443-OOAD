@@ -11,7 +11,12 @@ import java.util.List;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     List<Appointment> findByCustomer_UserId(Long customerId);
+
     List<Appointment> findByEmployee_UserId(Long employeeId);
+
     List<Appointment> findByStatus(AppointmentStatus status);
+
     List<Appointment> findByEmployee_UserIdAndStartTimeBetween(Long employeeId, LocalDateTime start, LocalDateTime end);
+
+    boolean existsByEmployee_UserId(Long employeeId);
 }

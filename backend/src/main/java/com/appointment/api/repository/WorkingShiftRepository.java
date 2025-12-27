@@ -8,5 +8,8 @@ import java.util.List;
 
 public interface WorkingShiftRepository extends JpaRepository<WorkingShift, Long> {
     Optional<WorkingShift> findByEmployeeAndDayOfWeek(Employee employee, String dayOfWeek);
+
     List<WorkingShift> findByEmployeeUserId(Long employeeId);
+
+    void deleteByEmployeeUserId(Long employeeId);
 }
