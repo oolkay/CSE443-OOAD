@@ -70,6 +70,12 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getEmployeesByCompany(companyId));
     }
 
+    @GetMapping("/manager/{managerId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER')")
+    public ResponseEntity<List<EmployeeResponseDTO>> getEmployeesByManager(@PathVariable Long managerId) {
+        return ResponseEntity.ok(employeeService.getEmployeesByManager(managerId));
+    }
+
     private void setCompanyIdFromPrincipal(EmployeeRequestDTO requestDTO, Principal principal) {
         User user = userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -77,6 +83,7 @@ public class EmployeeController {
         if (user instanceof BranchManager) {
             BranchManager manager = (BranchManager) user;
             requestDTO.setCompanyId(manager.getCompany().getCompanyId());
+            requestDTO.setManagerId(manager.getUserId());
         } else if (user instanceof SuperAdmin) {
             if (requestDTO.getCompanyId() == null) {
                 throw new IllegalArgumentException("Company ID is required for Super Admin");

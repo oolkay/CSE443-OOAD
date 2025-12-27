@@ -29,6 +29,7 @@ public class EmployeeService {
     private final ServiceRepository serviceRepository;
     private final AppointmentRepository appointmentRepository;
     private final WorkingShiftService workingShiftService;
+    private final com.appointment.api.repository.BranchManagerRepository branchManagerRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -55,6 +56,15 @@ public class EmployeeService {
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Company not found with id: " + requestDTO.getCompanyId()));
         employee.setCompany(company);
+
+        // Handle Manager relationship
+        if (requestDTO.getManagerId() != null) {
+            com.appointment.api.entity.BranchManager manager = branchManagerRepository
+                    .findById(requestDTO.getManagerId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Manager not found with id: " + requestDTO.getManagerId()));
+            employee.setManager(manager);
+        }
 
         // Handle Services relationship
         if (requestDTO.getServiceIds() != null && !requestDTO.getServiceIds().isEmpty()) {
@@ -149,6 +159,13 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> getEmployeesByCompany(Long companyId) {
         return employeeRepository.findByCompany_CompanyId(companyId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmployeeResponseDTO> getEmployeesByManager(Long managerId) {
+        return employeeRepository.findByManager_UserId(managerId).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }

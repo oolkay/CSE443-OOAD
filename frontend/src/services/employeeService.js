@@ -31,6 +31,11 @@ const employeeService = {
     getEmployeesByCompany: async (companyId) => {
         const response = await axios.get(`${EMPLOYEE_URL}/company/${companyId}`);
         return response.data;
+    },
+
+    getEmployeesByManager: async (managerId) => {
+        const response = await axios.get(`${EMPLOYEE_URL}/manager/${managerId}`);
+        return response.data;
     }
 };
 
