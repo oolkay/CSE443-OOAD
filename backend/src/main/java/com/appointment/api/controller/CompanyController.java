@@ -159,14 +159,16 @@ public class CompanyController {
 
     /**
      * Delete company and all related entities
-     * Deletes in order: Appointments -> Resources -> WorkingShifts -> Employees (cascades employee_services) -> Services (cascades service_resources) -> Company (cascades to BranchManager)
+     * Deletes in order: Appointments -> Resources -> WorkingShifts -> Employees
+     * (cascades employee_services) -> Services (cascades service_resources) ->
+     * Company (cascades to BranchManager)
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Transactional
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         log.info("Deleting company with id: {}", id);
-        
+
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + id));
 
@@ -190,13 +192,15 @@ public class CompanyController {
         // 4. Delete all appointments with these services
         int serviceAppointmentCount = 0;
         for (Service service : services) {
-            List<Appointment> serviceAppointments = appointmentRepository.findByService_ServiceId(service.getServiceId());
+            List<Appointment> serviceAppointments = appointmentRepository
+                    .findByService_ServiceId(service.getServiceId());
             serviceAppointmentCount += serviceAppointments.size();
             appointmentRepository.deleteAll(serviceAppointments);
         }
         log.info("Deleted {} appointments by service", serviceAppointmentCount);
 
-        // 5. Delete all resources (must be done before services since service_resources references them)
+        // 5. Delete all resources (must be done before services since service_resources
+        // references them)
         List<Resource> resources = resourceRepository.findByCompanyCompanyId(id);
         log.info("Deleting {} resources", resources.size());
         resourceRepository.deleteAll(resources);
@@ -220,7 +224,7 @@ public class CompanyController {
         // 9. Delete company (will cascade delete BranchManager due to CascadeType.ALL)
         log.info("Deleting company with id: {}", id);
         companyRepository.delete(company);
-        
+
         log.info("Company {} deleted successfully with all related entities", id);
         return ResponseEntity.noContent().build();
     }

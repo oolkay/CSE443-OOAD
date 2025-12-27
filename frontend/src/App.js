@@ -8,10 +8,6 @@ import SetNewPassword from "./pages/Auth/SetNewPassword";
 import EnterNewPassword from "./pages/Auth/EnterNewPassword";
 import Register from "./pages/Auth/Register";
 import Appointments from "./pages/Customer/Appointments";
-import ServiceList from "./pages/Customer/ServiceList";
-import EmployeeSelect from "./pages/Customer/EmployeeSelect";
-import TimePicker from "./pages/Customer/TimePicker";
-import Confirmation from "./pages/Customer/Confirmation";
 import EmployeeManagement from "./pages/BranchManager/EmployeeManagement/EmployeeManagement";
 import ServiceManager from "./pages/BranchManager/ServiceManagement/ServiceManager";
 import RequestManagement from "./pages/BranchManager/RequestManagement/RequestManagement";
@@ -47,38 +43,7 @@ function App() {
             <Route path="/reset-password" element={<EnterNewPassword />} />
 
             {/* Customer Routes */}
-            <Route
-              path="/services"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.CUSTOMER]}>
-                  <ServiceList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/employees"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.CUSTOMER]}>
-                  <EmployeeSelect />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/times"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.CUSTOMER]}>
-                  <TimePicker />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/confirm"
-              element={
-                <PrivateRoute allowedRoles={[ROLES.CUSTOMER]}>
-                  <Confirmation />
-                </PrivateRoute>
-              }
-            />
+
             <Route
               path="/appointments"
               element={
