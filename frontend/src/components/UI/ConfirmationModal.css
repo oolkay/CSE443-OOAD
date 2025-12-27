@@ -19,13 +19,14 @@
 }
 
 .confirmation-modal {
-    max-width: 400px !important;
-    width: 100% !important;
-    /* Uses max-width to constrain */
+    max-width: 600px !important;
+    width: 95% !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    /* Allow scrolling within modal if it exceeds screen height */
     height: auto !important;
-    /* Prevent vertical stretching */
     text-align: center;
-    padding: 2rem !important;
+    padding: 1.5rem !important;
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
