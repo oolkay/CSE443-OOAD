@@ -3,6 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from '../BranchManager/Calendar/Calendar';
 import './EmployeeDashboard.css';
 
+function AppointmentMobileCard({ appt, onViewDetails }) {
+    return (
+        <div className="appt-card-mobile">
+            <div className="appt-row">
+                <span className="appt-label">Müşteri:</span>
+                <span className="appt-value">{appt.customerName}</span>
+            </div>
+            <div className="appt-row">
+                <span className="appt-label">Hizmet:</span>
+                <span className="appt-value">{appt.serviceName}</span>
+            </div>
+            <div className="appt-row">
+                <span className="appt-label">Tarih:</span>
+                <span className="appt-value">{appt.startTime ? new Date(appt.startTime).toLocaleDateString('tr-TR') : '-'}</span>
+            </div>
+            <div className="appt-row">
+                <span className="appt-label">Saat:</span>
+                <span className="appt-value">{appt.startTime ? new Date(appt.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+            </div>
+            <button className="view-btn" onClick={onViewDetails}>
+                Detaylar
+            </button>
+        </div>
+    );
+}
+
 export default function EmployeeDashboard() {
     const navigate = useNavigate();
     const [employee, setEmployee] = useState(null);
@@ -56,9 +82,6 @@ export default function EmployeeDashboard() {
                 <div className="user-info">
                     <div className="user-name">{employee?.name || 'Çalışan'}</div>
                     <div className="user-email">{employee?.email || ''}</div>
-                    <button className="logout-btn" onClick={handleLogout}>
-                        Çıkış Yap
-                    </button>
                 </div>
 
                 <nav className="sidebar-nav">
@@ -75,6 +98,10 @@ export default function EmployeeDashboard() {
                         Takvim
                     </button>
                 </nav>
+
+                <button className="logout-btn" onClick={handleLogout}>
+                    Çıkış Yap
+                </button>
             </aside>
 
             <main className="employee-main">
@@ -100,35 +127,47 @@ export default function EmployeeDashboard() {
                                     {pendingAppointments.length === 0 ? (
                                         <p className="empty-message">Bekleyen talep bulunmuyor.</p>
                                     ) : (
-                                        <table className="appt-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Müşteri</th>
-                                                    <th>Hizmet</th>
-                                                    <th>Tarih</th>
-                                                    <th>Saat</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {pendingAppointments.map(appt => (
-                                                    <tr key={appt.appointmentId}>
-                                                        <td>{appt.customerName}</td>
-                                                        <td>{appt.serviceName}</td>
-                                                        <td>{appt.startTime ? new Date(appt.startTime).toLocaleDateString('tr-TR') : '-'}</td>
-                                                        <td>{appt.startTime ? new Date(appt.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
-                                                        <td>
-                                                            <button
-                                                                className="view-btn"
-                                                                onClick={() => setActiveTab('calendar')}
-                                                            >
-                                                                Detaylar
-                                                            </button>
-                                                        </td>
+                                        <>
+                                            <table className="appt-table desktop-only">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Müşteri</th>
+                                                        <th>Hizmet</th>
+                                                        <th>Tarih</th>
+                                                        <th>Saat</th>
+                                                        <th></th>
                                                     </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {pendingAppointments.map(appt => (
+                                                        <tr key={appt.appointmentId}>
+                                                            <td>{appt.customerName}</td>
+                                                            <td>{appt.serviceName}</td>
+                                                            <td>{appt.startTime ? new Date(appt.startTime).toLocaleDateString('tr-TR') : '-'}</td>
+                                                            <td>{appt.startTime ? new Date(appt.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                                                            <td>
+                                                                <button
+                                                                    className="view-btn"
+                                                                    onClick={() => setActiveTab('calendar')}
+                                                                >
+                                                                    Detaylar
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+
+                                            <div className="appt-table-mobile mobile-only">
+                                                {pendingAppointments.map(appt => (
+                                                    <AppointmentMobileCard
+                                                        key={appt.appointmentId}
+                                                        appt={appt}
+                                                        onViewDetails={() => setActiveTab('calendar')}
+                                                    />
                                                 ))}
-                                            </tbody>
-                                        </table>
+                                            </div>
+                                        </>
                                     )}
                                 </div>
                             </>
