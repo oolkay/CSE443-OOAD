@@ -24,6 +24,7 @@ function AppointmentRow({ appointment, showCancelButton, onCancel }) {
       <td>{appointment.date}</td>
       <td>{appointment.time}</td>
       <td>{appointment.employee}</td>
+      <td>{appointment.companyPhone}</td>
       <td><StatusBadge status={appointment.status} /></td>
       {showCancelButton && (
         <td>
@@ -54,6 +55,10 @@ function AppointmentMobileCard({ appointment, showCancelButton, onCancel }) {
       <div className="appt-row">
         <span className="appt-label">Çalışan:</span>
         <span className="appt-value">{appointment.employee}</span>
+      </div>
+      <div className="appt-row">
+        <span className="appt-label">Şirket Tel:</span>
+        <span className="appt-value">{appointment.companyPhone}</span>
       </div>
       <div className="appt-row">
         <span className="appt-label">Durum:</span>
@@ -122,6 +127,7 @@ export default function Appointments() {
             ? `${a.startTime.split('T')[1].slice(0, 5)} - ${a.endTime.split('T')[1].slice(0, 5)}`
             : '',
           employee: a.employeeName || '',
+          companyPhone: a.companyPhone || '',
           status: a.status || 'PENDING'
         };
 
@@ -275,6 +281,7 @@ export default function Appointments() {
                     <th>Tarih</th>
                     <th>Saat</th>
                     <th>Çalışan</th>
+                    <th>Şirket Tel</th>
                     <th>Durum</th>
                     <th></th>
                   </tr>
@@ -334,6 +341,7 @@ export default function Appointments() {
                     <th>Tarih</th>
                     <th>Saat</th>
                     <th>Çalışan</th>
+                    <th>Şirket Tel</th>
                     <th>Durum</th>
                   </tr>
                 </thead>

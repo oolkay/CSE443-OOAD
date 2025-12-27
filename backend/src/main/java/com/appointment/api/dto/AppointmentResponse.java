@@ -27,4 +27,5 @@ public class AppointmentResponse {
     private AppointmentStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String companyPhone;
 }

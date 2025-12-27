@@ -332,6 +332,7 @@ public class AppointmentService {
                 .status(appointment.getStatus())
                 .createdAt(appointment.getCreatedAt())
                 .updatedAt(appointment.getUpdatedAt())
+                .companyPhone(appointment.getEmployee().getCompany() != null ? appointment.getEmployee().getCompany().getPhoneNumber() : null)
                 .build();
     }
 
