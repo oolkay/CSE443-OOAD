@@ -15,8 +15,9 @@ public class LoginResponse {
     private long expiresIn;
     private Long companyId;
 
-    // Constructor without company info (for Customer and SuperAdmin)
+
     public LoginResponse(String token, Long userId, String email, String name, String role, long expiresIn) {
+    // Constructor without company info (for Customer and SuperAdmin)
         this.token = token;
         this.userId = userId;
         this.email = email;
