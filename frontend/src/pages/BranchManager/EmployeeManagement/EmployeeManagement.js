@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './EmployeeManagement.css';
 import employeeService from '../../../services/employeeService';
 import serviceService from '../../../services/serviceService'; // We need services list too
@@ -7,32 +7,76 @@ import authService from '../../../services/authService';
 import ToastNotification from '../../../components/UI/ToastNotification';
 import ConfirmationModal from '../../../components/UI/ConfirmationModal';
 
+// Gün Mapping (TR -> EN ve EN -> TR)
+const DAY_MAPPING = {
+    'Pazartesi': 'MONDAY',
+    'Salı': 'TUESDAY',
+    'Çarşamba': 'WEDNESDAY',
+    'Perşembe': 'THURSDAY',
+    'Cuma': 'FRIDAY',
+    'Cumartesi': 'SATURDAY',
+    'Pazar': 'SUNDAY'
+};
+
+const REVERSE_DAY_MAPPING = Object.fromEntries(Object.entries(DAY_MAPPING).map(([k, v]) => [v, k]));
+const DAYS_ORDER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+// Varsayılan boş program
+const DEFAULT_SCHEDULE = {
+    Pazartesi: { active: true, start: '09:00', end: '18:00' },
+    Salı: { active: true, start: '09:00', end: '18:00' },
+    Çarşamba: { active: true, start: '09:00', end: '18:00' },
+    Perşembe: { active: true, start: '09:00', end: '18:00' },
+    Cuma: { active: true, start: '09:00', end: '18:00' },
+    Cumartesi: { active: true, start: '10:00', end: '16:00' },
+    Pazar: { active: false, start: '09:00', end: '18:00' }
+};
+
+// UI Format (Day Key -> {active, start, end}) TO API Format (List of DTOs)
+const transformScheduleToApi = (scheduleObj) => {
+    const apiList = [];
+    Object.keys(scheduleObj).forEach(dayTr => {
+        const dayData = scheduleObj[dayTr];
+        if (dayData.active) {
+            // Backend requires MONDAY, TUESDAY etc.
+            const dayEn = DAY_MAPPING[dayTr];
+            if (dayEn) {
+                apiList.push({
+                    dayOfWeek: dayEn,
+                    startTime: dayData.start.length === 5 ? dayData.start + ":00" : dayData.start, // HH:mm -> HH:mm:ss
+                    endTime: dayData.end.length === 5 ? dayData.end + ":00" : dayData.end,
+                    shiftName: 'Shift' // Optional
+                });
+            }
+        }
+    });
+    return apiList;
+};
+
+// API Format TO UI Format
+const transformScheduleFromApi = (apiList) => {
+    // Start with default empty schedule
+    const uiSchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+
+    // Reset all days to inactive first
+    Object.keys(uiSchedule).forEach(d => uiSchedule[d].active = false);
+
+    if (!apiList || !Array.isArray(apiList)) return uiSchedule;
+
+    apiList.forEach(shift => {
+        const dayTr = REVERSE_DAY_MAPPING[shift.dayOfWeek];
+        if (dayTr && uiSchedule[dayTr]) {
+            uiSchedule[dayTr].active = true;
+            // Cut seconds from time if present (09:00:00 -> 09:00)
+            uiSchedule[dayTr].start = shift.startTime.substring(0, 5);
+            uiSchedule[dayTr].end = shift.endTime.substring(0, 5);
+        }
+    });
+
+    return uiSchedule;
+};
+
 const EmployeeManager = () => {
-    const DAYS_ORDER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-
-    // Gün Mapping (TR -> EN ve EN -> TR)
-    const DAY_MAPPING = {
-        'Pazartesi': 'MONDAY',
-        'Salı': 'TUESDAY',
-        'Çarşamba': 'WEDNESDAY',
-        'Perşembe': 'THURSDAY',
-        'Cuma': 'FRIDAY',
-        'Cumartesi': 'SATURDAY',
-        'Pazar': 'SUNDAY'
-    };
-
-    const REVERSE_DAY_MAPPING = Object.fromEntries(Object.entries(DAY_MAPPING).map(([k, v]) => [v, k]));
-
-    // Varsayılan boş program
-    const DEFAULT_SCHEDULE = {
-        Pazartesi: { active: true, start: '09:00', end: '18:00' },
-        Salı: { active: true, start: '09:00', end: '18:00' },
-        Çarşamba: { active: true, start: '09:00', end: '18:00' },
-        Perşembe: { active: true, start: '09:00', end: '18:00' },
-        Cuma: { active: true, start: '09:00', end: '18:00' },
-        Cumartesi: { active: true, start: '10:00', end: '16:00' },
-        Pazar: { active: false, start: '09:00', end: '18:00' }
-    };
 
     const user = authService.getCurrentUser();
     // --- STATE ---
@@ -54,7 +98,7 @@ const EmployeeManager = () => {
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const [warningMessage, setWarningMessage] = useState('');
     const [conflictingAppointments, setConflictingAppointments] = useState([]);
-    const [showAppointments, setShowAppointments] = useState(false);
+    const [activeTab, setActiveTab] = useState('none'); // 'none', 'appointments', 'services'
 
     // Form Verisi
     const initialFormState = {
@@ -68,13 +112,12 @@ const EmployeeManager = () => {
     };
     const [formData, setFormData] = useState(initialFormState);
 
-    // --- FETCH DATA ---
-    useEffect(() => {
-        fetchData();
-    }, []);
+    const userId = user?.userId;
+    const companyId = user?.companyId;
 
-    const fetchData = async () => {
-        if (!user || !user.companyId) {
+    // --- FETCH DATA ---
+    const fetchData = useCallback(async () => {
+        if (!userId || !companyId) {
             alert('Kullanıcının şirket bilgisi bulunamadı.');
             return;
         }
@@ -84,8 +127,8 @@ const EmployeeManager = () => {
                 // employeeService.getAllEmployees(),
                 // serviceService.getAllServices()
                 // employeeService.getEmployeesByCompany(user.companyId),
-                employeeService.getEmployeesByManager(user.userId),
-                serviceService.getServicesByCompany(user.companyId)
+                employeeService.getEmployeesByManager(userId),
+                serviceService.getServicesByCompany(companyId)
             ]);
 
             // Map backend response to frontend structure
@@ -105,7 +148,13 @@ const EmployeeManager = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId, companyId]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -267,7 +316,9 @@ const EmployeeManager = () => {
                 setIsForceDeleteModalOpen(true);
                 // Pre-fetch appointments just in case user wants to see them, or fetch on demand
                 setConflictingAppointments([]); // Clear previous
-                setShowAppointments(false);
+                // Trigger fetch immediately
+                fetchConflictingAppointments();
+                setActiveTab('appointments'); // Ensure tab is active by default
                 return;
             }
 
@@ -283,7 +334,6 @@ const EmployeeManager = () => {
             // Filter only future/pending appointments if needed, but backend force delete deletes all. 
             // Display pertinent info.
             setConflictingAppointments(appointments || []);
-            setShowAppointments(true);
         } catch (error) {
             console.error("Failed to fetch appointments", error);
             showToast("Randevu listesi alınamadı", "error");
@@ -296,49 +346,7 @@ const EmployeeManager = () => {
 
     // --- HELPERS ---
 
-    // UI Format (Day Key -> {active, start, end}) TO API Format (List of DTOs)
-    const transformScheduleToApi = (scheduleObj) => {
-        const apiList = [];
-        Object.keys(scheduleObj).forEach(dayTr => {
-            const dayData = scheduleObj[dayTr];
-            if (dayData.active) {
-                // Backend requires MONDAY, TUESDAY etc.
-                const dayEn = DAY_MAPPING[dayTr];
-                if (dayEn) {
-                    apiList.push({
-                        dayOfWeek: dayEn,
-                        startTime: dayData.start.length === 5 ? dayData.start + ":00" : dayData.start, // HH:mm -> HH:mm:ss
-                        endTime: dayData.end.length === 5 ? dayData.end + ":00" : dayData.end,
-                        shiftName: 'Shift' // Optional
-                    });
-                }
-            }
-        });
-        return apiList;
-    };
 
-    // API Format TO UI Format
-    const transformScheduleFromApi = (apiList) => {
-        // Start with default empty schedule
-        const uiSchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
-
-        // Reset all days to inactive first
-        Object.keys(uiSchedule).forEach(d => uiSchedule[d].active = false);
-
-        if (!apiList || !Array.isArray(apiList)) return uiSchedule;
-
-        apiList.forEach(shift => {
-            const dayTr = REVERSE_DAY_MAPPING[shift.dayOfWeek];
-            if (dayTr && uiSchedule[dayTr]) {
-                uiSchedule[dayTr].active = true;
-                // Cut seconds from time if present (09:00:00 -> 09:00)
-                uiSchedule[dayTr].start = shift.startTime.substring(0, 5);
-                uiSchedule[dayTr].end = shift.endTime.substring(0, 5);
-            }
-        });
-
-        return uiSchedule;
-    };
 
     return (
         <div className="layout-container">
@@ -556,56 +564,78 @@ const EmployeeManager = () => {
                 onClose={() => {
                     setIsForceDeleteModalOpen(false);
                     setEmployeeToDelete(null); // Clear selection on cancel
-                    setShowAppointments(false);
                     setConflictingAppointments([]);
+                    setActiveTab('none');
                 }}
                 onConfirm={() => confirmDelete(true)} // Force delete
                 title="Dikkat: Randevular Var"
                 message={
                     <div className="confirmation-content">
                         <p className="warning-text">{warningMessage}</p>
-                        {!showAppointments && (
+                        <div className="button-group" style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
                             <button
-                                className="action-button view-appointments-btn"
-                                onClick={fetchConflictingAppointments}
+                                className={`tab-button ${activeTab === 'appointments' ? 'active' : ''}`}
+                                onClick={() => {
+                                    if (conflictingAppointments.length === 0) fetchConflictingAppointments();
+                                    setActiveTab('appointments');
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: 'none',
+                                    background: activeTab === 'appointments' ? '#e0e7ff' : 'transparent',
+                                    color: activeTab === 'appointments' ? '#4f46e5' : '#6b7280',
+                                    fontWeight: 600,
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
                             >
-                                <span className="icon">📅</span> Randevuları Listele
+                                📅 Randevular ({conflictingAppointments.length})
                             </button>
-                        )}
 
-                        {showAppointments && conflictingAppointments.length > 0 && (
-                            <div className="appointments-list-container">
-                                <table className="appointments-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tarih</th>
-                                            <th>Müşteri</th>
-                                            <th>Hizmet</th>
-                                            <th>Süre</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {conflictingAppointments.map(app => (
-                                            <tr key={app.appointmentId}>
-                                                <td className="date-cell">
-                                                    <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
-                                                    <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
-                                                </td>
-                                                <td className="customer-cell">
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span></span> {app.customerName}
-                                                    </div>
-                                                </td>
-                                                <td className="service-cell">{app.serviceName}</td>
-                                                <td className="duration-cell">
-                                                    {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        </div>
+
+                        {activeTab === 'appointments' && (
+                            <div className="tab-content" style={{ marginTop: '15px' }}>
+                                {conflictingAppointments.length > 0 ? (
+                                    <div className="appointments-list-container">
+                                        <table className="appointments-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tarih</th>
+                                                    <th>Müşteri</th>
+                                                    <th>Hizmet</th>
+                                                    <th>Süre</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {conflictingAppointments.map(app => (
+                                                    <tr key={app.appointmentId}>
+                                                        <td className="date-cell">
+                                                            <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
+                                                            <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                        </td>
+                                                        <td className="customer-cell">
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                <span></span> {app.customerName}
+                                                            </div>
+                                                        </td>
+                                                        <td className="service-cell">{app.serviceName}</td>
+                                                        <td className="duration-cell">
+                                                            {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: '#6b7280', fontStyle: 'italic', padding: '10px' }}>Listelenecek randevu yok veya yükleniyor...</p>
+                                )}
                             </div>
                         )}
+
+
                     </div>
                 }
                 type="danger"

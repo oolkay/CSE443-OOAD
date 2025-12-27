@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { resourceService, setCurrentCompanyId } from '../../../services/resourceService';
 import appointmentService from '../../../services/appointmentService';
 
@@ -22,7 +22,10 @@ const ResourceManager = () => {
     const [warningMessage, setWarningMessage] = useState('');
     const [resourceToDelete, setResourceToDelete] = useState(null);
     const [conflictingAppointments, setConflictingAppointments] = useState([]);
-    const [showAppointments, setShowAppointments] = useState(false);
+
+    // Services Impact State
+    const [affectedServices, setAffectedServices] = useState([]);
+    const [activeTab, setActiveTab] = useState('none'); // 'none', 'appointments', 'services'
 
     // Toast Notification State
     const [toasts, setToasts] = useState([]);
@@ -49,16 +52,9 @@ const ResourceManager = () => {
     const [formData, setFormData] = useState(initialFormState);
 
     // --- API CALLS ---
-    // Load resources when component mounts
-    useEffect(() => {
-        fetchResourcesWithRetry();
-        // TODO: Get company ID from authentication context
-        // For now, setting default company ID (should come from login)
-        setCurrentCompanyId(1);
-    }, []);
 
     // Fetch resources with retry logic (10 second timeout)
-    const fetchResourcesWithRetry = async (retryCount = 0, maxRetries = 1) => {
+    const fetchResourcesWithRetry = useCallback(async (retryCount = 0, maxRetries = 1) => {
         try {
             setLoading(true);
             setError(null);
@@ -77,7 +73,15 @@ const ResourceManager = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Load resources when component mounts
+    useEffect(() => {
+        fetchResourcesWithRetry();
+        // TODO: Get company ID from authentication context
+        // For now, setting default company ID (should come from login)
+        setCurrentCompanyId(1);
+    }, [fetchResourcesWithRetry]);
 
     // Manual refresh without retry
     const fetchResources = async () => {
@@ -223,6 +227,7 @@ const ResourceManager = () => {
             setIsDeleteModalOpen(false);
             setIsForceDeleteModalOpen(false);
             setResourceToDelete(null);
+            setAffectedServices([]); // Reset services
         } catch (err) {
             console.error('Error deleting resource:', err);
 
@@ -231,10 +236,14 @@ const ResourceManager = () => {
             // Check for associated appointments
             if (!force && (backendMsg.includes("associated with existing appointments") || backendMsg.includes("associated appointments") || backendMsg.includes("randevu") || backendMsg.toLowerCase().includes('ilişkili'))) {
                 setIsDeleteModalOpen(false);
-                setWarningMessage("Bu kaynağa ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek ve müşterilere iptal maili gönderilecektir. Devam etmek istiyor musunuz?");
+                setWarningMessage("Bu kaynağa ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek, müşterilere bildirim gönderilecek ve bu kaynak ilişkili olduğu tüm hizmetlerden otomatik olarak çıkarılacaktır. Devam etmek istiyor musunuz?");
                 setIsForceDeleteModalOpen(true);
                 setConflictingAppointments([]);
-                setShowAppointments(false);
+                setAffectedServices([]); // Reset services
+                setActiveTab('appointments'); // Default to appointments tab
+                // Trigger fetches immediately for tabs
+                fetchConflictingAppointments();
+                fetchAffectedServices();
                 return;
             }
 
@@ -249,10 +258,20 @@ const ResourceManager = () => {
         try {
             const appointments = await appointmentService.getResourceAppointments(resourceToDelete);
             setConflictingAppointments(appointments || []);
-            setShowAppointments(true);
         } catch (error) {
             console.error("Failed to fetch appointments", error);
             addToast("error", "Randevu listesi alınamadı");
+        }
+    };
+
+    const fetchAffectedServices = async () => {
+        if (!resourceToDelete) return;
+        try {
+            const services = await resourceService.getResourceServices(resourceToDelete);
+            setAffectedServices(services || []);
+        } catch (error) {
+            console.error("Failed to fetch services", error);
+            addToast("error", "Hizmet listesi alınamadı");
         }
     };
 
@@ -274,7 +293,7 @@ const ResourceManager = () => {
         };
 
         initialLoad();
-    }, []);
+    }, [fetchResourcesWithRetry]);
 
     // Search and filter logic - only runs after initial load and when filters change
     useEffect(() => {
@@ -316,28 +335,7 @@ const ResourceManager = () => {
 
     const filteredResources = resources; // Now handled by API
 
-    // Test backend connection
-    const testBackendConnection = async () => {
-        try {
-            console.log('Testing backend connection...');
-            const response = await fetch('http://localhost:8080/api/resources/company/1');
-            console.log('Backend test - Status:', response.status);
-            console.log('Backend test - OK:', response.ok);
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Backend test - Data:', data);
-                alert('Backend bağlantısı başarılı! Veri: ' + JSON.stringify(data));
-            } else {
-                const errorText = await response.text();
-                console.log('Backend test - Error:', errorText);
-                alert('Backend bağlantı hatası: ' + response.status + ' - ' + errorText);
-            }
-        } catch (error) {
-            console.error('Backend test - Error:', error);
-            alert('Backend bağlanamadı: ' + error.message);
-        }
-    };
 
     return (
         <div className="layout-container">
@@ -476,7 +474,7 @@ const ResourceManager = () => {
                             <button className="close-btn" onClick={closeDetailModal}>&times;</button>
                         </div>
                         <div className="modal-body">
-                            <div className="detail-icon-large">🏗️</div>
+                            <div className="detail-icon-large"></div>
                             <h3 className="detail-name">{selectedResource.name}</h3>
 
                             <div className="detail-section">
@@ -603,56 +601,126 @@ const ResourceManager = () => {
                 onClose={() => {
                     setIsForceDeleteModalOpen(false);
                     setResourceToDelete(null); // Clear selection on cancel
-                    setShowAppointments(false);
                     setConflictingAppointments([]);
+                    setActiveTab('none');
                 }}
                 onConfirm={() => handleConfirmDelete(true)} // Force delete
                 title="Dikkat: Randevular Var"
                 message={
                     <div className="confirmation-content">
                         <p className="warning-text">{warningMessage}</p>
-                        {!showAppointments && (
+                        <div className="button-group" style={{ display: 'flex', gap: '10px', marginTop: '10px', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
                             <button
-                                className="action-button view-appointments-btn"
-                                onClick={fetchConflictingAppointments}
+                                className={`tab-button ${activeTab === 'appointments' ? 'active' : ''}`}
+                                onClick={() => {
+                                    if (conflictingAppointments.length === 0) fetchConflictingAppointments();
+                                    setActiveTab('appointments');
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: 'none',
+                                    background: activeTab === 'appointments' ? '#e0e7ff' : 'transparent',
+                                    color: activeTab === 'appointments' ? '#4f46e5' : '#6b7280',
+                                    fontWeight: 600,
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
                             >
-                                <span className="icon">📅</span> Randevuları Listele
+                                📅 Randevular ({conflictingAppointments.length})
                             </button>
+                            <button
+                                className={`tab-button ${activeTab === 'services' ? 'active' : ''}`}
+                                onClick={() => {
+                                    if (affectedServices.length === 0) fetchAffectedServices();
+                                    setActiveTab('services');
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: 'none',
+                                    background: activeTab === 'services' ? '#e0e7ff' : 'transparent',
+                                    color: activeTab === 'services' ? '#4f46e5' : '#6b7280',
+                                    fontWeight: 600,
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                🛠️ Hizmetler ({affectedServices.length})
+                            </button>
+                        </div>
+
+                        {activeTab === 'appointments' && (
+                            <div className="tab-content" style={{ marginTop: '15px' }}>
+                                {conflictingAppointments.length > 0 ? (
+                                    <div className="appointments-list-container">
+                                        <table className="appointments-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tarih</th>
+                                                    <th>Müşteri</th>
+                                                    <th>Hizmet</th>
+                                                    <th>Çalışan</th>
+                                                    <th>Süre</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {conflictingAppointments.map(app => (
+                                                    <tr key={app.appointmentId}>
+                                                        <td className="date-cell">
+                                                            <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
+                                                            <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                        </td>
+                                                        <td className="customer-cell">
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                <span></span> {app.customerName}
+                                                            </div>
+                                                        </td>
+                                                        <td className="service-cell">{app.serviceName}</td>
+                                                        <td className="employee-cell">{app.employeeName}</td>
+                                                        <td className="duration-cell">
+                                                            {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: '#6b7280', fontStyle: 'italic', padding: '10px' }}>Listelenecek randevu yok veya yükleniyor...</p>
+                                )}
+                            </div>
                         )}
 
-                        {showAppointments && conflictingAppointments.length > 0 && (
-                            <div className="appointments-list-container">
-                                <table className="appointments-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tarih</th>
-                                            <th>Müşteri</th>
-                                            <th>Hizmet</th>
-                                            <th>Çalışan</th>
-                                            <th>Süre</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {conflictingAppointments.map(app => (
-                                            <tr key={app.appointmentId}>
-                                                <td className="date-cell">
-                                                    <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
-                                                    <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
-                                                </td>
-                                                <td className="customer-cell">
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span></span> {app.customerName}
-                                                    </div>
-                                                </td>
-                                                <td className="service-cell">{app.serviceName}</td>
-                                                <td className="employee-cell">{app.employeeName}</td>
-                                                <td className="duration-cell">
-                                                    {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        {activeTab === 'services' && (
+                            <div className="tab-content" style={{ marginTop: '15px' }}>
+                                {affectedServices.length > 0 ? (
+                                    <div className="services-list-container">
+                                        <h4 style={{ textAlign: 'left', margin: '10px 0', fontSize: '0.9rem', color: '#1f2937' }}>Etkilenen Hizmetler (Otomatik Çıkarılacak):</h4>
+                                        <table className="appointments-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Hizmet Adı</th>
+                                                    <th>Açıklama</th>
+                                                    <th>Süre</th>
+                                                    <th>Fiyat</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {affectedServices.map(service => (
+                                                    <tr key={service.id}>
+                                                        <td style={{ fontWeight: 600, color: '#1f2937' }}>{service.name}</td>
+                                                        <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#6b7280' }}>{service.description || '-'}</td>
+                                                        <td>{service.durationMinutes} dk</td>
+                                                        <td>{service.price} TL</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: '#6b7280', fontStyle: 'italic', padding: '10px' }}>Listelenecek hizmet yok veya yükleniyor...</p>
+                                )}
                             </div>
                         )}
                     </div>

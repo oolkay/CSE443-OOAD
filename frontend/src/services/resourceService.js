@@ -135,6 +135,24 @@ export const resourceService = {
   /**
    * Delete a resource
    */
+  async getResourceServices(resourceId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${resourceId}/services`, {
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching resource services:', error);
+      throw error;
+    }
+  },
+
   async deleteResource(resourceId, confirm = false) {
     try {
       const companyId = getCurrentCompanyId();

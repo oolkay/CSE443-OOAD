@@ -658,8 +658,10 @@ body {
 /* --- APPOINTMENT LIST TABLE STYLING --- */
 .appointments-list-container {
     margin-top: 15px;
-    max-height: 250px;
+    max-height: 150px;
     overflow-y: auto;
+    overflow-x: auto;
+    /* Allow horizontal scroll for small screens */
     border: 1px solid #d1d5db;
     /* Darker border */
     border-radius: 8px;
@@ -673,8 +675,8 @@ body {
     border-collapse: separate;
     /* Changed for better border radius support if needed */
     border-spacing: 0;
-    font-size: 0.9rem;
-    /* Increased font size */
+    font-size: 0.85rem;
+    /* Compact font size */
 }
 
 .appointments-table th {
@@ -683,7 +685,7 @@ body {
     /* Dark black for better readability */
     font-weight: 700;
     text-align: left;
-    padding: 14px 16px;
+    padding: 6px 8px;
     border-bottom: 2px solid #e5e7eb;
     position: sticky;
     top: 0;
@@ -694,8 +696,8 @@ body {
 }
 
 .appointments-table td {
-    padding: 14px 16px;
-    /* Increased padding */
+    padding: 6px 8px;
+    /* Reduced padding for compactness */
     border-bottom: 1px solid #f3f4f6;
     color: #374151;
     /* Dark gray */

@@ -180,4 +180,17 @@ public class ResourceController {
         ResourceService.ResourceStatsDTO stats = resourceService.getResourceStats(companyId);
         return ResponseEntity.ok(stats);
     }
+
+    /**
+     * GET /api/resources/{resourceId}/services
+     * Get all services that use a specific resource
+     * Used for deletion impact analysis
+     */
+    @GetMapping("/{resourceId}/services")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER')")
+    public ResponseEntity<List<com.appointment.api.dto.ServiceResponseDTO>> getServicesForResource(
+            @PathVariable Long resourceId) {
+        List<com.appointment.api.dto.ServiceResponseDTO> services = resourceService.getServicesForResource(resourceId);
+        return ResponseEntity.ok(services);
+    }
 }

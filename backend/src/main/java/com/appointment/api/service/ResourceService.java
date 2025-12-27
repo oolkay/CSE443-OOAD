@@ -184,6 +184,21 @@ public class ResourceService {
                         }
                     });
                 }
+
+                // IMPORTANT: Remove resource from all associated services before deletion
+                // to avoid DataIntegrityViolationException (foreign key constraint)
+                List<com.appointment.api.entity.Service> services = resource.getServices();
+                if (services != null && !services.isEmpty()) {
+                    for (com.appointment.api.entity.Service service : services) {
+                        service.getResources().remove(resource);
+                        // We don't need to explicitly call serviceRepository.save(service) if we are in
+                        // a transaction
+                        // and the relationship is properly managed, but it's safer to rely on JPA dirty
+                        // checking.
+                    }
+                    // Clear the list on the resource side as well to sync
+                    resource.getServices().clear();
+                }
                 appointmentRepository.delete(appointment);
             }
         }
@@ -314,5 +329,26 @@ public class ResourceService {
         private long available;
         private long outOfService;
         private long inUse;
+    }
+
+    /**
+     * Get all services that use a specific resource.
+     * Used for impact analysis before deletion.
+     */
+    public List<com.appointment.api.dto.ServiceResponseDTO> getServicesForResource(Long resourceId) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
+
+        return resource.getServices().stream()
+                .map(service -> com.appointment.api.dto.ServiceResponseDTO.builder()
+                        .id(service.getServiceId())
+                        .name(service.getName())
+                        .description(service.getDescription())
+                        .durationMinutes(service.getTimeDuration().intValue())
+                        .price(service.getPrice())
+                        .createdAt(service.getCreatedAt())
+                        .updatedAt(service.getUpdatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 }
