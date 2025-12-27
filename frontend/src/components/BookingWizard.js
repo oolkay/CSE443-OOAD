@@ -52,6 +52,7 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
   // Error/Success States
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Fetch functions defined before useEffects
   const fetchCompanies = useCallback(async () => {
@@ -233,8 +234,11 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
       return;
     }
 
+    if (isConfirming) return; // Prevent multiple clicks
+
     setErrorMessage(null);
     setSuccessMessage(null);
+    setIsConfirming(true);
 
     try {
       // Ensure startTime is in ISO format and in the future
@@ -258,6 +262,8 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
     } catch (error) {
       // Simple user-friendly message without technical details
       setErrorMessage("Randevu oluşturulamadı. Lütfen bilgileri kontrol edip tekrar deneyin.");
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -520,7 +526,9 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
           {step < 5 ? (
             <button className="wizard-btn wizard-btn-next" onClick={handleNext}>{step === 4 ? "Önizleme" : "İleri"}</button>
           ) : (
-            <button className="wizard-btn wizard-btn-confirm" onClick={handleConfirm}>Randevuyu Onayla</button>
+            <button className="wizard-btn wizard-btn-confirm" onClick={handleConfirm} disabled={isConfirming}>
+              {isConfirming ? 'Oluşturuluyor...' : 'Randevuyu Onayla'}
+            </button>
           )}
         </div>
       </div>
