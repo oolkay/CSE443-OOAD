@@ -502,7 +502,7 @@ public class AppointmentService {
             EmailTemplateData data = buildEmailTemplateData(appointment);
             emailNotificationProvider.sendTemplatedNotification(
                     appointment.getCustomer().getEmail(),
-                    "appointment-confirmation",
+                    "appointment_confirmation",
                     data);
         } catch (Exception e) {
             // Log error but don't fail the appointment creation
@@ -515,7 +515,7 @@ public class AppointmentService {
             EmailTemplateData data = buildEmailTemplateData(appointment);
             emailNotificationProvider.sendTemplatedNotification(
                     appointment.getCustomer().getEmail(),
-                    "appointment-approval",
+                    "appointment_approval",
                     data);
         } catch (Exception e) {
             System.err.println("Failed to send approval email: " + e.getMessage());
@@ -531,7 +531,7 @@ public class AppointmentService {
 
             emailNotificationProvider.sendTemplatedNotification(
                     appointment.getCustomer().getEmail(),
-                    "appointment-rejection",
+                    "appointment_rejection",
                     data);
         } catch (Exception e) {
             System.err.println("Failed to send rejection email: " + e.getMessage());
@@ -543,7 +543,7 @@ public class AppointmentService {
             EmailTemplateData data = buildEmailTemplateData(appointment);
             emailNotificationProvider.sendTemplatedNotification(
                     appointment.getCustomer().getEmail(),
-                    "appointment-cancellation",
+                    "appointment_cancellation",
                     data);
         } catch (Exception e) {
             System.err.println("Failed to send cancellation email: " + e.getMessage());

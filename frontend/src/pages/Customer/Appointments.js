@@ -78,6 +78,7 @@ export default function Appointments() {
   const [modalOpen, setModalOpen] = useState(false);
   const [pendingCancel, setPendingCancel] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Fetch appointments from API
   const fetchAppointments = useCallback(async () => {
@@ -158,9 +159,10 @@ export default function Appointments() {
   };
 
   const confirmCancel = async () => {
-    if (!pendingCancel) return;
+    if (!pendingCancel || isCancelling) return;
 
     try {
+      setIsCancelling(true);
       const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
       const res = await fetch(`${BASE_URL}/api/appointments/${pendingCancel.id}`, {
         method: 'DELETE',
@@ -176,6 +178,8 @@ export default function Appointments() {
       closeModal();
     } catch (e) {
       setError("Randevu iptal edilemedi");
+    } finally {
+      setIsCancelling(false);
       closeModal();
     }
   };
@@ -202,10 +206,14 @@ export default function Appointments() {
             <h3>Emin misiniz?</h3>
             <p>Bu randevuyu iptal etmek istiyor musunuz?</p>
             <div className="modal-actions">
-              <button className="btn btn-danger" onClick={confirmCancel}>
-                Evet, İptal Et
+              <button
+                className="btn btn-danger"
+                onClick={confirmCancel}
+                disabled={isCancelling}
+              >
+                {isCancelling ? 'İptal Ediliyor...' : 'Evet, İptal Et'}
               </button>
-              <button className="btn" onClick={closeModal}>
+              <button className="btn" onClick={closeModal} disabled={isCancelling}>
                 Vazgeç
               </button>
             </div>
