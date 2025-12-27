@@ -36,7 +36,7 @@ public class WorkingShiftService {
         workingShift.setDayOfWeek(request.getDayOfWeek().toUpperCase());
         workingShift.setStartTime(request.getStartTime());
         workingShift.setEndTime(request.getEndTime());
-        
+
         workingShift.setShiftName(request.getShiftName() != null ? request.getShiftName() : "Standard Shift");
 
         return workingShiftRepository.save(workingShift);
@@ -44,12 +44,18 @@ public class WorkingShiftService {
 
     @Transactional
     public List<WorkingShift> defineWeeklySchedule(Long employeeId, List<WorkingShiftRequestDTO> requests) {
+        deleteAllShiftsForEmployee(employeeId);
         return requests.stream()
                 .map(req -> defineWorkingShift(employeeId, req))
                 .collect(Collectors.toList());
     }
-    
+
     public List<WorkingShift> getScheduleForEmployee(Long employeeId) {
         return workingShiftRepository.findByEmployeeUserId(employeeId);
+    }
+
+    @Transactional
+    public void deleteAllShiftsForEmployee(Long employeeId) {
+        workingShiftRepository.deleteByEmployeeUserId(employeeId);
     }
 }

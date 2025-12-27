@@ -11,6 +11,7 @@ import com.appointment.api.exception.ResourceNotFoundException;
 import com.appointment.api.repository.CompanyRepository;
 import com.appointment.api.repository.EmployeeRepository;
 import com.appointment.api.repository.ServiceRepository;
+import com.appointment.api.repository.AppointmentRepository;
 import com.appointment.api.dto.WorkingShiftResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +27,7 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final ServiceRepository serviceRepository;
+    private final AppointmentRepository appointmentRepository;
     private final WorkingShiftService workingShiftService;
 
     private final PasswordEncoder passwordEncoder;
@@ -66,7 +68,7 @@ public class EmployeeService {
         Employee savedEmployee = employeeRepository.save(employee);
 
         // Save schedule if provided
-        if (requestDTO.getSchedule() != null && !requestDTO.getSchedule().isEmpty()) {
+        if (requestDTO.getSchedule() != null) {
             workingShiftService.defineWeeklySchedule(savedEmployee.getUserId(), requestDTO.getSchedule());
         }
 
@@ -108,7 +110,8 @@ public class EmployeeService {
         Employee updatedEmployee = employeeRepository.save(employee);
 
         // Update schedule if provided
-        if (requestDTO.getSchedule() != null && !requestDTO.getSchedule().isEmpty()) {
+        // Update schedule if provided (including empty list to clear shifts)
+        if (requestDTO.getSchedule() != null) {
             workingShiftService.defineWeeklySchedule(updatedEmployee.getUserId(), requestDTO.getSchedule());
         }
 
@@ -122,10 +125,17 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void deleteEmployee(Long id) {
         if (!employeeRepository.existsById(id)) {
             throw new ResourceNotFoundException("Employee not found with id: " + id);
         }
+
+        if (appointmentRepository.existsByEmployee_UserId(id)) {
+            throw new IllegalArgumentException("Cannot delete employee. This employee has associated appointments.");
+        }
+
+        workingShiftService.deleteAllShiftsForEmployee(id);
         employeeRepository.deleteById(id);
     }
 
