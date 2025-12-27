@@ -47,6 +47,25 @@ export default function Companies() {
   const [managerCreated, setManagerCreated] = useState(false);
   const [createdManagerData, setCreatedManagerData] = useState(null);
 
+  const [pageMessage, setPageMessage] = useState(null);
+  const [companyModalMessage, setCompanyModalMessage] = useState(null);
+  const [managerModalMessage, setManagerModalMessage] = useState(null);
+
+  const showPageMessage = (type, text) => {
+    setPageMessage({ type, text });
+    setTimeout(() => setPageMessage(null), 3000);
+  };
+
+  const showCompanyModalMessage = (type, text) => {
+    setCompanyModalMessage({ type, text });
+    if (type === 'success') setTimeout(() => setCompanyModalMessage(null), 3000);
+  };
+
+  const showManagerModalMessage = (type, text) => {
+    setManagerModalMessage({ type, text });
+    if (type === 'success') setTimeout(() => setManagerModalMessage(null), 3000);
+  };
+
   // API call functions
   const fetchCompanies = async () => {
     try {
@@ -128,31 +147,34 @@ export default function Companies() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this company?")) {
+    if (window.confirm("Bu şirketi silmek istediğinizden emin misiniz?")) {
       const success = await deleteCompany(id);
       if (!success) {
-        // Fallback to local state update
         setCompanies(companies.filter((c) => c.companyId !== id));
+      } else {
+        showPageMessage('success', "Şirket başarıyla silindi.");
       }
     }
   };
 
   const handleAddCompany = async () => {
     if (!newCompany.name || !newCompany.email || !newCompany.address || !newCompany.phoneNumber) {
-      alert("Please fill in all fields");
+      showCompanyModalMessage('error', "Lütfen tüm alanları doldurun");
       return;
     }
 
     if (isEditing) {
       const success = await updateCompany(currentCompanyId, newCompany);
       if (!success) {
-        // Fallback to local state update
+        // Fallback
         setCompanies(companies.map(c =>
           c.companyId === currentCompanyId ? { ...c, ...newCompany } : c
         ));
       }
+      showPageMessage('success', "Şirket güncellendi.");
     } else {
-      alert("Please use the 'Add New Company' button to create companies with managers.");
+      showCompanyModalMessage('error', "Şirket oluşturmak için lütfen 'Yeni Şirket Ekle' butonunu kullanın.");
+      return;
     }
 
     handleModalClose();
@@ -165,6 +187,7 @@ export default function Companies() {
     setNewCompany({ name: "", email: "", address: "", phoneNumber: "" });
     setManagerCreated(false);
     setCreatedManagerData(null);
+    setCompanyModalMessage(null);
   };
 
   const handleAddCompanyWithManager = () => {
@@ -181,6 +204,7 @@ export default function Companies() {
     });
     setManagerCreated(false);
     setCreatedManagerData(null);
+    setCompanyModalMessage(null);
   };
 
 
@@ -204,33 +228,41 @@ export default function Companies() {
       password: "",
       phoneNumber: "",
     });
+    setManagerModalMessage(null);
   };
 
   return (
     <div className="companies-page">
       {/* Header */}
       <header className="companies-header">
-        <h1>Hi, {currentUser.name} 👋</h1>
+        <div className="header-left"></div>
+        <button className="btn-create" onClick={handleAddCompanyWithManager}>
+          + Şirket Ekle
+        </button>
       </header>
 
       {/* Company List Section */}
       <div className="companies-container">
-        <div className="companies-toolbar">
-          <h2 className="section-title">Company List</h2>
-          <div className="toolbar-actions">
-            <div className="search-box">
-              <input
-                type="text"
-                placeholder="Search by name"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-              <span className="search-icon">🔍</span>
-            </div>
-            <button className="btn-add" onClick={handleAddCompanyWithManager}>
-              Add New Company
-            </button>
+        {pageMessage && (
+          <div className={`message-banner ${pageMessage.type}`}>
+            {pageMessage.text}
+          </div>
+        )}
+        <div className="companies-toolbar" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Şirket ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+            <span className="search-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
           </div>
         </div>
 
@@ -239,23 +271,19 @@ export default function Companies() {
           <table className="companies-table">
             <thead>
               <tr>
-                <th>
-                  <input type="checkbox" />
-                </th>
-                <th>Company</th>
-                <th>Address</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Manager</th>
+
+                <th>Şirket</th>
+                <th>Adres</th>
+                <th>E-posta</th>
+                <th>Telefon</th>
+                <th>Yönetici</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {displayedCompanies.map((company) => (
                 <tr key={company.companyId}>
-                  <td>
-                    <input type="checkbox" />
-                  </td>
+
                   <td className="company-name">{company.name}</td>
                   <td>{company.address}</td>
                   <td>{company.email}</td>
@@ -268,18 +296,18 @@ export default function Companies() {
                         <button
                           className="btn-edit-manager"
                           onClick={() => handleOpenManagerModal(company)}
-                          title="Edit Manager"
+                          title="Yöneticiyi Düzenle"
                         >
-                          ✏️
+                          Düzenle
                         </button>
                       </div>
                     ) : (
                       <button
                         className="btn-add-manager"
                         onClick={() => handleOpenManagerModal(company)}
-                        title="Assign Branch Manager"
+                        title="Şube Yöneticisi Ata"
                       >
-                        + Assign Manager
+                        Yönetici Ata
                       </button>
                     )}
                   </td>
@@ -288,16 +316,16 @@ export default function Companies() {
                       <button
                         className="btn-icon edit"
                         onClick={() => handleEdit(company)}
-                        title="Edit"
+                        title="Düzenle"
                       >
-                        ✏️
+                        Düzenle
                       </button>
                       <button
                         className="btn-icon delete"
                         onClick={() => handleDelete(company.companyId)}
-                        title="Delete"
+                        title="Sil"
                       >
-                        🗑️
+                        Sil
                       </button>
                     </div>
                   </td>
@@ -310,7 +338,7 @@ export default function Companies() {
         {/* Pagination */}
         <div className="pagination">
           <div className="pagination-info">
-            Total Company: {filteredCompanies.length}
+            Toplam Şirket: {filteredCompanies.length}
           </div>
           <div className="pagination-controls">
             <button
@@ -345,112 +373,117 @@ export default function Companies() {
         <div className="modal-overlay" onClick={handleModalClose}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{isEditing ? "Edit Company" : "Add New Company"}</h2>
+              <h2>{isEditing ? "Şirketi Düzenle" : "Yeni Şirket Ekle"}</h2>
               <button className="modal-close" onClick={handleModalClose}>
                 ×
               </button>
             </div>
             <div className="modal-body">
+              {companyModalMessage && (
+                <div className={`modal-message ${companyModalMessage.type}`}>
+                  {companyModalMessage.text}
+                </div>
+              )}
               {isEditing ? (
                 <>
                   <div className="form-group">
-                    <label>Company Name</label>
+                    <label>Şirket Adı</label>
                     <input
                       type="text"
                       value={newCompany.name}
                       onChange={(e) =>
                         setNewCompany({ ...newCompany, name: e.target.value })
                       }
-                      placeholder="Enter company name"
+                      placeholder="Şirket adı giriniz"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Email</label>
+                    <label>E-posta</label>
                     <input
                       type="email"
                       value={newCompany.email}
                       onChange={(e) =>
                         setNewCompany({ ...newCompany, email: e.target.value })
                       }
-                      placeholder="Enter email address"
+                      placeholder="E-posta adresi giriniz"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Address</label>
+                    <label>Adres</label>
                     <input
                       type="text"
                       value={newCompany.address}
                       onChange={(e) =>
                         setNewCompany({ ...newCompany, address: e.target.value })
                       }
-                      placeholder="Enter address"
+                      placeholder="Adres giriniz"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Phone Number</label>
+                    <label>Telefon</label>
                     <input
                       type="text"
                       value={newCompany.phoneNumber}
                       onChange={(e) =>
                         setNewCompany({ ...newCompany, phoneNumber: e.target.value })
                       }
-                      placeholder="Enter phone number"
+                      placeholder="Telefon numarası giriniz"
                     />
                   </div>
                 </>
               ) : (
                 <>
-                  <h3>Company Information</h3>
+                  <h3>Şirket Bilgileri</h3>
                   <div className="form-group">
-                    <label>Company Name</label>
+                    <label>Şirket Adı</label>
                     <input
                       type="text"
                       value={newManager.companyName}
                       onChange={(e) =>
                         setNewManager({ ...newManager, companyName: e.target.value })
                       }
-                      placeholder="Enter company name"
+                      placeholder="Şirket adı giriniz"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Company Email</label>
+                    <label>Şirket E-postası</label>
                     <input
                       type="email"
                       value={newManager.companyEmail}
                       onChange={(e) =>
                         setNewManager({ ...newManager, companyEmail: e.target.value })
                       }
-                      placeholder="Enter company email"
+                      placeholder="Şirket e-posta adresi giriniz"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Company Address</label>
+                    <label>Şirket Adresi</label>
                     <input
                       type="text"
                       value={newManager.companyAddress}
                       onChange={(e) =>
                         setNewManager({ ...newManager, companyAddress: e.target.value })
                       }
-                      placeholder="Enter company address"
+                      placeholder="Şirket adresi giriniz"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Company Phone</label>
+                    <label>Şirket Telefonu</label>
                     <input
                       type="text"
                       value={newManager.companyPhoneNumber}
                       onChange={(e) =>
                         setNewManager({ ...newManager, companyPhoneNumber: e.target.value })
                       }
-                      placeholder="Enter company phone number"
+                      placeholder="Şirket telefon numarası giriniz"
                     />
                   </div>
                   <div className="manager-assignment-section">
-                    <h3>Branch Manager Assignment</h3>
+                    <h3>Şube Yöneticisi Atama</h3>
                     {managerCreated && createdManagerData ? (
                       <div className="manager-created-status">
                         <p className="manager-success-text">
-                          ✅ Branch Manager Created: {createdManagerData.name} ({createdManagerData.email})
+                          Şube Yöneticisi Oluşturuldu: {createdManagerData.name} ({createdManagerData.email})
                         </p>
                         <button
                           type="button"
@@ -461,13 +494,13 @@ export default function Companies() {
                             setIsManagerModalOpen(true);
                           }}
                         >
-                          Modify Manager
+                          Yöneticiyi Düzenle
                         </button>
                       </div>
                     ) : (
                       <>
                         <p className="manager-assignment-desc">
-                          Every company requires a Branch Manager. Click the button below to create a new Branch Manager for this company.
+                          Her şirketin bir Şube Yöneticisine ihtiyacı vardır. Bu şirket için yeni bir Şube Yöneticisi oluşturmak için aşağıdaki butona tıklayın.
                         </p>
                         <button
                           type="button"
@@ -483,7 +516,7 @@ export default function Companies() {
                             setIsManagerModalOpen(true);
                           }}
                         >
-                          Create Branch Manager
+                          Şube Yöneticisi Oluştur
                         </button>
                       </>
                     )}
@@ -493,16 +526,16 @@ export default function Companies() {
             </div>
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleModalClose}>
-                Cancel
+                İptal
               </button>
               <button className="btn-save" onClick={isEditing ? handleAddCompany : async () => {
                 if (!newManager.companyName || !newManager.companyEmail || !newManager.companyAddress || !newManager.companyPhoneNumber) {
-                  alert("Please fill in all company fields");
+                  showCompanyModalMessage('error', "Lütfen tüm şirket alanlarını doldurun");
                   return;
                 }
 
                 if (!managerCreated || !createdManagerData) {
-                  alert("Please create a Branch Manager for this company first.");
+                  showCompanyModalMessage('error', "Lütfen önce bu şirket için bir Şube Yöneticisi oluşturun.");
                   return;
                 }
 
@@ -520,15 +553,15 @@ export default function Companies() {
                 try {
                   await companyService.createCompany(companyData);
 
-                  alert("Company and manager created successfully!");
+                  showPageMessage('success', "Şirket ve yönetici başarıyla oluşturuldu!");
                   await fetchCompanies();
                   handleModalClose();
                 } catch (error) {
-                  console.error('Error creating company with manager:', error);
-                  alert(`Error creating company and manager: ${error.message}`);
+                  console.error('Şirket ve yönetici oluşturulurken hata:', error);
+                  showCompanyModalMessage('error', "İşlem başarısız oldu.");
                 }
               }}>
-                {isEditing ? "Update Company" : "Create Company & Manager"}
+                {isEditing ? "Şirketi Güncelle" : "Şirket ve Yönetici Oluştur"}
               </button>
             </div>
           </div>
@@ -543,87 +576,92 @@ export default function Companies() {
               <h2>
                 {selectedCompany ? (
                   selectedCompany.managerName
-                    ? `Modify Branch Manager - ${selectedCompany.name}`
-                    : `Assign Branch Manager - ${selectedCompany.name}`
-                ) : 'Create Branch Manager'}
+                    ? `Yöneticiyi Düzenle - ${selectedCompany.name}`
+                    : `Yönetici Ata - ${selectedCompany.name}`
+                ) : 'Yönetici Oluştur'}
               </h2>
               <button className="modal-close" onClick={handleCloseManagerModal}>
                 ×
               </button>
             </div>
             <div className="modal-body">
+              {managerModalMessage && (
+                <div className={`modal-message ${managerModalMessage.type}`}>
+                  {managerModalMessage.text}
+                </div>
+              )}
               <div className="manager-form-section">
-                <h3>Branch Manager Information</h3>
+                <h3>Yönetici Bilgileri</h3>
                 <div className="form-group">
-                  <label>Manager Name *</label>
+                  <label>Yönetici Adı *</label>
                   <input
                     type="text"
                     value={managerData.name}
                     onChange={(e) =>
                       setManagerData({ ...managerData, name: e.target.value })
                     }
-                    placeholder="Enter manager full name"
+                    placeholder="Yöneticinin tam adı"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Manager Email *</label>
+                  <label>Yönetici E-postası *</label>
                   <input
                     type="email"
                     value={managerData.email}
                     onChange={(e) =>
                       setManagerData({ ...managerData, email: e.target.value })
                     }
-                    placeholder="Enter manager email"
+                    placeholder="Yöneticinin e-postası"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Password *</label>
+                  <label>Şifre *</label>
                   <input
                     type="password"
                     value={managerData.password}
                     onChange={(e) =>
                       setManagerData({ ...managerData, password: e.target.value })
                     }
-                    placeholder={selectedCompany?.managerName ? "Enter new password (leave blank to keep current)" : "Enter temporary password"}
+                    placeholder={selectedCompany?.managerName ? "Yeni şifre giriniz (mevcut şifreyi korumak için boş bırakın)" : "Geçici şifre giriniz"}
                     required={!selectedCompany?.managerName}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Phone Number</label>
+                  <label>Telefon</label>
                   <input
                     type="text"
                     value={managerData.phoneNumber}
                     onChange={(e) =>
                       setManagerData({ ...managerData, phoneNumber: e.target.value })
                     }
-                    placeholder="Enter phone number"
+                    placeholder="Telefon numarası giriniz"
                   />
                 </div>
               </div>
 
               {selectedCompany && (
                 <div className="company-info-section">
-                  <h3>Company Information</h3>
+                  <h3>Şirket Bilgileri</h3>
                   <div className="company-display">
-                    <p><strong>Company:</strong> {selectedCompany.name}</p>
-                    <p><strong>Email:</strong> {selectedCompany.email}</p>
-                    <p><strong>Address:</strong> {selectedCompany.address}</p>
-                    <p><strong>Phone:</strong> {selectedCompany.phoneNumber}</p>
+                    <p><strong>Şirket:</strong> {selectedCompany.name}</p>
+                    <p><strong>E-posta:</strong> {selectedCompany.email}</p>
+                    <p><strong>Adres:</strong> {selectedCompany.address}</p>
+                    <p><strong>Telefon:</strong> {selectedCompany.phoneNumber}</p>
                   </div>
                 </div>
               )}
             </div>
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleCloseManagerModal}>
-                Cancel
+                İptal
               </button>
               <button
                 className="btn-save"
                 onClick={async () => {
                   if (!managerData.name || !managerData.email || !managerData.password) {
-                    alert("Please fill in all required manager fields (name, email, and password)");
+                    showManagerModalMessage('error', "Lütfen tüm zorunlu alanları doldurun.");
                     return;
                   }
 
@@ -633,7 +671,7 @@ export default function Companies() {
                       const response = await managerService.updateManager(selectedCompany.managerId, managerData);
 
                       if (response) {
-                        alert(selectedCompany.managerName ? "Manager updated successfully!" : "Branch manager assigned successfully!");
+                        showPageMessage('success', selectedCompany.managerName ? "Yönetici güncellendi!" : "Yönetici atandı!");
                         await fetchCompanies();
                         handleCloseManagerModal();
                       }
@@ -646,16 +684,16 @@ export default function Companies() {
                         phoneNumber: managerData.phoneNumber,
                       });
                       setManagerCreated(true);
-                      alert("Branch Manager information saved! Now click 'Create Company & Manager' to complete the creation.");
+                      showCompanyModalMessage('success', "Yönetici bilgileri kaydedildi.");
                       handleCloseManagerModal();
                     }
                   } catch (error) {
-                    console.error('Error managing manager/company:', error);
-                    alert(`Error: ${error.message}`);
+                    console.error('Yönetici/şirket yönetimi hatası:', error);
+                    showManagerModalMessage('error', "İşlem başarısız.");
                   }
                 }}
               >
-                {selectedCompany ? (selectedCompany.managerName ? "Update Manager" : "Assign Manager") : "Save Manager Info"}
+                {selectedCompany ? (selectedCompany.managerName ? "Yöneticiyi Güncelle" : "Yönetici Ata") : "Yönetici Bilgisini Kaydet"}
               </button>
             </div>
           </div>
