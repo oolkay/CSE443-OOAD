@@ -249,7 +249,8 @@
 .manager-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  align-items: flex-start;
 }
 
 .manager-name {
@@ -282,15 +283,16 @@
 }
 
 .btn-edit-manager {
-  padding: 2px 6px;
+  padding: 4px 8px;
   background: #fff;
   color: #00c7ed;
   border: 1px solid #00c7ed;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-left: 4px;
+  margin-left: 0;
+  margin-top: 2px;
 }
 
 .btn-edit-manager:hover {
@@ -365,7 +367,7 @@
 }
 
 /* Pagination */
-.pagination {
+.companies-page .pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -373,17 +375,17 @@
   border-top: 1px solid #e8ebed;
 }
 
-.pagination-info {
+.companies-page .pagination-info {
   font-size: 14px;
   color: #6b7280;
 }
 
-.pagination-controls {
+.companies-page .pagination-controls {
   display: flex;
   gap: 8px;
 }
 
-.page-btn {
+.companies-page .page-btn {
   width: 36px;
   height: 36px;
   border: 1px solid #e8ebed;
@@ -395,21 +397,32 @@
   transition: all 0.2s ease;
 }
 
-.page-btn:hover:not(:disabled) {
+.companies-page .page-btn:hover:not(:disabled) {
   background: #f9fafb;
   border-color: #00c7ed;
 }
 
-.page-btn.active {
+.companies-page .page-btn.active {
   background: #00c7ed;
   color: #fff;
   border-color: #00c7ed;
 }
 
-.page-btn:disabled {
+.companies-page .page-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Responsive Overrides within the previously defined media query block are also important, 
+   but this scoping handles the base conflict.
+   We need to make sure the responsive block in Companies.css also uses the scoped selector 
+   or at least doesn't break. 
+   Wait, I need to update the media query block too if I want full consistency, 
+   but simpler is to rely on specificity. 
+   However, let's look at the media query block I replaced in Step 138/144. 
+   It targets .pagination inside .companies-page? No, it targets just .pagination.
+   So I must update the media query block as well.
+*/
 
 /* Modal Styles */
 .modal-overlay {
@@ -665,24 +678,121 @@
   display: inline-block;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
+  .companies-page {
+    padding: 16px;
+  }
+
+  .companies-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .header-left {
+    width: 100%;
+  }
+
+  .btn-create {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Toolbar */
+  .companies-toolbar {
+    margin-bottom: 16px;
+  }
+
   .toolbar-actions {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .search-box {
-    min-width: 100%;
+    max-width: 100%;
+    flex: 1;
   }
 
-  .pagination {
+  .search-input {
+    width: 100%;
+  }
+
+  /* Table Adjustments */
+  .companies-table th,
+  .companies-table td {
+    padding: 12px 10px;
+  }
+
+  /* Hide less critical columns on mobile */
+  .companies-table th:nth-child(2), /* Address */
+  .companies-table td:nth-child(2),
+  .companies-table th:nth-child(3), /* Email */
+  .companies-table td:nth-child(3), 
+  .companies-table th:nth-child(4), /* Phone */
+  .companies-table td:nth-child(4) {
+    display: none;
+  }
+
+  /* Pagination */
+  .companies-page .pagination {
     flex-direction: column;
     gap: 16px;
+    align-items: stretch;
+  }
+  
+  .companies-page .pagination-info {
+    text-align: center;
+    margin-bottom: 8px;
   }
 
+  .companies-page .pagination-controls {
+    justify-content: center;
+    display: flex; /* Ensure it's flex row */
+    flex-direction: row; /* Force row to keep buttons side by side */
+  }
+
+  /* Modal */
   .modal-content {
     width: 95%;
-    margin: 20px;
+    margin: 10px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-title {
+    font-size: 20px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .btn-icon {
+    width: 100%;
+    justify-content: center;
   }
 }
 
