@@ -14,7 +14,8 @@ public class LoginResponse {
     private String role;
     private long expiresIn;
 
-    public LoginResponse(String token, Long userId, String email, String name, String role, long expiresIn) {
+    public LoginResponse(String token, Long userId, String email, String name, String role,
+            long expiresIn) {
         this.token = token;
         this.userId = userId;
         this.email = email;

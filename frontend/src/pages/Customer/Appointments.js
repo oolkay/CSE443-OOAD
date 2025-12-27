@@ -17,54 +17,54 @@ function StatusBadge({ status }) {
   return <span className={config.class}>{config.text}</span>;
 }
 
-function AppointmentCard({ appointment, showCancelButton, onCancel }) {
+function AppointmentRow({ appointment, showCancelButton, onCancel }) {
   return (
-    <>
-      {/* Desktop Table Row */}
-      <tr className="desktop-only">
-        <td>{appointment.service}</td>
-        <td>{appointment.date}</td>
-        <td>{appointment.time}</td>
-        <td>{appointment.employee}</td>
-        <td><StatusBadge status={appointment.status} /></td>
-        {showCancelButton && (
-          <td>
-            <button className="cancel-btn" onClick={() => onCancel(appointment.id)}>
-              İptal Et
-            </button>
-          </td>
-        )}
-      </tr>
-
-      {/* Mobile Card */}
-      <div className="appt-card-mobile mobile-only">
-        <div className="appt-row">
-          <span className="appt-label">Hizmet:</span>
-          <span className="appt-value">{appointment.service}</span>
-        </div>
-        <div className="appt-row">
-          <span className="appt-label">Tarih:</span>
-          <span className="appt-value">{appointment.date}</span>
-        </div>
-        <div className="appt-row">
-          <span className="appt-label">Saat:</span>
-          <span className="appt-value">{appointment.time}</span>
-        </div>
-        <div className="appt-row">
-          <span className="appt-label">Çalışan:</span>
-          <span className="appt-value">{appointment.employee}</span>
-        </div>
-        <div className="appt-row">
-          <span className="appt-label">Durum:</span>
-          <StatusBadge status={appointment.status} />
-        </div>
-        {showCancelButton && (
+    <tr>
+      <td>{appointment.service}</td>
+      <td>{appointment.date}</td>
+      <td>{appointment.time}</td>
+      <td>{appointment.employee}</td>
+      <td><StatusBadge status={appointment.status} /></td>
+      {showCancelButton && (
+        <td>
           <button className="cancel-btn" onClick={() => onCancel(appointment.id)}>
             İptal Et
           </button>
-        )}
+        </td>
+      )}
+    </tr>
+  );
+}
+
+function AppointmentMobileCard({ appointment, showCancelButton, onCancel }) {
+  return (
+    <div className="appt-card-mobile">
+      <div className="appt-row">
+        <span className="appt-label">Hizmet:</span>
+        <span className="appt-value">{appointment.service}</span>
       </div>
-    </>
+      <div className="appt-row">
+        <span className="appt-label">Tarih:</span>
+        <span className="appt-value">{appointment.date}</span>
+      </div>
+      <div className="appt-row">
+        <span className="appt-label">Saat:</span>
+        <span className="appt-value">{appointment.time}</span>
+      </div>
+      <div className="appt-row">
+        <span className="appt-label">Çalışan:</span>
+        <span className="appt-value">{appointment.employee}</span>
+      </div>
+      <div className="appt-row">
+        <span className="appt-label">Durum:</span>
+        <StatusBadge status={appointment.status} />
+      </div>
+      {showCancelButton && (
+        <button className="cancel-btn" onClick={() => onCancel(appointment.id)}>
+          İptal Et
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -223,21 +223,16 @@ export default function Appointments() {
 
       <aside className="appointments-sidebar">
         <div className="user-info">
-          <div className="user-avatar">
-            {(user.name || "K").charAt(0).toUpperCase()}
-          </div>
-          <div className="user-details">
-            <div className="user-name">{user.name || "Kullanıcı"}</div>
-            <div className="user-email">{user.email || "email@example.com"}</div>
-          </div>
+          <div className="user-name">{user.name || "Kullanıcı"}</div>
+          <div className="user-email">{user.email || "email@example.com"}</div>
+          <Link to="/" onClick={() => {
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+          }} className="logout-btn">
+            Çıkış Yap
+          </Link>
         </div>
 
-        <Link to="/" onClick={() => {
-          localStorage.removeItem('user');
-          localStorage.removeItem('authToken');
-        }} className="logout-btn">
-          Çıkış Yap
-        </Link>
       </aside>
 
       <section className="appointments-main">
@@ -291,7 +286,7 @@ export default function Appointments() {
                     </tr>
                   ) : (
                     upcomingList.map((appt) => (
-                      <AppointmentCard
+                      <AppointmentRow
                         key={appt.id}
                         appointment={appt}
                         showCancelButton
@@ -309,7 +304,7 @@ export default function Appointments() {
                   </p>
                 ) : (
                   upcomingList.map((appt) => (
-                    <AppointmentCard
+                    <AppointmentMobileCard
                       key={appt.id}
                       appointment={appt}
                       showCancelButton
@@ -349,7 +344,7 @@ export default function Appointments() {
                     </tr>
                   ) : (
                     previousList.map((appt) => (
-                      <AppointmentCard
+                      <AppointmentRow
                         key={appt.id}
                         appointment={appt}
                         showCancelButton={false}
@@ -366,7 +361,7 @@ export default function Appointments() {
                   </p>
                 ) : (
                   previousList.map((appt) => (
-                    <AppointmentCard
+                    <AppointmentMobileCard
                       key={appt.id}
                       appointment={appt}
                       showCancelButton={false}

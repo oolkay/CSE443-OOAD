@@ -131,6 +131,33 @@ public class AppointmentController {
     }
 
     /**
+     * Get all appointments for an employee
+     * GET /api/appointments/employee/{employeeId}
+     */
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<?> getEmployeeAppointments(
+            @PathVariable Long employeeId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        // Extract token and verify userId matches
+        String token = authHeader.substring(7); // Remove "Bearer " prefix
+        Long tokenUserId = jwtTokenProvider.getUserIdFromToken(token);
+
+        if (tokenUserId == null || !tokenUserId.equals(employeeId)) {
+            ErrorResponse error = new ErrorResponse(
+                    LocalDateTime.now(),
+                    HttpStatus.FORBIDDEN.value(),
+                    "Forbidden",
+                    "You can only view your own appointments",
+                    "/api/appointments/employee/" + employeeId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
+
+        List<AppointmentResponse> appointments = appointmentService.getEmployeeAppointments(employeeId);
+        return ResponseEntity.ok(appointments);
+    }
+
+    /**
      * Get employee availability for a specific date
      * GET
      * /api/appointments/availability/employee/{employeeId}?date=2025-12-10&serviceDuration=30

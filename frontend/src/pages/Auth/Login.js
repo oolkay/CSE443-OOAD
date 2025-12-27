@@ -27,6 +27,8 @@ export default function Login() {
         navigate("/admin/home");
       } else if (user.role === "BRANCH_MANAGER") {
         navigate("/calendar");
+      } else if (user.role === "ROLE_EMPLOYEE") {
+        navigate("/employee/dashboard");
       } else {
         // Default to appointments for CUSTOMER role
         navigate("/appointments");
