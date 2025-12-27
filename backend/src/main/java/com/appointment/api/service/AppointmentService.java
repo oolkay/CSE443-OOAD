@@ -177,6 +177,13 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    public List<AppointmentResponse> getResourceAppointments(Long resourceId) {
+        List<Appointment> appointments = appointmentRepository.findByResources_ResourceId(resourceId);
+        return appointments.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Get employee availability for a specific date
      * Returns available time slots based on working hours and existing appointments

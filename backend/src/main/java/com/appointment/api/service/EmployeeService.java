@@ -13,12 +13,16 @@ import com.appointment.api.repository.EmployeeRepository;
 import com.appointment.api.repository.ServiceRepository;
 import com.appointment.api.repository.AppointmentRepository;
 import com.appointment.api.dto.WorkingShiftResponseDTO;
+import com.appointment.api.entity.Appointment;
+import com.appointment.api.provider.NotificationProvider;
+import com.appointment.api.dto.EmailTemplateData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
@@ -29,6 +33,8 @@ public class EmployeeService {
     private final ServiceRepository serviceRepository;
     private final AppointmentRepository appointmentRepository;
     private final WorkingShiftService workingShiftService;
+    private final com.appointment.api.repository.BranchManagerRepository branchManagerRepository;
+    private final NotificationProvider notificationProvider;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -55,6 +61,15 @@ public class EmployeeService {
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Company not found with id: " + requestDTO.getCompanyId()));
         employee.setCompany(company);
+
+        // Handle Manager relationship
+        if (requestDTO.getManagerId() != null) {
+            com.appointment.api.entity.BranchManager manager = branchManagerRepository
+                    .findById(requestDTO.getManagerId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Manager not found with id: " + requestDTO.getManagerId()));
+            employee.setManager(manager);
+        }
 
         // Handle Services relationship
         if (requestDTO.getServiceIds() != null && !requestDTO.getServiceIds().isEmpty()) {
@@ -126,13 +141,46 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void deleteEmployee(Long id) {
+    public void deleteEmployee(Long id, boolean confirm) {
         if (!employeeRepository.existsById(id)) {
             throw new ResourceNotFoundException("Employee not found with id: " + id);
         }
 
         if (appointmentRepository.existsByEmployee_UserId(id)) {
-            throw new IllegalArgumentException("Cannot delete employee. This employee has associated appointments.");
+            if (!confirm) {
+                throw new IllegalArgumentException(
+                        "Cannot delete employee. This employee has associated appointments.");
+            }
+
+            // Confirm is true, send cancellations and delete appointments
+            List<Appointment> appointments = appointmentRepository.findByEmployee_UserId(id);
+            for (Appointment appointment : appointments) {
+                if (appointment.getCustomer() != null && appointment.getCustomer().getEmail() != null) {
+                    EmailTemplateData emailData = EmailTemplateData.builder()
+                            .customerName(appointment.getCustomer().getName())
+                            .companyName(appointment.getService().getCompany().getName())
+                            .serviceName(appointment.getService().getName())
+                            .employeeName(appointment.getEmployee().getName())
+                            .appointmentDate(appointment.getStartTime().toLocalDate())
+                            .appointmentTime(appointment.getStartTime().toLocalTime())
+                            .appointmentDateTime(appointment.getStartTime()
+                                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                            .reason("Employee deletion")
+                            .build();
+
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            notificationProvider.sendTemplatedNotification(
+                                    appointment.getCustomer().getEmail(),
+                                    "APPOINTMENT_CANCELLATION",
+                                    emailData);
+                        } catch (Exception e) {
+                            System.err.println("Failed to send cancellation email: " + e.getMessage());
+                        }
+                    });
+                }
+                appointmentRepository.delete(appointment);
+            }
         }
 
         workingShiftService.deleteAllShiftsForEmployee(id);
@@ -149,6 +197,13 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> getEmployeesByCompany(Long companyId) {
         return employeeRepository.findByCompany_CompanyId(companyId).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmployeeResponseDTO> getEmployeesByManager(Long managerId) {
+        return employeeRepository.findByManager_UserId(managerId).stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { resourceService, setCurrentCompanyId } from '../../../services/resourceService';
+import appointmentService from '../../../services/appointmentService';
+
+import ConfirmationModal from '../../../components/UI/ConfirmationModal';
+import ToastNotification from '../../../components/UI/ToastNotification';
 import './ResourceManager.css';
 
 const ResourceManager = () => {
@@ -11,6 +15,26 @@ const ResourceManager = () => {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+
+    // Confirmation Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isForceDeleteModalOpen, setIsForceDeleteModalOpen] = useState(false);
+    const [warningMessage, setWarningMessage] = useState('');
+    const [resourceToDelete, setResourceToDelete] = useState(null);
+    const [conflictingAppointments, setConflictingAppointments] = useState([]);
+    const [showAppointments, setShowAppointments] = useState(false);
+
+    // Toast Notification State
+    const [toasts, setToasts] = useState([]);
+
+    const addToast = (type, message) => {
+        const id = Math.random().toString(36).substr(2, 9);
+        setToasts([...toasts, { id, type, message }]);
+    };
+
+    const removeToast = (id) => {
+        setToasts(toasts.filter(toast => toast.id !== id));
+    };
 
     const [selectedResource, setSelectedResource] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -182,18 +206,53 @@ const ResourceManager = () => {
         }
     };
 
-    // Silme İşlemi - API Call
-    const handleDelete = async (id) => {
-        if (window.confirm('Bu kaynağı silmek istediğinize emin misiniz?')) {
-            try {
-                await resourceService.deleteResource(id);
-                setResources(resources.filter(r => r.resourceId !== id));
-                closeDetailModal();
-            } catch (err) {
-                console.error('Error deleting resource:', err);
-                // TODO: Show user-friendly error message
-                alert('Kaynak silinemedi: ' + (err.message || 'Bilinmeyen hata'));
+    // Silme İşlemi Başlatma
+    const initiateDelete = (resourceId) => {
+        setResourceToDelete(resourceId);
+        setIsDeleteModalOpen(true);
+    };
+
+    // Silme İşlemi Onay
+    const handleConfirmDelete = async (force = false) => {
+        if (!resourceToDelete) return;
+        try {
+            await resourceService.deleteResource(resourceToDelete, force);
+            setResources(resources.filter(r => r.resourceId !== resourceToDelete));
+            addToast('success', 'Kaynak başarıyla silindi.');
+            closeDetailModal();
+            setIsDeleteModalOpen(false);
+            setIsForceDeleteModalOpen(false);
+            setResourceToDelete(null);
+        } catch (err) {
+            console.error('Error deleting resource:', err);
+
+            const backendMsg = err.data?.message || err.message || '';
+
+            // Check for associated appointments
+            if (!force && (backendMsg.includes("associated with existing appointments") || backendMsg.includes("associated appointments") || backendMsg.includes("randevu") || backendMsg.toLowerCase().includes('ilişkili'))) {
+                setIsDeleteModalOpen(false);
+                setWarningMessage("Bu kaynağa ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek ve müşterilere iptal maili gönderilecektir. Devam etmek istiyor musunuz?");
+                setIsForceDeleteModalOpen(true);
+                setConflictingAppointments([]);
+                setShowAppointments(false);
+                return;
             }
+
+            let userMessage = `Kaynak silinemedi: ${backendMsg}`;
+            addToast('error', userMessage);
+            if (!force) setIsDeleteModalOpen(false);
+        }
+    };
+
+    const fetchConflictingAppointments = async () => {
+        if (!resourceToDelete) return;
+        try {
+            const appointments = await appointmentService.getResourceAppointments(resourceToDelete);
+            setConflictingAppointments(appointments || []);
+            setShowAppointments(true);
+        } catch (error) {
+            console.error("Failed to fetch appointments", error);
+            addToast("error", "Randevu listesi alınamadı");
         }
     };
 
@@ -230,8 +289,8 @@ const ResourceManager = () => {
                 setError(null);
 
                 const statusFilter = sortBy === 'all' ? null :
-                                   sortBy === 'available' ? 'AVAILABLE' :
-                                   sortBy === 'out_of_service' ? 'OUT_OF_SERVICE' : 'IN_USE';
+                    sortBy === 'available' ? 'AVAILABLE' :
+                        sortBy === 'out_of_service' ? 'OUT_OF_SERVICE' : 'IN_USE';
 
                 const data = await resourceService.searchResources(searchTerm, statusFilter);
                 setResources(data);
@@ -329,13 +388,13 @@ const ResourceManager = () => {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
+                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
                                         <div className="loading-spinner">Yükleniyor...</div>
                                     </td>
                                 </tr>
                             ) : error ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#dc2626'}}>
+                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#dc2626' }}>
                                         <div className="error-message">
                                             {error}
                                             <button
@@ -358,7 +417,7 @@ const ResourceManager = () => {
                                 </tr>
                             ) : filteredResources.length === 0 ? (
                                 <tr>
-                                    <td colSpan="2" style={{textAlign:'center', padding:'2rem', color:'#999'}}>
+                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
                                         Kaynak bulunamadı.
                                     </td>
                                 </tr>
@@ -466,7 +525,7 @@ const ResourceManager = () => {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn-delete" onClick={() => handleDelete(selectedResource.resourceId)}>Sil</button>
+                            <button className="btn-delete" onClick={() => initiateDelete(selectedResource.resourceId)}>Sil</button>
                             <button className="btn-edit" onClick={() => openFormModal(selectedResource)}>Kaynağı Düzenle</button>
                         </div>
                     </div>
@@ -528,6 +587,81 @@ const ResourceManager = () => {
                     </div>
                 </div>
             )}
+
+            {/* --- CONFIRMATION MODAL --- */}
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Kaynağı Sil"
+                message="Bu kaynağı silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                type="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={isForceDeleteModalOpen}
+                onClose={() => {
+                    setIsForceDeleteModalOpen(false);
+                    setResourceToDelete(null); // Clear selection on cancel
+                    setShowAppointments(false);
+                    setConflictingAppointments([]);
+                }}
+                onConfirm={() => handleConfirmDelete(true)} // Force delete
+                title="Dikkat: Randevular Var"
+                message={
+                    <div className="confirmation-content">
+                        <p className="warning-text">{warningMessage}</p>
+                        {!showAppointments && (
+                            <button
+                                className="action-button view-appointments-btn"
+                                onClick={fetchConflictingAppointments}
+                            >
+                                <span className="icon">📅</span> Randevuları Listele
+                            </button>
+                        )}
+
+                        {showAppointments && conflictingAppointments.length > 0 && (
+                            <div className="appointments-list-container">
+                                <table className="appointments-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Müşteri</th>
+                                            <th>Hizmet</th>
+                                            <th>Çalışan</th>
+                                            <th>Süre</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {conflictingAppointments.map(app => (
+                                            <tr key={app.appointmentId}>
+                                                <td className="date-cell">
+                                                    <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
+                                                    <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </td>
+                                                <td className="customer-cell">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span></span> {app.customerName}
+                                                    </div>
+                                                </td>
+                                                <td className="service-cell">{app.serviceName}</td>
+                                                <td className="employee-cell">{app.employeeName}</td>
+                                                <td className="duration-cell">
+                                                    {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                }
+                type="danger"
+            />
+
+            {/* --- TOAST NOTIFICATION --- */}
+            <ToastNotification toasts={toasts} removeToast={removeToast} />
         </div>
     );
 };

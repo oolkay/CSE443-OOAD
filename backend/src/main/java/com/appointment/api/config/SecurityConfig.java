@@ -72,7 +72,8 @@ public class SecurityConfig {
 
                         // Appointment endpoints - role-based access
                         .requestMatchers("/api/appointments/customer/**").hasAnyRole("CUSTOMER", "SUPER_ADMIN")
-                        .requestMatchers("/api/appointments/employee/**").hasAnyRole("EMPLOYEE", "SUPER_ADMIN")
+                        .requestMatchers("/api/appointments/employee/**")
+                        .hasAnyRole("EMPLOYEE", "MANAGER", "SUPER_ADMIN")
                         .requestMatchers("/api/appointments/manager/**").hasAnyRole("MANAGER", "SUPER_ADMIN")
                         .requestMatchers("/api/appointments/**").authenticated()
 

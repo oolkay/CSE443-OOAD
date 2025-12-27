@@ -7,31 +7,30 @@ const API_BASE_URL = 'http://localhost:8080/api/resources';
 
 /**
  * Get current company ID for the logged-in user
- * TODO: This should come from authentication context/token in the future
- * For now, using localStorage or a configurable default
  */
 const getCurrentCompanyId = () => {
-  // Try to get from localStorage first (set by login/auth)
   const storedCompanyId = localStorage.getItem('companyId');
   if (storedCompanyId) {
     return parseInt(storedCompanyId, 10);
   }
-
-  // Fallback to default for development
-  // In production, this should be handled by proper authentication
   const defaultCompanyId = 1;
-  console.warn('No company ID found in localStorage, using default:', defaultCompanyId);
-
-  // Set the default for future use
   localStorage.setItem('companyId', defaultCompanyId.toString());
   return defaultCompanyId;
 };
 
-/**
- * Set current company ID (called after login/company selection)
- */
 export const setCurrentCompanyId = (companyId) => {
   localStorage.setItem('companyId', companyId.toString());
+};
+
+/**
+ * Helper to get headers with Auth token
+ */
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('authToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
 };
 
 export const resourceService = {
@@ -44,23 +43,18 @@ export const resourceService = {
       const url = `${API_BASE_URL}/company/${companyId}`;
       console.log('Fetching resources from:', url);
 
-      const response = await fetch(url);
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+      const response = await fetch(url, {
+        headers: getAuthHeaders()
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response body:', errorText);
         throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
       }
 
-      const data = await response.json();
-      console.log('Resources data:', data);
-      return data;
+      return await response.json();
     } catch (error) {
       console.error('Error fetching resources:', error);
-      console.error('Error type:', error.constructor.name);
-      console.error('Error message:', error.message);
       throw error;
     }
   },
@@ -71,7 +65,9 @@ export const resourceService = {
   async getResourceById(resourceId) {
     try {
       const companyId = getCurrentCompanyId();
-      const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}`);
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}`, {
+        headers: getAuthHeaders()
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -83,16 +79,14 @@ export const resourceService = {
   },
 
   /**
-   * Create a new resource for the current user's company
+   * Create a new resource
    */
   async createResource(resourceData) {
     try {
       const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           ...resourceData,
           companyId: companyId
@@ -119,9 +113,7 @@ export const resourceService = {
       const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           ...resourceData,
           companyId: companyId
@@ -143,19 +135,22 @@ export const resourceService = {
   /**
    * Delete a resource
    */
-  async deleteResource(resourceId) {
+  async deleteResource(resourceId, confirm = false) {
     try {
       const companyId = getCurrentCompanyId();
-      const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}?confirm=${confirm}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        error.data = errorData; // Attach data to the error object
+        throw error;
       }
 
-      return true; // Successful delete
+      return true;
     } catch (error) {
       console.error('Error deleting resource:', error);
       throw error;
@@ -163,14 +158,14 @@ export const resourceService = {
   },
 
   /**
-   * Toggle resource status (Quick toggle for frontend)
-   * Changes between AVAILABLE and OUT_OF_SERVICE
+   * Toggle resource status
    */
   async toggleResourceStatus(resourceId) {
     try {
       const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}/toggle`, {
-        method: 'PATCH'
+        method: 'PATCH',
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -186,7 +181,7 @@ export const resourceService = {
   },
 
   /**
-   * Search resources with optional status filter
+   * Search resources
    */
   async searchResources(keyword, status = null) {
     try {
@@ -195,7 +190,9 @@ export const resourceService = {
       if (keyword) params.append('keyword', keyword);
       if (status) params.append('status', status);
 
-      const response = await fetch(`${API_BASE_URL}/company/${companyId}/search?${params}`);
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/search?${params}`, {
+        headers: getAuthHeaders()
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -212,7 +209,9 @@ export const resourceService = {
   async getResourcesByStatus(status) {
     try {
       const companyId = getCurrentCompanyId();
-      const response = await fetch(`${API_BASE_URL}/company/${companyId}/status/${status}`);
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/status/${status}`, {
+        headers: getAuthHeaders()
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -224,12 +223,14 @@ export const resourceService = {
   },
 
   /**
-   * Get available resources (for scheduling)
+   * Get available resources
    */
   async getAvailableResources() {
     try {
       const companyId = getCurrentCompanyId();
-      const response = await fetch(`${API_BASE_URL}/company/${companyId}/available`);
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/available`, {
+        headers: getAuthHeaders()
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -246,7 +247,9 @@ export const resourceService = {
   async getResourceStats() {
     try {
       const companyId = getCurrentCompanyId();
-      const response = await fetch(`${API_BASE_URL}/company/${companyId}/stats`);
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/stats`, {
+        headers: getAuthHeaders()
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

@@ -9,6 +9,11 @@ import com.appointment.api.exception.ResourceNotFoundException;
 import com.appointment.api.exception.DuplicateResourceException;
 import com.appointment.api.repository.CompanyRepository;
 import com.appointment.api.repository.ResourceRepository;
+import com.appointment.api.repository.AppointmentRepository;
+import com.appointment.api.dto.WorkingShiftResponseDTO;
+import com.appointment.api.entity.Appointment;
+import com.appointment.api.provider.NotificationProvider;
+import com.appointment.api.dto.EmailTemplateData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Service layer for Resource management - Contains business logic
@@ -34,6 +40,8 @@ public class ResourceService {
 
     private final ResourceRepository resourceRepository;
     private final CompanyRepository companyRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final NotificationProvider notificationProvider;
 
     /**
      * Create a new resource
@@ -44,11 +52,15 @@ public class ResourceService {
 
         // Business logic: Check if company exists
         Company company = companyRepository.findById(requestDTO.getCompanyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with ID: " + requestDTO.getCompanyId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Company not found with ID: " + requestDTO.getCompanyId()));
 
-        // Business logic: Check if resource with same name already exists in the company
-        if (resourceRepository.existsByCompanyCompanyIdAndNameIgnoreCase(requestDTO.getCompanyId(), requestDTO.getName())) {
-            throw new DuplicateResourceException("Resource with name '" + requestDTO.getName() + "' already exists in this company");
+        // Business logic: Check if resource with same name already exists in the
+        // company
+        if (resourceRepository.existsByCompanyCompanyIdAndNameIgnoreCase(requestDTO.getCompanyId(),
+                requestDTO.getName())) {
+            throw new DuplicateResourceException(
+                    "Resource with name '" + requestDTO.getName() + "' already exists in this company");
         }
 
         // Convert DTO to Entity
@@ -93,7 +105,8 @@ public class ResourceService {
         log.info("Fetching resource {} for company: {}", resourceId, companyId);
 
         Resource resource = resourceRepository.findByCompanyCompanyIdAndResourceId(companyId, resourceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with ID: " + resourceId + " for company: " + companyId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resource not found with ID: " + resourceId + " for company: " + companyId));
 
         return convertToResponseDTO(resource);
     }
@@ -105,12 +118,15 @@ public class ResourceService {
         log.info("Updating resource {} for company: {}", resourceId, companyId);
 
         Resource resource = resourceRepository.findByCompanyCompanyIdAndResourceId(companyId, resourceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with ID: " + resourceId + " for company: " + companyId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resource not found with ID: " + resourceId + " for company: " + companyId));
 
         // Check if name is being changed and if new name already exists in the company
         if (!resource.getName().equals(requestDTO.getName()) &&
-            resourceRepository.existsByNameInCompanyExcludingResource(companyId, requestDTO.getName(), resourceId)) {
-            throw new DuplicateResourceException("Resource with name '" + requestDTO.getName() + "' already exists in this company");
+                resourceRepository.existsByNameInCompanyExcludingResource(companyId, requestDTO.getName(),
+                        resourceId)) {
+            throw new DuplicateResourceException(
+                    "Resource with name '" + requestDTO.getName() + "' already exists in this company");
         }
 
         // Update fields
@@ -128,11 +144,49 @@ public class ResourceService {
     /**
      * Delete resource
      */
-    public void deleteResource(Long companyId, Long resourceId) {
+    public void deleteResource(Long companyId, Long resourceId, boolean confirm) {
         log.info("Deleting resource {} for company: {}", resourceId, companyId);
 
         Resource resource = resourceRepository.findByCompanyCompanyIdAndResourceId(companyId, resourceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with ID: " + resourceId + " for company: " + companyId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resource not found with ID: " + resourceId + " for company: " + companyId));
+
+        if (appointmentRepository.existsByResources_ResourceId(resourceId)) {
+            if (!confirm) {
+                throw new IllegalArgumentException(
+                        "Cannot delete resource. This resource is associated with existing appointments.");
+            }
+
+            // Confirm is true, send cancellations and delete appointments
+            List<Appointment> appointments = appointmentRepository.findByResources_ResourceId(resourceId);
+            for (Appointment appointment : appointments) {
+                if (appointment.getCustomer() != null && appointment.getCustomer().getEmail() != null) {
+                    EmailTemplateData emailData = EmailTemplateData.builder()
+                            .customerName(appointment.getCustomer().getName())
+                            .companyName(appointment.getService().getCompany().getName())
+                            .serviceName(appointment.getService().getName())
+                            .employeeName(appointment.getEmployee().getName())
+                            .appointmentDate(appointment.getStartTime().toLocalDate())
+                            .appointmentTime(appointment.getStartTime().toLocalTime())
+                            .appointmentDateTime(appointment.getStartTime()
+                                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                            .reason("Resource deletion: " + resource.getName())
+                            .build();
+
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            notificationProvider.sendTemplatedNotification(
+                                    appointment.getCustomer().getEmail(),
+                                    "APPOINTMENT_CANCELLATION",
+                                    emailData);
+                        } catch (Exception e) {
+                            System.err.println("Failed to send cancellation email: " + e.getMessage());
+                        }
+                    });
+                }
+                appointmentRepository.delete(appointment);
+            }
+        }
 
         resourceRepository.delete(resource);
 
@@ -147,7 +201,8 @@ public class ResourceService {
         log.info("Toggling status for resource {} in company: {}", resourceId, companyId);
 
         Resource resource = resourceRepository.findByCompanyCompanyIdAndResourceId(companyId, resourceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with ID: " + resourceId + " for company: " + companyId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resource not found with ID: " + resourceId + " for company: " + companyId));
 
         // Toggle logic: AVAILABLE -> OUT_OF_SERVICE, OUT_OF_SERVICE -> AVAILABLE
         ResourceStatus newStatus = (resource.getStatus() == ResourceStatus.OUT_OF_SERVICE)
@@ -224,11 +279,12 @@ public class ResourceService {
         log.info("Getting resource statistics for company: {}", companyId);
 
         long total = resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.AVAILABLE) +
-                     resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.OUT_OF_SERVICE) +
-                     resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.IN_USE);
+                resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.OUT_OF_SERVICE) +
+                resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.IN_USE);
 
         long available = resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.AVAILABLE);
-        long outOfService = resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.OUT_OF_SERVICE);
+        long outOfService = resourceRepository.countByCompanyCompanyIdAndStatus(companyId,
+                ResourceStatus.OUT_OF_SERVICE);
         long inUse = resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.IN_USE);
 
         return new ResourceStatsDTO(total, available, outOfService, inUse);

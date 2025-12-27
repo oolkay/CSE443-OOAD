@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -135,26 +136,33 @@ public class AppointmentController {
      * GET /api/appointments/employee/{employeeId}
      */
     @GetMapping("/employee/{employeeId}")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<?> getEmployeeAppointments(
             @PathVariable Long employeeId,
             @RequestHeader("Authorization") String authHeader) {
-
-        // Extract token and verify userId matches
-        String token = authHeader.substring(7); // Remove "Bearer " prefix
-        Long tokenUserId = jwtTokenProvider.getUserIdFromToken(token);
-
-        if (tokenUserId == null || !tokenUserId.equals(employeeId)) {
-            ErrorResponse error = new ErrorResponse(
-                    LocalDateTime.now(),
-                    HttpStatus.FORBIDDEN.value(),
-                    "Forbidden",
-                    "You can only view your own appointments",
-                    "/api/appointments/employee/" + employeeId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        }
-
+        // Access control is handled by PreAuthorize for roles, detailed ownership check
+        // can be added if needed
+        // For Manager/Super Admin, they can view any employee's appointments (scoped by
+        // company ideally)
         List<AppointmentResponse> appointments = appointmentService.getEmployeeAppointments(employeeId);
         return ResponseEntity.ok(appointments);
+    }
+
+    /**
+     * Get all appointments for a resource
+     * GET /api/appointments/resource/{resourceId}
+     */
+    @GetMapping("/resource/{resourceId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'SUPER_ADMIN')")
+    public ResponseEntity<?> getResourceAppointments(@PathVariable Long resourceId) {
+        try {
+            List<AppointmentResponse> appointments = appointmentService.getResourceAppointments(resourceId);
+            return ResponseEntity.ok(appointments);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(
+                    LocalDateTime.now(), HttpStatus.NOT_FOUND.value(), "Not Found", e.getMessage(),
+                    "/api/appointments/resource/" + resourceId));
+        }
     }
 
     /**

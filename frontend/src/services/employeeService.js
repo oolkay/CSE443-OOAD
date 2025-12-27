@@ -23,13 +23,18 @@ const employeeService = {
         return response.data;
     },
 
-    deleteEmployee: async (id) => {
-        const response = await axios.delete(`${EMPLOYEE_URL}/${id}`);
+    deleteEmployee: async (id, confirm = false) => {
+        const response = await axios.delete(`${EMPLOYEE_URL}/${id}?confirm=${confirm}`);
         return response.data;
     },
 
     getEmployeesByCompany: async (companyId) => {
         const response = await axios.get(`${EMPLOYEE_URL}/company/${companyId}`);
+        return response.data;
+    },
+
+    getEmployeesByManager: async (managerId) => {
+        const response = await axios.get(`${EMPLOYEE_URL}/manager/${managerId}`);
         return response.data;
     }
 };
