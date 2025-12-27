@@ -14,9 +14,7 @@ import RequestManagement from "./pages/BranchManager/RequestManagement/RequestMa
 import ResourceManager from "./pages/BranchManager/ResourceManagement/ResourceManager";
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Home from "./pages/Admin/Home";
-import SuperAdmins from "./pages/Admin/SuperAdmins";
 import Companies from "./pages/Admin/Companies";
-import Settings from "./pages/Admin/Settings";
 import Calendar from "./pages/BranchManager/Calendar/Calendar";
 import EmployeeDashboard from "./pages/Employee/EmployeeDashboard";
 import BranchManagerDashboard from "./pages/BranchManager/BranchManagerDashboard";
@@ -126,9 +124,7 @@ function App() {
               }
             >
               <Route path="home" element={<Home />} />
-              <Route path="super-admins" element={<SuperAdmins />} />
               <Route path="companies" element={<Companies />} />
-              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </main>

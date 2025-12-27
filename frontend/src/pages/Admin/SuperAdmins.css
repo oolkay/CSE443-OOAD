@@ -10,6 +10,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -43,9 +44,19 @@
 }
 
 @keyframes wave {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-10deg); }
-  75% { transform: rotate(10deg); }
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-10deg);
+  }
+
+  75% {
+    transform: rotate(10deg);
+  }
 }
 
 /* Super Admin List Section */
@@ -96,8 +107,8 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #319795;
-  box-shadow: 0 0 0 3px rgba(49, 151, 149, 0.1);
+  border-color: #00c7ed;
+  box-shadow: 0 0 0 3px rgba(0, 199, 237, 0.1);
 }
 
 .search-icon {
@@ -195,12 +206,12 @@
 }
 
 .btn-icon.edit {
-  background: rgba(49, 151, 149, 0.1);
-  color: #319795;
+  background: rgba(0, 199, 237, 0.1);
+  color: #00c7ed;
 }
 
 .btn-icon.edit:hover {
-  background: rgba(49, 151, 149, 0.2);
+  background: rgba(0, 199, 237, 0.2);
   transform: scale(1.1);
 }
 
@@ -249,16 +260,16 @@
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #319795;
+  background: #00c7ed;
   color: white;
-  border-color: #319795;
+  border-color: #00c7ed;
 }
 
 .page-btn.active {
-  background: linear-gradient(135deg, #319795, #2c7a7b);
+  background: linear-gradient(135deg, #00c7ed, #00a0be);
   color: white;
-  border-color: #319795;
-  box-shadow: 0 2px 4px rgba(49, 151, 149, 0.3);
+  border-color: #00c7ed;
+  box-shadow: 0 2px 4px rgba(0, 199, 237, 0.3);
 }
 
 .page-btn:disabled {
@@ -366,8 +377,8 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #319795;
-  box-shadow: 0 0 0 3px rgba(49, 151, 149, 0.1);
+  border-color: #00c7ed;
+  box-shadow: 0 0 0 3px rgba(0, 199, 237, 0.1);
 }
 
 .form-group input::placeholder {
@@ -400,7 +411,7 @@
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #319795, #2c7a7b);
+  background: linear-gradient(135deg, #00c7ed, #00a0be);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -409,13 +420,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(49, 151, 149, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 199, 237, 0.2);
 }
 
 .btn-save:hover {
-  background: linear-gradient(135deg, #2c7a7b, #2a6e6e);
+  background: linear-gradient(135deg, #00a0be, #0087a1);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(49, 151, 149, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 199, 237, 0.3);
 }
 
 /* Loading Spinner */
@@ -432,14 +443,19 @@
   width: 40px;
   height: 40px;
   border: 4px solid #f1f5f9;
-  border-top: 4px solid #319795;
+  border-top: 4px solid #00c7ed;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-container p {
@@ -459,8 +475,8 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
-  background: #319795;
-  border-color: #319795;
+  background: #00c7ed;
+  border-color: #00c7ed;
 }
 
 input[type="checkbox"]:checked::after {
@@ -653,8 +669,8 @@ input[type="checkbox"]:checked::after {
   }
 
   .search-input:focus {
-    border-color: #4fd1c7;
-    box-shadow: 0 0 0 3px rgba(79, 209, 199, 0.1);
+    border-color: #00c7ed;
+    box-shadow: 0 0 0 3px rgba(0, 199, 237, 0.1);
   }
 
   .super-admins-table th {
@@ -692,9 +708,9 @@ input[type="checkbox"]:checked::after {
   }
 
   .page-btn:hover:not(:disabled) {
-    background: #4fd1c7;
+    background: #00c7ed;
     color: #1a202c;
-    border-color: #4fd1c7;
+    border-color: #00c7ed;
   }
 
   .modal-content {
@@ -730,8 +746,8 @@ input[type="checkbox"]:checked::after {
   }
 
   .form-group input:focus {
-    border-color: #4fd1c7;
-    box-shadow: 0 0 0 3px rgba(79, 209, 199, 0.1);
+    border-color: #00c7ed;
+    box-shadow: 0 0 0 3px rgba(0, 199, 237, 0.1);
   }
 
   .modal-footer {
