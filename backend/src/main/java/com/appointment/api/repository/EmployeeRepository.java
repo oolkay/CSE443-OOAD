@@ -9,5 +9,8 @@ import java.util.List;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     boolean existsByEmail(String email);
+
     List<Employee> findByCompany_CompanyId(Long companyId);
+
+    List<Employee> findByManager_UserId(Long managerId);
 }

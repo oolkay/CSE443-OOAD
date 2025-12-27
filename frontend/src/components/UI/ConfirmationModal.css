@@ -1,12 +1,41 @@
 /* Higher z-index to appear above other modals */
 .confirmation-overlay {
-    z-index: 200 !important;
+    z-index: 9999 !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Ensure background dimming */
+    display: flex !important;
+    /* Force flex */
+    align-items: center !important;
+    /* Center vertically */
+    justify-content: center !important;
+    /* Center horizontally */
+    padding: 1rem;
+    /* Prevent touching edges on mobile */
 }
 
 .confirmation-modal {
     max-width: 400px !important;
+    width: 100% !important;
+    /* Uses max-width to constrain */
+    height: auto !important;
+    /* Prevent vertical stretching */
     text-align: center;
     padding: 2rem !important;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    position: relative !important;
+    /* Reset any fixed positioning if inherited */
+    margin: 0 !important;
+    /* Flexbox handles centering */
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
 }
 
 .confirmation-icon {
@@ -34,9 +63,10 @@
 }
 
 .confirmation-modal .modal-footer {
+    display: flex;
     justify-content: center;
     gap: 1rem;
-    padding-top: 0;
+    padding-top: 1rem;
     margin-top: 1rem;
     border-top: none;
 }
@@ -61,18 +91,45 @@
     transform: translateY(-1px);
 }
 
+.btn-cancel {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+    background-color: white;
+    color: #374151;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #F9FAFB;
+    border-color: #D1D5DB;
+    transform: translateY(-1px);
+}
+
 /* Mobile Responsiveness */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .confirmation-modal {
         width: 90% !important;
-        margin: 0 auto;
+        /* Explicitly restrict width on mobile */
+        max-width: 400px !important;
+        /* Keep it card-sized */
+        padding: 1.5rem !important;
+        /* Flexbox in parent (.confirmation-overlay) handles centering */
     }
 
     .confirmation-modal .modal-footer {
-        flex-direction: column-reverse;
+        flex-direction: row;
+        /* Keep side-by-side as requested */
+        gap: 0.75rem;
     }
 
     .confirmation-modal .modal-footer button {
-        width: 100%;
+        flex: 1;
+        /* Equal space */
+        white-space: nowrap;
+        padding: 0.75rem 0.5rem;
+        font-size: 0.95rem;
     }
 }

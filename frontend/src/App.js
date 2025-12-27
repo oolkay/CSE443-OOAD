@@ -19,6 +19,7 @@ import Companies from "./pages/Admin/Companies";
 import Settings from "./pages/Admin/Settings";
 import Calendar from "./pages/BranchManager/Calendar/Calendar";
 import EmployeeDashboard from "./pages/Employee/EmployeeDashboard";
+import BranchManagerDashboard from "./pages/BranchManager/BranchManagerDashboard";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -83,6 +84,14 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
                   <ResourceManager />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/manager/dashboard"
+              element={
+                <PrivateRoute allowedRoles={[ROLES.MANAGER]}>
+                  <BranchManagerDashboard />
                 </PrivateRoute>
               }
             />

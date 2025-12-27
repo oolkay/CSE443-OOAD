@@ -77,7 +77,8 @@ const EmployeeManager = () => {
             const [empData, srvData] = await Promise.all([
                 // employeeService.getAllEmployees(),
                 // serviceService.getAllServices()
-                employeeService.getEmployeesByCompany(user.companyId),
+                // employeeService.getEmployeesByCompany(user.companyId),
+                employeeService.getEmployeesByManager(user.userId),
                 serviceService.getServicesByCompany(user.companyId)
             ]);
 
@@ -480,7 +481,7 @@ const EmployeeManager = () => {
                                                             />
                                                         </>
                                                     ) : (
-                                                        <span className="closed-text">Kapalı</span>
+                                                        <span className="closed-text">Çalışmıyor</span>
                                                     )}
                                                 </div>
                                             </div>

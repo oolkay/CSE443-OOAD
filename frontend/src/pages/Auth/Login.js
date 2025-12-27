@@ -25,8 +25,8 @@ export default function Login() {
       // Role-based navigation
       if (user.role === "ADMIN" || user.role === "ROLE_SUPER_ADMIN") {
         navigate("/admin/home");
-      } else if (user.role === "BRANCH_MANAGER") {
-        navigate("/calendar");
+      } else if (user.role === "BRANCH_MANAGER" || user.role === "ROLE_MANAGER") {
+        navigate("/manager/dashboard");
       } else if (user.role === "ROLE_EMPLOYEE") {
         navigate("/employee/dashboard");
       } else {
