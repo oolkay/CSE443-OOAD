@@ -26,7 +26,7 @@ public class LoginResponse {
     }
 
     // Constructor with company info (for BranchManager and Employee)
-    public LoginResponse(String token, Long userId, String email, String name, String role, long expiresIn, Long companyId, String companyName) {
+    public LoginResponse(String token, Long userId, String email, String name, String role, long expiresIn, Long companyId) {
         this.token = token;
         this.userId = userId;
         this.email = email;
