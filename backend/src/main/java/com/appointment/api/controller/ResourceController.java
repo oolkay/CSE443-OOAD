@@ -39,10 +39,10 @@ public class ResourceController {
      *
      * Example Request:
      * {
-     *   "companyId": 1,
-     *   "name": "Masaj Masası 1",
-     *   "description": "Elektrikli masaj masası, ayarlanabilir yükseklik",
-     *   "status": "AVAILABLE"
+     * "companyId": 1,
+     * "name": "Masaj Masası 1",
+     * "description": "Elektrikli masaj masası, ayarlanabilir yükseklik",
+     * "status": "AVAILABLE"
      * }
      */
     @PostMapping
@@ -93,8 +93,9 @@ public class ResourceController {
     @DeleteMapping("/company/{companyId}/{resourceId}")
     public ResponseEntity<Void> deleteResource(
             @PathVariable Long companyId,
-            @PathVariable Long resourceId) {
-        resourceService.deleteResource(companyId, resourceId);
+            @PathVariable Long resourceId,
+            @RequestParam(required = false, defaultValue = "false") boolean confirm) {
+        resourceService.deleteResource(companyId, resourceId, confirm);
         return ResponseEntity.noContent().build();
     }
 
@@ -133,7 +134,8 @@ public class ResourceController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) ResourceStatus status) {
 
-        // If no keyword provided, search for all (will be filtered by status if provided)
+        // If no keyword provided, search for all (will be filtered by status if
+        // provided)
         String searchKeyword = (keyword != null) ? keyword : "";
 
         List<ResourceResponseDTO> resources = resourceService.searchResources(companyId, searchKeyword, status);
@@ -146,7 +148,7 @@ public class ResourceController {
      * Useful for frontend filter dropdown
      *
      * Examples:
-     * GET /api/resources/company/1/status/AVAILABLE    -> "Uygun" resources
+     * GET /api/resources/company/1/status/AVAILABLE -> "Uygun" resources
      * GET /api/resources/company/1/status/OUT_OF_SERVICE -> "Servis Dışı" resources
      */
     @GetMapping("/company/{companyId}/status/{status}")

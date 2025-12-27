@@ -56,10 +56,13 @@
     color: #111827;
 }
 
-.confirmation-modal p {
-    color: #6B7280;
+.confirmation-modal p,
+.confirmation-message {
+    color: #111827;
+    /* Darker gray for better readability */
     margin-bottom: 1.5rem;
     line-height: 1.5;
+    font-size: 1rem;
 }
 
 .confirmation-modal .modal-footer {

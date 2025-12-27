@@ -59,8 +59,9 @@ public class EmployeeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER')")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
-        employeeService.deleteEmployee(id);
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "false") boolean confirm) {
+        employeeService.deleteEmployee(id, confirm);
         return ResponseEntity.noContent().build();
     }
 

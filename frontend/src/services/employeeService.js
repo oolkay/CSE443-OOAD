@@ -23,8 +23,8 @@ const employeeService = {
         return response.data;
     },
 
-    deleteEmployee: async (id) => {
-        const response = await axios.delete(`${EMPLOYEE_URL}/${id}`);
+    deleteEmployee: async (id, confirm = false) => {
+        const response = await axios.delete(`${EMPLOYEE_URL}/${id}?confirm=${confirm}`);
         return response.data;
     },
 

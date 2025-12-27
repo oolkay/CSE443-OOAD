@@ -12,7 +12,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, type = 
                     {/* Icon removed */}
                 </div>
                 <h3>{title}</h3>
-                <p>{message}</p>
+                <div className="confirmation-message">{message}</div>
                 <div className="modal-footer">
                     <button className="btn-cancel" onClick={onClose}>İptal</button>
                     <button

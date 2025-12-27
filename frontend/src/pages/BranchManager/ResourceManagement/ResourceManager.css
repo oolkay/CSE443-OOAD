@@ -670,3 +670,152 @@ input:checked+.toggle-slider:before {
 .retry-btn:hover {
     background-color: #4f46e5 !important;
 }
+
+/* --- DELETION MODAL APPOINTMENT LIST --- */
+.confirmation-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.warning-text {
+    margin: 0;
+    line-height: 1.5;
+    color: #4b5563;
+}
+
+.view-appointments-btn {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    margin-top: 5px;
+}
+
+.view-appointments-btn:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    color: #111827;
+}
+
+.view-appointments-btn:active {
+    transform: translateY(0);
+    background-color: #f3f4f6;
+    box-shadow: none;
+}
+
+.view-appointments-btn .icon {
+    font-size: 1.1rem;
+}
+
+/* --- APPOINTMENT LIST TABLE STYLING --- */
+.appointments-list-container {
+    margin-top: 15px;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #d1d5db;
+    /* Darker border */
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* Stronger shadow */
+}
+
+.appointments-table {
+    width: 100%;
+    border-collapse: separate;
+    /* Changed for better border radius support if needed */
+    border-spacing: 0;
+    font-size: 0.9rem;
+    /* Increased font size */
+}
+
+.appointments-table th {
+    background-color: #f3f4f6;
+    color: #111827;
+    /* Dark black for better readability */
+    font-weight: 700;
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 2px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.appointments-table td {
+    padding: 14px 16px;
+    /* Increased padding */
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+    /* Dark gray */
+    vertical-align: middle;
+}
+
+.appointments-table tr:last-child td {
+    border-bottom: none;
+}
+
+.appointments-table tr:hover {
+    background-color: #f9fafb;
+}
+
+.date-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.date-cell .date {
+    font-weight: 600;
+    color: #0f172a;
+    /* Slate 900 - Very Dark */
+    font-size: 0.95rem;
+}
+
+.date-cell .time {
+    font-size: 0.85rem;
+    color: #475569;
+    /* Slate 600 - Medium Dark */
+    font-weight: 500;
+}
+
+.customer-cell {
+    font-weight: 600;
+    color: #1e293b;
+    /* Slate 800 */
+    font-size: 0.95rem;
+}
+
+.service-cell {
+    color: #334155;
+    /* Slate 700 */
+    font-weight: 500;
+}
+
+.duration-cell {
+    color: #475569;
+    font-family: monospace;
+    /* Fixed width for alignment */
+    font-size: 0.9rem;
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}

@@ -23,5 +23,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     boolean existsByEmployee_UserId(Long employeeId);
 
+    List<Appointment> findByResources_ResourceId(Long resourceId);
+
     boolean existsByResources_ResourceId(Long resourceId);
 }
