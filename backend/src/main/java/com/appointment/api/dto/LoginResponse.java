@@ -13,7 +13,9 @@ public class LoginResponse {
     private String name;
     private String role;
     private long expiresIn;
+    private Long companyId;
 
+    // Constructor without company info (for Customer and SuperAdmin)
     public LoginResponse(String token, Long userId, String email, String name, String role, long expiresIn) {
         this.token = token;
         this.userId = userId;
@@ -21,6 +23,17 @@ public class LoginResponse {
         this.name = name;
         this.role = role;
         this.expiresIn = expiresIn;
+    }
+
+    // Constructor with company info (for BranchManager and Employee)
+    public LoginResponse(String token, Long userId, String email, String name, String role, long expiresIn, Long companyId, String companyName) {
+        this.token = token;
+        this.userId = userId;
+        this.email = email;
+        this.name = name;
+        this.role = role;
+        this.expiresIn = expiresIn;
+        this.companyId = companyId;
     }
 
     // Getters and Setters
@@ -78,5 +91,13 @@ public class LoginResponse {
 
     public void setExpiresIn(long expiresIn) {
         this.expiresIn = expiresIn;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 }
