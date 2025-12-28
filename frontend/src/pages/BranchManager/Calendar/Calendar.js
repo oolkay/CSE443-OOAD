@@ -23,11 +23,14 @@ const Calendar = () => {
         if (user && user.companyId) {
             const employees = await employeeService.getEmployeesByCompany(user.companyId);
             setEmployees(employees);
-            if (user.role === 'ROLE_EMPLOYEE') {
-                setSelectedEmployee(employees.find(emp => emp.id === user.userId));
-            }
+
         }
     }
+
+    const getEmployeeId = (employee) => {
+        if (!employee) return undefined;
+        return employee.id || employee.user_id || employee.userId;
+    };
 
     const getCalendarData = async () => {
         const dateStart = new Date(currentDate);
@@ -39,10 +42,31 @@ const Calendar = () => {
             startTime = startOfWeek(currentDate);
             endTime = endOfWeek(currentDate);
         } else if (viewMode === 'monthly') {
-            startTime = startOfMonth(currentDate);
-            endTime = endOfMonth(currentDate);
+            // Get the full range of dates displayed in the monthly view (including padding days)
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+
+            // Calculate start date (first day of the first week row)
+            // If first day is Sunday (0), we need 6 days of padding (Mon-Sat are 1-6)
+            // If first day is Monday (1), we need 0 days of padding
+            const startDayOfWeek = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
+            startTime = new Date(firstDayOfMonth);
+            startTime.setDate(startTime.getDate() - startDayOfWeek);
+
+            // Calculate end date (last day of the last week row)
+            // We need to complete the grid to 42 days (6 rows * 7 days) usually
+            // But let's verify how renderMonthlyView does it. 
+            // renderMonthlyView generates dates dynamically.
+            // Let's ensure we cover at least 6 weeks from startTime.
+            endTime = new Date(startTime);
+            endTime.setDate(endTime.getDate() + 42); // Cover full potential grid
+
             interval = 24 * 60;
         }
+
+
 
         const data = await axios.get('/api/calendar', {
             params: {
@@ -50,7 +74,8 @@ const Calendar = () => {
                 end_time: endTime.toISOString(),
                 interval: interval,
                 company_id: user.companyId,
-                employee_id: selectedEmployee !== 'all' ? selectedEmployee.id : undefined
+                // Check both id and userId properties as the employee object structure might vary
+                employee_id: selectedEmployee !== 'all' ? getEmployeeId(selectedEmployee) : undefined
             }
         })
         let appointmentIds = [];
@@ -70,7 +95,7 @@ const Calendar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         getCalendarData();
-    }, [selectedEmployee, viewMode, currentDate]);
+    }, [selectedEmployee === 'all' ? 'all' : getEmployeeId(selectedEmployee), viewMode, currentDate]);
 
     // --- LIFECYCLE ---
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -264,65 +289,63 @@ const Calendar = () => {
                                 {calendarData
                                     .filter(cdata => new Date(cdata.timestamp).getHours() === hour)
                                     .map((cdata, idx) => {
-                                        if (selectedEmployee === 'all') {
-                                            const appointmentCount = cdata?.appointments?.length;
-                                            if (appointmentCount <= 0) {
-                                                return null;
-                                            }
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    className={`aggregated-appointment-block`}
-                                                    onClick={() => openAppointmentsModal(cdata)}
-                                                >
-                                                    <div className="agg-apt-time">{formatTime(new Date(cdata.timestamp))} - {formatTime(addHours(new Date(cdata.timestamp), 1))}</div>
-                                                    <div className="apt-service">{appointmentCount} Randevu Mevcut</div>
-                                                </div>
-                                            );
-                                        }
-                                        return cdata?.appointments?.map(apt => {
-                                            if (insertedAppointmentIds.includes(apt.appointmentId)) {
-                                                return null;
-                                            }
-                                            insertedAppointmentIds.push(apt.appointmentId);
+                                        // Filter out appointments that have already been rendered
+                                        const validAppointments = cdata?.appointments?.filter(apt => !insertedAppointmentIds.includes(apt.appointmentId)) || [];
 
+                                        // Add them to the inserted list
+                                        insertedAppointmentIds.push(...validAppointments.map(a => a.appointmentId));
+
+                                        return validAppointments.map((apt, aptIndex) => {
                                             const appointmentStyle = calculateAppointmentStyle(apt);
                                             const duration = apt.duration || 60;
 
-                                            // Adjust content based on duration
+                                            // Handle overlapping: split width
+                                            const count = validAppointments.length;
+                                            const width = 100 / count;
+                                            const left = width * aptIndex;
+
+                                            const finalStyle = {
+                                                ...appointmentStyle,
+                                                width: `${width}%`,
+                                                left: `${left}%`
+                                            };
+
+                                            // Adjust content based on duration (and width if narrow)
                                             const isVeryShort = duration <= 15;
-                                            const isShort = duration <= 30;
-                                            const showFullDetails = duration >= 60;
-                                            const showMediumDetails = duration >= 45;
+                                            const showFullDetails = duration >= 60 && count < 3;
+                                            const showMediumDetails = duration >= 45 && count < 4;
 
                                             return (
                                                 <div
                                                     key={apt.appointmentId}
-                                                    className={`appointment-block ${findApppointmentClass(apt)} ${isVeryShort ? 'very-short' : isShort ? 'short' : ''}`}
-                                                    style={appointmentStyle}
+                                                    className={`appointment-block ${findApppointmentClass(apt)} ${isVeryShort ? 'very-short' : ''}`}
+                                                    style={finalStyle}
                                                     onClick={() => openAppointmentModal(apt)}
+                                                    title={`${apt.service} - ${apt.employee}`}
                                                 >
                                                     {isVeryShort ? (
-                                                        // For 15-min appointments: show time and service in one compact line
                                                         <div className="apt-compact">
                                                             <span className="apt-time-inline">{formatTime(apt.startTime)}</span>
-                                                            <span className="apt-service-inline">{apt.service}</span>
                                                         </div>
                                                     ) : (
                                                         <>
                                                             <div className="apt-time">
-                                                                {formatTime(apt.startTime)} - {formatTime(apt.endTime)}
+                                                                {formatTime(apt.startTime)}
                                                             </div>
-                                                            <div className="apt-service">{apt.service}</div>
-                                                            {showMediumDetails && <div className="apt-customer">{apt.customer}</div>}
-                                                            {showFullDetails && <div className="apt-employee">{apt.employee}</div>}
+                                                            <div className="apt-service" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {apt.service}
+                                                            </div>
+                                                            {showFullDetails && (
+                                                                <div className="apt-employee" style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+                                                                    {apt.employee}
+                                                                </div>
+                                                            )}
                                                         </>
                                                     )}
                                                 </div>
                                             )
-                                        })
-                                    }
-                                    )
+                                        });
+                                    })
                                 }
                             </div>
                         </div>
@@ -366,37 +389,41 @@ const Calendar = () => {
                                 return (
                                     <div key={idx} className="day-cell">
                                         {cellData.map((cdata, cdataIdx) => {
-                                            if (selectedEmployee === 'all') {
-                                                const appointmentCount = cdata?.appointments?.length || 0;
-                                                if (appointmentCount <= 0) {
-                                                    return null;
-                                                }
-                                                return (
-                                                    <div
-                                                        key={cdataIdx}
-                                                        className="aggregated-appointment-block small"
-                                                        onClick={() => openAppointmentsModal(cdata)}
-                                                    >
-                                                        <div className="apt-time-small">{formatTime(new Date(cdata.timestamp))}</div>
-                                                        <div className="apt-service-xsmall">{appointmentCount} Randevu Mevcut</div>
-                                                    </div>
-                                                );
-                                            }
-                                            return cdata?.appointments?.map(apt => {
-                                                if (insertedAppointmentIds.includes(apt.appointmentId)) {
-                                                    return null;
-                                                }
-                                                insertedAppointmentIds.push(apt.appointmentId);
+                                            // Handle overlaps per cell slot
+                                            const validAppointments = cdata?.appointments?.filter(apt => !insertedAppointmentIds.includes(apt.appointmentId)) || [];
+                                            insertedAppointmentIds.push(...validAppointments.map(a => a.appointmentId));
+
+                                            return validAppointments.map((apt, aptIndex) => {
+                                                const count = validAppointments.length;
+                                                // If more than 2, it gets very crowded in weekly view, but better than hidden
+                                                const width = 100 / count;
+                                                const left = width * aptIndex;
+
                                                 return (
                                                     <div
                                                         key={apt.appointmentId}
                                                         className={`appointment-block small ${findApppointmentClass(apt)}`}
+                                                        style={{
+                                                            width: `${width}%`,
+                                                            left: `${left}%`,
+                                                            position: 'relative', // Weekly view cells often assume flow or relative, let's keep it simple
+                                                            // Actually weak view usually doesn't time-scale height unless implemented. 
+                                                            // The existing code didn't use calculateAppointmentStyle, likely just stacking blocks. 
+                                                            // If they are just stacked blocks, width/left absolute might break flow if container is flex/static.
+                                                            // Let's assume standard flow for weekly if not using absolute time.
+                                                            // BUT: previous code was just mapped divs. 
+                                                            // If we want side-by-side, we need flex container or inline-block.
+                                                            display: 'inline-block',
+                                                            verticalAlign: 'top',
+                                                            minHeight: 'auto'
+                                                        }}
                                                         onClick={() => openAppointmentModal(apt)}
+                                                        title={`${apt.service} - ${apt.employee}`}
                                                     >
                                                         <div className="apt-time-small">
                                                             {formatTime(apt.startTime)}
                                                         </div>
-                                                        <div className="apt-service-small">{apt.service}</div>
+                                                        <div className="apt-service-small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{apt.service}</div>
                                                     </div>
                                                 )
                                             });
@@ -448,24 +475,8 @@ const Calendar = () => {
                             >
                                 <div className="date-number">{date.getDate()}</div>
                                 <div className="day-appointments">
-                                    {selectedEmployee === 'all' && dayAppointments.length > 0 ? (
-                                        <>
-                                            <div
-                                                className="apt-indicator aggregated"
-                                                onClick={() => {
-                                                    // Open modal with all appointments for this day
-                                                    const combinedData = {
-                                                        timestamp: date.toISOString(),
-                                                        appointments: dayAppointments
-                                                    };
-                                                    openAppointmentsModal(combinedData);
-                                                }}
-                                                title={`${dayAppointments.length} Randevu`}
-                                            >
-                                                📅 {dayAppointments.length} Randevu Mevcut
-                                            </div>
-                                        </>
-                                    ) : (
+                                    <div className="day-appointments">
+                                        {/* Removed aggregation logic to show appointments for all */}
                                         <>
                                             {dayAppointments.slice(0, 3).map(apt => (
                                                 <div
@@ -492,7 +503,7 @@ const Calendar = () => {
                                                 </div>
                                             )}
                                         </>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -515,7 +526,7 @@ const Calendar = () => {
                             className="dropdown-selected"
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         >
-                            <span>{selectedEmployee === 'all' ? 'Tüm Personel' : selectedEmployee.name}</span>
+                            <span>{selectedEmployee === 'all' ? 'Tüm Personel' : (selectedEmployee?.name || 'Seçiniz')}</span>
                             <span className="dropdown-arrow">{isDropdownOpen ? '▲' : '▼'}</span>
                         </div>
                         {isDropdownOpen && (
@@ -531,8 +542,8 @@ const Calendar = () => {
                                 </div>
                                 {employees.map(emp => (
                                     <div
-                                        key={emp.id}
-                                        className={`dropdown-item ${selectedEmployee !== 'all' && selectedEmployee.id === emp.id ? 'active' : ''}`}
+                                        key={getEmployeeId(emp)}
+                                        className={`dropdown-item ${selectedEmployee !== 'all' && getEmployeeId(selectedEmployee) === getEmployeeId(emp) ? 'active' : ''}`}
                                         onClick={() => {
                                             setSelectedEmployee(emp);
                                             setIsDropdownOpen(false);
@@ -600,8 +611,6 @@ const Calendar = () => {
                             <button className="close-btn" onClick={closeModal}>&times;</button>
                         </div>
                         <div className="modal-body">
-                            <div className="detail-icon-large">📅</div>
-
                             <div className="detail-grid">
                                 <div className="detail-item">
                                     <span className="label">Hizmet</span>
@@ -617,14 +626,12 @@ const Calendar = () => {
 
                             <div className="detail-section">
                                 <div className="detail-row">
-                                    <span className="icon">👤</span>
                                     <div>
                                         <div className="label-small">Müşteri</div>
                                         <div className="value-text">{selectedAppointment.customer}</div>
                                     </div>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="icon">💼</span>
                                     <div>
                                         <div className="label-small">Personel</div>
                                         <div
@@ -639,7 +646,6 @@ const Calendar = () => {
                                     </div>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="icon">📅</span>
                                     <div>
                                         <div className="label-small">Tarih</div>
                                         <div className="value-text">
@@ -648,7 +654,6 @@ const Calendar = () => {
                                     </div>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="icon">🕐</span>
                                     <div>
                                         <div className="label-small">Saat</div>
                                         <div className="value-text">

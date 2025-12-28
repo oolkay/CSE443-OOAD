@@ -198,7 +198,7 @@
 
 /* Approve button */
 .btn-approve {
-  background: #28a745;
+  background: #00c7ed;
   color: #fff;
   border: none;
   padding: 6px 12px;
@@ -210,7 +210,7 @@
 }
 
 .btn-approve:hover {
-  background: #218838;
+  background: #00b0d4;
 }
 
 /* Reject button */
