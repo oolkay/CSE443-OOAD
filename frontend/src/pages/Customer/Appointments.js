@@ -186,7 +186,7 @@ export default function Appointments() {
       await fetchAppointments();
       closeModal();
     } catch (e) {
-      setError("Randevu iptal edilemedi");
+      setError(e.message);
     } finally {
       setIsCancelling(false);
       closeModal();
