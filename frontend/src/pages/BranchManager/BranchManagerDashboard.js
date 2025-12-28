@@ -7,6 +7,7 @@ import ResourceManager from './ResourceManagement/ResourceManager';
 import ConflictConfirmationModal from '../../components/UI/ConflictConfirmationModal';
 import ToastNotification from '../../components/UI/ToastNotification';
 import appointmentService from '../../services/appointmentService';
+import employeeService from '../../services/employeeService';
 import './BranchManagerDashboard.css';
 
 function AppointmentMobileCard({ appt, onApprove, onReject }) {
@@ -48,6 +49,9 @@ export default function BranchManagerDashboard() {
     const navigate = useNavigate();
     const [manager, setManager] = useState(null);
     const [pendingAppointments, setPendingAppointments] = useState([]);
+    const [employees, setEmployees] = useState([]);
+    const [selectedEmployee, setSelectedEmployee] = useState('all'); // 'all' or employeeId
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Custom dropdown state
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -88,10 +92,20 @@ export default function BranchManagerDashboard() {
             const user = JSON.parse(userStr);
             setManager(user);
             fetchAppointments(user.userId);
+            fetchEmployees(user.userId);
         } else {
             navigate('/');
         }
     }, [navigate, fetchAppointments]);
+
+    const fetchEmployees = React.useCallback(async (managerId) => {
+        try {
+            const emps = await employeeService.getEmployeesByManager(managerId);
+            setEmployees(emps);
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+        }
+    }, []);
 
     const handleApprove = async (appointment) => {
         try {
@@ -187,63 +201,118 @@ export default function BranchManagerDashboard() {
                                 </div>
 
                                 <div className="card">
-                                    <h3>Bekleyen Talepler</h3>
-                                    {pendingAppointments.length === 0 ? (
-                                        <p className="empty-message">Bekleyen talep bulunmuyor.</p>
-                                    ) : (
-                                        <>
-                                            <table className="appt-table desktop-only">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Müşteri</th>
-                                                        <th>Çalışan</th>
-                                                        <th>Hizmet</th>
-                                                        <th>Tarih</th>
-                                                        <th>Saat</th>
-                                                        <th>İşlemler</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {pendingAppointments.map(appt => (
-                                                        <tr key={appt.appointmentId}>
-                                                            <td>{appt.customerName}</td>
-                                                            <td>{appt.employeeName}</td>
-                                                            <td>{appt.serviceName}</td>
-                                                            <td>{appt.startTime ? new Date(appt.startTime).toLocaleDateString('tr-TR') : '-'}</td>
-                                                            <td>{appt.startTime ? new Date(appt.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
-                                                            <td>
-                                                                <div className="table-actions">
-                                                                    <button
-                                                                        className="btn-approve"
-                                                                        onClick={() => handleApprove(appt)}
-                                                                    >
-                                                                        Onayla
-                                                                    </button>
-                                                                    <button
-                                                                        className="btn-reject"
-                                                                        onClick={() => handleReject(appt)}
-                                                                    >
-                                                                        Reddet
-                                                                    </button>
+                                    <div className="card-header-with-filter">
+                                        <h3>Bekleyen Talepler</h3>
+                                        <div className="employee-filter">
+                                            <div className="custom-dropdown">
+                                                <div
+                                                    className="dropdown-selected"
+                                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                    tabIndex={0}
+                                                >
+                                                    {selectedEmployee === 'all'
+                                                        ? `Tüm Çalışanlar (${pendingAppointments.length})`
+                                                        : (() => {
+                                                            const emp = employees.find(e => e.id === parseInt(selectedEmployee));
+                                                            const count = pendingAppointments.filter(a => a.employeeId === parseInt(selectedEmployee)).length;
+                                                            return emp ? `${emp.name} (${count})` : 'Seçiniz';
+                                                        })()
+                                                    }
+                                                    <span className="dropdown-arrow">{isDropdownOpen ? '▲' : '▼'}</span>
+                                                </div>
+                                                {isDropdownOpen && (
+                                                    <div className="dropdown-menu">
+                                                        <div
+                                                            className={`dropdown-item ${selectedEmployee === 'all' ? 'active' : ''}`}
+                                                            onClick={() => {
+                                                                setSelectedEmployee('all');
+                                                                setIsDropdownOpen(false);
+                                                            }}
+                                                        >
+                                                            Tüm Çalışanlar ({pendingAppointments.length})
+                                                        </div>
+                                                        {employees.map(emp => {
+                                                            const count = pendingAppointments.filter(a => a.employeeId === emp.id).length;
+                                                            return (
+                                                                <div
+                                                                    key={emp.id}
+                                                                    className={`dropdown-item ${selectedEmployee === emp.id.toString() ? 'active' : ''}`}
+                                                                    onClick={() => {
+                                                                        setSelectedEmployee(emp.id.toString());
+                                                                        setIsDropdownOpen(false);
+                                                                    }}
+                                                                >
+                                                                    {emp.name} ({count})
                                                                 </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-
-                                            <div className="appt-table-mobile mobile-only">
-                                                {pendingAppointments.map(appt => (
-                                                    <AppointmentMobileCard
-                                                        key={appt.appointmentId}
-                                                        appt={appt}
-                                                        onApprove={handleApprove}
-                                                        onReject={handleReject}
-                                                    />
-                                                ))}
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
-                                        </>
-                                    )}
+                                        </div>
+                                    </div>
+                                    {(() => {
+                                        const filteredAppointments = selectedEmployee === 'all'
+                                            ? pendingAppointments
+                                            : pendingAppointments.filter(a => a.employeeId === parseInt(selectedEmployee));
+
+                                        return filteredAppointments.length === 0 ? (
+                                            <p className="empty-message">Bu filtre için bekleyen talep bulunmuyor.</p>
+                                        ) : (
+                                            <>
+                                                <table className="appt-table desktop-only">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Müşteri</th>
+                                                            <th>Çalışan</th>
+                                                            <th>Hizmet</th>
+                                                            <th>Tarih</th>
+                                                            <th>Saat</th>
+                                                            <th>İşlemler</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {filteredAppointments.map(appt => (
+                                                            <tr key={appt.appointmentId}>
+                                                                <td>{appt.customerName}</td>
+                                                                <td>{appt.employeeName}</td>
+                                                                <td>{appt.serviceName}</td>
+                                                                <td>{appt.startTime ? new Date(appt.startTime).toLocaleDateString('tr-TR') : '-'}</td>
+                                                                <td>{appt.startTime ? new Date(appt.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                                                                <td>
+                                                                    <div className="table-actions">
+                                                                        <button
+                                                                            className="btn-approve"
+                                                                            onClick={() => handleApprove(appt)}
+                                                                        >
+                                                                            Onayla
+                                                                        </button>
+                                                                        <button
+                                                                            className="btn-reject"
+                                                                            onClick={() => handleReject(appt)}
+                                                                        >
+                                                                            Reddet
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+
+                                                <div className="appt-table-mobile mobile-only">
+                                                    {filteredAppointments.map(appt => (
+                                                        <AppointmentMobileCard
+                                                            key={appt.appointmentId}
+                                                            appt={appt}
+                                                            onApprove={handleApprove}
+                                                            onReject={handleReject}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </>
                         )}
