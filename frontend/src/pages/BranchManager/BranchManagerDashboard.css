@@ -4,6 +4,11 @@
   padding: 20px;
   min-height: calc(100vh - 40px);
   background: #f7f7fb;
+  box-sizing: border-box;
+}
+
+.branch-manager-page * {
+  box-sizing: border-box;
 }
 
 .branch-manager-sidebar {
@@ -277,9 +282,13 @@
 
   .branch-manager-page {
     flex-direction: column;
+    /* Add extra padding at bottom to prevent content being cut off */
     padding: 12px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
     gap: 12px;
     min-height: 100vh;
+    /* Use dvh if supported for better mobile browser bar handling */
+    min-height: 100dvh;
     box-sizing: border-box;
   }
 
@@ -319,6 +328,7 @@
 
   .nav-item {
     flex: 1;
+    width: auto;
     text-align: center;
     padding: 10px 8px;
     font-size: 13px;

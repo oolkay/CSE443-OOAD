@@ -158,7 +158,8 @@ body {
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    /* Center on all screens, but adjust logic for content */
+    align-items: center;
     z-index: 100;
 }
 
@@ -546,15 +547,36 @@ body {
     }
 
     /* Modal Layout on Mobile */
+    .modal-overlay {
+        align-items: flex-end;
+        /* Bottom sheet effect on mobile */
+    }
+
     .modal-content {
-        height: 95vh;
-        max-height: 95vh;
+        height: auto;
+        /* Dynamic height up to max */
+        max-height: 90vh;
+        /* Leave some space at top */
+        max-height: 90dvh;
         border-radius: 16px 16px 0 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-body {
+        /* Ensure scrolling within the modal body */
+        flex: 1;
+        overflow-y: auto;
+        overscroll-behavior: contain;
     }
 
     .modal-footer {
         flex-direction: column;
         gap: 10px;
+        /* Ensure updated padding for Home indicator is present */
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+        background-color: #fff;
+        border-top: 1px solid #e5e7eb;
     }
 
     .modal-footer button {
