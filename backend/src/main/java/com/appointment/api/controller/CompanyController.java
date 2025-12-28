@@ -164,14 +164,15 @@ public class CompanyController {
 
     /**
      * Delete company and all related entities
-     * Deletes in order: Appointments -> WorkingShifts -> Employees -> Services
-     * (removes service_resources join table references) -> Resources -> Company
+     * Deletes in order: Appointments (with email notifications) -> WorkingShifts -> Employees
+     * -> Services (removes service_resources join table references) -> Resources -> Company
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Transactional
-    public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
-        log.info("Deleting company with id: {}", id);
+    public ResponseEntity<Void> deleteCompany(@PathVariable Long id,
+                                              @RequestParam(required = false, defaultValue = "false") boolean confirm) {
+        log.info("Deleting company with id: {}, confirm: {}", id, confirm);
 
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + id));
@@ -184,24 +185,59 @@ public class CompanyController {
         List<Service> services = serviceRepository.findByCompany_CompanyId(id);
         log.info("Found {} services for company {}", services.size(), id);
 
-        // 3. Delete all appointments with these employees
-        int appointmentCount = 0;
+        // 3. Check for appointments and send notifications if confirmed
+        int totalAppointmentCount = 0;
         for (Employee employee : employees) {
             List<Appointment> employeeAppointments = appointmentRepository.findByEmployee_UserId(employee.getUserId());
-            appointmentCount += employeeAppointments.size();
-            appointmentRepository.deleteAll(employeeAppointments);
+            totalAppointmentCount += employeeAppointments.size();
         }
-        log.info("Deleted {} appointments by employee", appointmentCount);
 
-        // 4. Delete all appointments with these services
-        int serviceAppointmentCount = 0;
-        for (Service service : services) {
-            List<Appointment> serviceAppointments = appointmentRepository
-                    .findByService_ServiceId(service.getServiceId());
-            serviceAppointmentCount += serviceAppointments.size();
-            appointmentRepository.deleteAll(serviceAppointments);
+        if (totalAppointmentCount > 0 && !confirm) {
+            throw new IllegalArgumentException(
+                "Cannot delete company. This company has " + totalAppointmentCount + " associated appointments. " +
+                "Please confirm deletion to cancel all appointments and notify customers."
+            );
         }
-        log.info("Deleted {} appointments by service", serviceAppointmentCount);
+
+        // 4. Delete all appointments with notifications
+        if (totalAppointmentCount > 0 && confirm) {
+            int notificationCount = 0;
+            for (Employee employee : employees) {
+                List<Appointment> employeeAppointments = appointmentRepository.findByEmployee_UserId(employee.getUserId());
+                for (Appointment appointment : employeeAppointments) {
+                    // Send email notification
+                    if (appointment.getCustomer() != null && appointment.getCustomer().getEmail() != null) {
+                        EmailTemplateData emailData = EmailTemplateData.builder()
+                                .customerName(appointment.getCustomer().getName())
+                                .companyName(company.getName())
+                                .serviceName(appointment.getService().getName())
+                                .employeeName(appointment.getEmployee().getName())
+                                .appointmentDate(appointment.getStartTime().toLocalDate())
+                                .appointmentTime(appointment.getStartTime().toLocalTime())
+                                .appointmentDateTime(appointment.getStartTime()
+                                        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                                .reason("Company closure")
+                                .build();
+
+                        final Appointment appointmentFinal = appointment;
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                notificationProvider.sendTemplatedNotification(
+                                        appointmentFinal.getCustomer().getEmail(),
+                                        "APPOINTMENT_CANCELLATION",
+                                        emailData);
+                                log.info("Sent cancellation email to customer: {}", appointmentFinal.getCustomer().getEmail());
+                            } catch (Exception e) {
+                                log.error("Failed to send cancellation email: {}", e.getMessage());
+                            }
+                        });
+                        notificationCount++;
+                    }
+                    appointmentRepository.delete(appointment);
+                }
+            }
+            log.info("Sent {} cancellation emails and deleted appointments", notificationCount);
+        }
 
         // 5. Delete all working shifts for employees
         int workingShiftCount = 0;

@@ -23,8 +23,10 @@ const companyService = {
     return response.data;
   },
 
-  deleteCompany: async (id) => {
-    const response = await axios.delete(`${COMPANY_URL}/${id}`);
+  deleteCompany: async (id, confirm = false) => {
+    const response = await axios.delete(`${COMPANY_URL}/${id}`, {
+      params: { confirm }
+    });
     return response.data;
   }
 };
