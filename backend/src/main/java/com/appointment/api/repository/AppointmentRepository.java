@@ -26,4 +26,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByResources_ResourceId(Long resourceId);
 
     boolean existsByResources_ResourceId(Long resourceId);
+
+    boolean existsByService_ServiceId(Long serviceId);
 }

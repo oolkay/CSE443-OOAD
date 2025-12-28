@@ -658,7 +658,7 @@ body {
 /* --- APPOINTMENT LIST TABLE STYLING --- */
 .appointments-list-container {
     margin-top: 15px;
-    max-height: 250px;
+    max-height: 180px;
     overflow-y: auto;
     border: 1px solid #d1d5db;
     /* Darker border */

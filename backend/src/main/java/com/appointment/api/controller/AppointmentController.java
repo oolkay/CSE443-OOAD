@@ -166,6 +166,23 @@ public class AppointmentController {
     }
 
     /**
+     * Get all appointments for a service
+     * GET /api/appointments/service/{serviceId}
+     */
+    @GetMapping("/service/{serviceId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'SUPER_ADMIN')")
+    public ResponseEntity<?> getServiceAppointments(@PathVariable Long serviceId) {
+        try {
+            List<AppointmentResponse> appointments = appointmentService.getServiceAppointments(serviceId);
+            return ResponseEntity.ok(appointments);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(
+                    LocalDateTime.now(), HttpStatus.NOT_FOUND.value(), "Not Found", e.getMessage(),
+                    "/api/appointments/service/" + serviceId));
+        }
+    }
+
+    /**
      * Get employee availability for a specific date
      * GET
      * /api/appointments/availability/employee/{employeeId}?date=2025-12-10&serviceDuration=30

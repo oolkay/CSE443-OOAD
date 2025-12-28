@@ -258,5 +258,24 @@ export const resourceService = {
       console.error('Error fetching resource stats:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get services associated with a resource
+   */
+  async getResourceServices(resourceId) {
+    try {
+      const companyId = getCurrentCompanyId();
+      const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}/services`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching resource services:', error);
+      throw error;
+    }
   }
 };

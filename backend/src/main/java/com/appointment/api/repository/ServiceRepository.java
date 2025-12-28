@@ -21,4 +21,6 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
     boolean existsByName(String name);
 
     List<Service> findByCompany_CompanyId(Long companyId);
+
+    List<Service> findByResources_ResourceId(Long resourceId);
 }

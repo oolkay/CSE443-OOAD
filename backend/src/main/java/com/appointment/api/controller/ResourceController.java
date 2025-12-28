@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.appointment.api.dto.ServiceResponseDTO;
 import java.util.List;
 
 /**
@@ -179,5 +180,17 @@ public class ResourceController {
     public ResponseEntity<ResourceService.ResourceStatsDTO> getResourceStats(@PathVariable Long companyId) {
         ResourceService.ResourceStatsDTO stats = resourceService.getResourceStats(companyId);
         return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * GET /api/resources/company/{companyId}/{resourceId}/services
+     * Get services associated with a resource
+     */
+    @GetMapping("/company/{companyId}/{resourceId}/services")
+    public ResponseEntity<List<ServiceResponseDTO>> getResourceServices(
+            @PathVariable Long companyId,
+            @PathVariable Long resourceId) {
+        List<ServiceResponseDTO> services = resourceService.getResourceServices(companyId, resourceId);
+        return ResponseEntity.ok(services);
     }
 }
