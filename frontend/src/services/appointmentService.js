@@ -8,6 +8,11 @@ const appointmentService = {
         return response.data;
     },
 
+    getServiceAppointments: async (serviceId) => {
+        const response = await axios.get(`${APPOINTMENT_URL}/service/${serviceId}`);
+        return response.data;
+    },
+
     getEmployeeAvailability: async (employeeId, date, serviceDuration) => {
         const response = await axios.get(`${APPOINTMENT_URL}/availability/employee/${employeeId}`, {
             params: { date, serviceDuration }

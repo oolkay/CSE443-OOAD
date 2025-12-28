@@ -35,6 +35,8 @@ const EmployeeManager = () => {
     };
 
     const user = authService.getCurrentUser();
+    const userId = user?.userId;
+    const companyId = user?.companyId;
     // --- STATE ---
     const [employees, setEmployees] = useState([]);
     const [services, setServices] = useState([]); // Available services
@@ -54,7 +56,6 @@ const EmployeeManager = () => {
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const [warningMessage, setWarningMessage] = useState('');
     const [conflictingAppointments, setConflictingAppointments] = useState([]);
-    const [showAppointments, setShowAppointments] = useState(false);
 
     // Form Verisi
     const initialFormState = {
@@ -69,12 +70,8 @@ const EmployeeManager = () => {
     const [formData, setFormData] = useState(initialFormState);
 
     // --- FETCH DATA ---
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        if (!user || !user.companyId) {
+    const fetchData = React.useCallback(async () => {
+        if (!userId || !companyId) {
             alert('Kullanıcının şirket bilgisi bulunamadı.');
             return;
         }
@@ -84,8 +81,8 @@ const EmployeeManager = () => {
                 // employeeService.getAllEmployees(),
                 // serviceService.getAllServices()
                 // employeeService.getEmployeesByCompany(user.companyId),
-                employeeService.getEmployeesByManager(user.userId),
-                serviceService.getServicesByCompany(user.companyId)
+                employeeService.getEmployeesByManager(userId),
+                serviceService.getServicesByCompany(companyId)
             ]);
 
             // Map backend response to frontend structure
@@ -105,7 +102,11 @@ const EmployeeManager = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId, companyId]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -267,7 +268,6 @@ const EmployeeManager = () => {
                 setIsForceDeleteModalOpen(true);
                 // Trigger fetch immediately
                 fetchConflictingAppointments();
-                setShowAppointments(true);
                 return;
             }
 
@@ -283,7 +283,6 @@ const EmployeeManager = () => {
             // Filter only future/pending appointments if needed, but backend force delete deletes all. 
             // Display pertinent info.
             setConflictingAppointments(appointments || []);
-            setShowAppointments(true);
         } catch (error) {
             console.error("Failed to fetch appointments", error);
             showToast("Randevu listesi alınamadı", "error");
@@ -556,7 +555,6 @@ const EmployeeManager = () => {
                 onClose={() => {
                     setIsForceDeleteModalOpen(false);
                     setEmployeeToDelete(null); // Clear selection on cancel
-                    setShowAppointments(false);
                     setConflictingAppointments([]);
                 }}
                 onConfirm={() => confirmDelete(true)} // Force delete
