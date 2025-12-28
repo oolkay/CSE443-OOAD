@@ -7,19 +7,31 @@ const API_BASE_URL = 'http://localhost:8080/api/resources';
 
 /**
  * Get current company ID for the logged-in user
+ * Priority: user object (set during login) -> legacy companyId key -> default
  */
 const getCurrentCompanyId = () => {
+  // 1. Try user object (set during login in authService)
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.companyId) {
+        return user.companyId;
+      }
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+    }
+  }
+
+  // 2. Fallback to legacy 'companyId' key
   const storedCompanyId = localStorage.getItem('companyId');
   if (storedCompanyId) {
     return parseInt(storedCompanyId, 10);
   }
-  const defaultCompanyId = 1;
-  localStorage.setItem('companyId', defaultCompanyId.toString());
-  return defaultCompanyId;
-};
 
-export const setCurrentCompanyId = (companyId) => {
-  localStorage.setItem('companyId', companyId.toString());
+  // 3. Default fallback (should not happen if user is logged in)
+  console.warn('No company ID found in localStorage, using default');
+  return 1;
 };
 
 /**
@@ -35,11 +47,10 @@ const getAuthHeaders = () => {
 
 export const resourceService = {
   /**
-   * Get all resources for the current user's company
+   * Get all resources for a specific company
    */
-  async getResources() {
+  async getResources(companyId) {
     try {
-      const companyId = getCurrentCompanyId();
       const url = `${API_BASE_URL}/company/${companyId}`;
       console.log('Fetching resources from:', url);
 
@@ -62,9 +73,8 @@ export const resourceService = {
   /**
    * Get resource by ID
    */
-  async getResourceById(resourceId) {
+  async getResourceById(companyId, resourceId) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}`, {
         headers: getAuthHeaders()
       });
@@ -81,9 +91,8 @@ export const resourceService = {
   /**
    * Create a new resource
    */
-  async createResource(resourceData) {
+  async createResource(companyId, resourceData) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -108,9 +117,8 @@ export const resourceService = {
   /**
    * Update an existing resource
    */
-  async updateResource(resourceId, resourceData) {
+  async updateResource(companyId, resourceId, resourceData) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
@@ -135,9 +143,8 @@ export const resourceService = {
   /**
    * Delete a resource
    */
-  async deleteResource(resourceId, confirm = false) {
+  async deleteResource(companyId, resourceId, confirm = false) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}?confirm=${confirm}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
@@ -160,9 +167,8 @@ export const resourceService = {
   /**
    * Toggle resource status
    */
-  async toggleResourceStatus(resourceId) {
+  async toggleResourceStatus(companyId, resourceId) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}/toggle`, {
         method: 'PATCH',
         headers: getAuthHeaders()
@@ -183,9 +189,8 @@ export const resourceService = {
   /**
    * Search resources
    */
-  async searchResources(keyword, status = null) {
+  async searchResources(companyId, keyword, status = null) {
     try {
-      const companyId = getCurrentCompanyId();
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (status) params.append('status', status);
@@ -206,9 +211,8 @@ export const resourceService = {
   /**
    * Get resources by status
    */
-  async getResourcesByStatus(status) {
+  async getResourcesByStatus(companyId, status) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/status/${status}`, {
         headers: getAuthHeaders()
       });
@@ -225,9 +229,8 @@ export const resourceService = {
   /**
    * Get available resources
    */
-  async getAvailableResources() {
+  async getAvailableResources(companyId) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/available`, {
         headers: getAuthHeaders()
       });
@@ -244,9 +247,8 @@ export const resourceService = {
   /**
    * Get resource statistics
    */
-  async getResourceStats() {
+  async getResourceStats(companyId) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/stats`, {
         headers: getAuthHeaders()
       });
@@ -263,9 +265,8 @@ export const resourceService = {
   /**
    * Get services associated with a resource
    */
-  async getResourceServices(resourceId) {
+  async getResourceServices(companyId, resourceId) {
     try {
-      const companyId = getCurrentCompanyId();
       const response = await fetch(`${API_BASE_URL}/company/${companyId}/${resourceId}/services`, {
         headers: getAuthHeaders()
       });
@@ -279,3 +280,6 @@ export const resourceService = {
     }
   }
 };
+
+// Export getCurrentCompanyId for external use
+export { getCurrentCompanyId };
