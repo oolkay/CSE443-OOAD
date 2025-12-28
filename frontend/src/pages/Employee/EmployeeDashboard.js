@@ -32,9 +32,7 @@ function AppointmentMobileCard({ appt, onViewDetails, onApprove, onReject }) {
                 <button className="btn-reject" onClick={() => onReject(appt)}>
                     Reddet
                 </button>
-                <button className="view-btn" onClick={onViewDetails}>
-                    Detaylar
-                </button>
+
             </div>
         </div>
     );
@@ -238,12 +236,7 @@ export default function EmployeeDashboard() {
                                                                     >
                                                                         Reddet
                                                                     </button>
-                                                                    <button
-                                                                        className="view-btn"
-                                                                        onClick={() => setActiveTab('calendar')}
-                                                                    >
-                                                                        Detaylar
-                                                                    </button>
+
                                                                 </div>
                                                             </td>
                                                         </tr>

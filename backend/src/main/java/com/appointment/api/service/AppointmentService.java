@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +38,7 @@ public class AppointmentService {
     private final ServiceRepository serviceRepository;
     private final BranchManagerRepository branchManagerRepository;
     private final EmailNotificationProvider emailNotificationProvider;
+    private final WorkingShiftService workingShiftService;
 
     @Transactional
     public AppointmentResponse createAppointment(AppointmentRequestDTO request) {
@@ -48,10 +51,6 @@ public class AppointmentService {
         Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + request.getCustomerId()));
 
-        // Fetch employee
-        Employee employee = employeeRepository.findById(request.getEmployeeId())
-                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + request.getEmployeeId()));
-
         // Fetch service
         com.appointment.api.entity.Service service = serviceRepository.findById(request.getServiceId())
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + request.getServiceId()));
@@ -59,10 +58,14 @@ public class AppointmentService {
         // Calculate end time based on service duration
         LocalDateTime endTime = request.getStartTime().plusMinutes(service.getTimeDuration());
 
-        // Check if employee is available
-        if (!isEmployeeAvailable(employee.getUserId(), request.getStartTime(), endTime)) {
-            throw new RuntimeException("Employee is not available at the requested time");
+        // Check if customer already has an appointment at this time
+        if (hasCustomerConflict(customer.getUserId(), request.getStartTime(), endTime)) {
+            throw new RuntimeException("You already have an appointment scheduled at this time");
         }
+
+        // Fetch employee
+        Employee employee = employeeRepository.findById(request.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + request.getEmployeeId()));
 
         // Create appointment
         Appointment appointment = new Appointment();
@@ -199,10 +202,32 @@ public class AppointmentService {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
 
-        // Define default working hours (9 AM to 6 PM)
-        // TODO: Get from employee working schedule when implemented
-        LocalTime workStart = LocalTime.of(9, 0);
-        LocalTime workEnd = LocalTime.of(18, 0);
+        // Get day of week from the requested date
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        String dayName = dayOfWeek.toString(); // "MONDAY", "TUESDAY", etc.
+
+        // Fetch employee's schedule for this day
+        List<WorkingShift> shifts = workingShiftService.getScheduleForEmployee(employeeId);
+        Optional<WorkingShift> dayShift = shifts.stream()
+                .filter(shift -> shift.getDayOfWeek().equalsIgnoreCase(dayName))
+                .findFirst();
+
+        // If no schedule for this day, employee doesn't work
+        if (dayShift.isEmpty()) {
+            return EmployeeAvailabilityResponse.builder()
+                    .employeeId(employeeId)
+                    .employeeName(employee.getName())
+                    .date(date)
+                    .workStartTime(null)
+                    .workEndTime(null)
+                    .availableSlots(new ArrayList<>())
+                    .bookedSlots(new ArrayList<>())
+                    .build();
+        }
+
+        // Use actual schedule times
+        LocalTime workStart = dayShift.get().getStartTime();
+        LocalTime workEnd = dayShift.get().getEndTime();
 
         // Get all appointments for this employee on this date
         LocalDateTime dayStart = date.atStartOfDay();
@@ -211,7 +236,7 @@ public class AppointmentService {
         List<Appointment> appointments = appointmentRepository
                 .findByEmployee_UserIdAndStartTimeBetween(employeeId, dayStart, dayEnd)
                 .stream()
-                .filter(a -> a.getStatus() != AppointmentStatus.CANCELLED)
+                .filter(a -> a.getStatus() == AppointmentStatus.APPROVED)
                 .collect(Collectors.toList());
 
         // Convert appointments to booked slots
@@ -265,25 +290,28 @@ public class AppointmentService {
         LocalDateTime slotStart = date.atTime(workStart);
         LocalDateTime workEndDateTime = date.atTime(workEnd);
 
-        // Slot interval in minutes (e.g., 15 or 30 minutes)
+        // Slot interval in minutes (fixed at 30 minutes)
         int slotInterval = 30;
 
-        while (slotStart.plusMinutes(serviceDuration).isBefore(workEndDateTime)
-                || slotStart.plusMinutes(serviceDuration).equals(workEndDateTime)) {
+        // Loop until the service start time + duration exceeds work end time
+        while (!slotStart.plusMinutes(serviceDuration).isAfter(workEndDateTime)) {
 
-            LocalDateTime slotEnd = slotStart.plusMinutes(serviceDuration);
-            final LocalDateTime finalSlotStart = slotStart;
-            final LocalDateTime finalSlotEnd = slotEnd;
+            final LocalDateTime currentSlotStart = slotStart;
+            final LocalDateTime currentSlotEnd = slotStart.plusMinutes(serviceDuration);
 
             // Check if this slot conflicts with any booked appointment
+            // IMPORTANT: Check if the ENTIRE duration [currentSlotStart, currentSlotEnd] is
+            // free
             boolean isAvailable = bookedSlots.stream()
-                    .noneMatch(booked -> hasTimeConflict(finalSlotStart, finalSlotEnd,
+                    .noneMatch(booked -> hasTimeConflict(currentSlotStart, currentSlotEnd,
                             booked.getStartTime(), booked.getEndTime()));
 
             if (isAvailable) {
                 availableSlots.add(AvailableSlotDTO.builder()
-                        .startTime(slotStart)
-                        .endTime(slotEnd)
+                        .startTime(currentSlotStart)
+                        .endTime(currentSlotStart.plusMinutes(30)) // Show 30 min slot in UI, but availability is
+                                                                   // checked for full
+                                                                   // duration
                         .build());
             }
 
@@ -321,6 +349,26 @@ public class AppointmentService {
                 .collect(Collectors.toList());
 
         return conflictingAppointments.isEmpty();
+    }
+
+    /**
+     * Check if customer has any conflicting appointment at the requested time
+     * Checks both PENDING and APPROVED appointments (not CANCELLED or REJECTED)
+     */
+    private boolean hasCustomerConflict(Long customerId, LocalDateTime startTime, LocalDateTime endTime) {
+        List<Appointment> customerAppointments = appointmentRepository
+                .findByCustomer_UserId(customerId)
+                .stream()
+                .filter(a -> a.getStatus() == AppointmentStatus.PENDING ||
+                        a.getStatus() == AppointmentStatus.APPROVED)
+                .filter(a -> {
+                    // Check if there's a time overlap
+                    return !(endTime.isBefore(a.getStartTime()) || endTime.isEqual(a.getStartTime()) ||
+                            startTime.isAfter(a.getEndTime()) || startTime.isEqual(a.getEndTime()));
+                })
+                .collect(Collectors.toList());
+
+        return !customerAppointments.isEmpty();
     }
 
     private AppointmentResponse mapToResponse(Appointment appointment) {
