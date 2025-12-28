@@ -189,6 +189,53 @@
   background: #fafafa;
 }
 
+/* Action buttons container */
+.table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.appt-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Approve button */
+.btn-approve {
+  background: #00c7ed;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-approve:hover {
+  background: #00b0d4;
+}
+
+/* Reject button */
+.btn-reject {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reject:hover {
+  background: #c82333;
+}
+
 .view-btn {
   background: #00c7ed;
   color: #fff;
@@ -205,50 +252,223 @@
   opacity: 0.9;
 }
 
+/* Mobile card view */
+.appt-table-mobile {
+  display: none;
+}
+
+.desktop-only {
+  display: table;
+}
+
+.mobile-only {
+  display: none;
+}
+
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
   .branch-manager-page {
     flex-direction: column;
     padding: 12px;
     gap: 12px;
+    min-height: 100vh;
+    box-sizing: border-box;
   }
 
   .branch-manager-sidebar {
     width: 100%;
     padding: 12px;
-    position: relative;
-    top: 0;
+    position: static;
     max-height: none;
+    box-sizing: border-box;
+  }
+
+  .user-info {
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .user-name {
+    font-size: 14px;
+  }
+
+  .user-email {
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .logout-btn {
+    padding: 10px 12px;
+    font-size: 14px;
+    box-sizing: border-box;
   }
 
   .sidebar-nav {
     flex-direction: row;
-    flex-wrap: wrap;
-    /* Allow wrapping if many items */
+    gap: 8px;
+    margin-bottom: 0;
   }
 
   .nav-item {
-    text-align: center;
     flex: 1;
-    /* Distribute space */
-    white-space: nowrap;
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 13px;
   }
 
   .branch-manager-header h1 {
     font-size: 1.5rem;
   }
 
-  .appt-table {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .appt-table-mobile {
+    display: block;
+  }
+
+  .appt-card-mobile {
+    background: #fafafa;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #00c7ed;
+  }
+
+  .appt-card-mobile .appt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  .appt-card-mobile .appt-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .appt-card-mobile .appt-label {
+    font-weight: 600;
+    color: #666;
+  }
+
+  .appt-card-mobile .appt-value {
+    color: #333;
+    text-align: right;
+    word-break: break-word;
+    max-width: 60%;
+  }
+
+  .appt-card-mobile .appt-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .appt-card-mobile .btn-approve,
+  .appt-card-mobile .btn-reject,
+  .appt-card-mobile .view-btn {
+    width: 100%;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .branch-manager-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .card h3 {
+    font-size: 1.1rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .branch-manager-page {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .branch-manager-sidebar {
+    padding: 10px;
+  }
+
+  .user-info {
+    padding: 12px;
+  }
+
+  .user-name {
     font-size: 13px;
   }
 
-  .appt-table th,
-  .appt-table td {
-    padding: 8px;
+  .user-email {
+    font-size: 11px;
   }
 
-  /* Make table scrollable horizontally on very small screens */
+  .logout-btn {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .nav-item {
+    padding: 9px 6px;
+    font-size: 12px;
+  }
+
+  .branch-manager-header h1 {
+    font-size: 1.15rem;
+  }
+
   .card {
+    padding: 10px;
+  }
+
+  .card h3 {
+    font-size: 1.05rem;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-label {
+    font-size: 13px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .appt-card-mobile {
     padding: 12px;
+  }
+
+  .appt-card-mobile .appt-row {
+    font-size: 13px;
+  }
+
+  .view-btn {
+    font-size: 13px;
   }
 }

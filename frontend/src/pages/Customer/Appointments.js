@@ -177,7 +177,10 @@ export default function Appointments() {
         }
       });
 
-      if (!res.ok) throw new Error("Cancel failed");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Randevu iptal edilemedi");
+      }
 
       // Refresh appointments
       await fetchAppointments();

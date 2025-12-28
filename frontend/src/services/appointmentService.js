@@ -56,6 +56,37 @@ const appointmentService = {
             }
         });
         return response.data;
+    },
+
+    // Manager-specific methods
+    // Get all appointments for the manager's company
+    getCompanyAppointments: async (managerId) => {
+        const response = await axios.get(`${APPOINTMENT_URL}/manager/${managerId}`);
+        return response.data;
+    },
+
+    // Get conflicting appointments for manager
+    getConflictingAppointmentsForManager: async (managerId, employeeId, startTime, endTime) => {
+        const response = await axios.get(`${APPOINTMENT_URL}/manager/${managerId}/conflicts`, {
+            params: {
+                employeeId: employeeId,
+                startTime: startTime,
+                endTime: endTime
+            }
+        });
+        return response.data;
+    },
+
+    // Approve appointment as manager
+    approveAppointmentAsManager: async (employeeId, appointmentId) => {
+        const response = await axios.put(`${APPOINTMENT_URL}/employee/${employeeId}/approve/${appointmentId}`);
+        return response.data;
+    },
+
+    // Reject appointment as manager
+    rejectAppointmentAsManager: async (employeeId, appointmentId) => {
+        const response = await axios.put(`${APPOINTMENT_URL}/employee/${employeeId}/reject/${appointmentId}`);
+        return response.data;
     }
 };
 
