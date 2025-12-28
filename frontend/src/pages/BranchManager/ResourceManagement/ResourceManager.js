@@ -577,12 +577,40 @@ const ResourceManager = () => {
                                         <input
                                             type="checkbox"
                                             checked={selectedResource.status === 'OUT_OF_SERVICE'}
-                                            onChange={() => {
-                                                toggleStatus(selectedResource.resourceId, selectedResource.status);
-                                                setSelectedResource(prev => ({
-                                                    ...prev,
-                                                    status: selectedResource.status === 'OUT_OF_SERVICE' ? 'AVAILABLE' : 'OUT_OF_SERVICE'
-                                                }));
+                                            onChange={async () => {
+                                                console.log('Toggle clicked - companyId:', companyId, 'resourceId:', selectedResource.resourceId, 'currentStatus:', selectedResource.status);
+
+                                                if (!companyId) {
+                                                    console.error('CompanyId is undefined!');
+                                                    return;
+                                                }
+
+                                                const oldStatus = selectedResource.status;
+                                                const newStatus = oldStatus === 'OUT_OF_SERVICE' ? 'AVAILABLE' : 'OUT_OF_SERVICE';
+
+                                                console.log('Toggling from', oldStatus, 'to', newStatus);
+
+                                                // Optimistic update for detail modal
+                                                setSelectedResource(prev => ({ ...prev, status: newStatus }));
+
+                                                // API call with proper state update
+                                                try {
+                                                    console.log('Calling API with companyId:', companyId, 'resourceId:', selectedResource.resourceId);
+                                                    const updated = await resourceService.toggleResourceStatus(companyId, selectedResource.resourceId);
+                                                    console.log('API response:', updated);
+
+                                                    // Update resources array
+                                                    setResources(prev => prev.map(res =>
+                                                        res.resourceId === selectedResource.resourceId ? updated : res
+                                                    ));
+
+                                                    // Update selectedResource with server response
+                                                    setSelectedResource(updated);
+                                                } catch (err) {
+                                                    console.error('Error toggling resource status:', err);
+                                                    // Revert on error
+                                                    setSelectedResource(prev => ({ ...prev, status: oldStatus }));
+                                                }
                                             }}
                                         />
                                         <span className="toggle-slider"></span>
