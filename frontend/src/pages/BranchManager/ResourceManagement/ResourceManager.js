@@ -24,7 +24,6 @@ const ResourceManager = () => {
     const [conflictingAppointments, setConflictingAppointments] = useState([]);
 
     const [affectedServices, setAffectedServices] = useState([]);
-    const [showAppointments, setShowAppointments] = useState(false);
     const [activeTab, setActiveTab] = useState('appointments'); // 'appointments' or 'services'
 
     // Toast Notification State
@@ -52,16 +51,8 @@ const ResourceManager = () => {
     const [formData, setFormData] = useState(initialFormState);
 
     // --- API CALLS ---
-    // Load resources when component mounts
-    useEffect(() => {
-        fetchResourcesWithRetry();
-        // TODO: Get company ID from authentication context
-        // For now, setting default company ID (should come from login)
-        setCurrentCompanyId(1);
-    }, []);
-
     // Fetch resources with retry logic (10 second timeout)
-    const fetchResourcesWithRetry = async (retryCount = 0, maxRetries = 1) => {
+    const fetchResourcesWithRetry = React.useCallback(async (retryCount = 0, maxRetries = 1) => {
         try {
             setLoading(true);
             setError(null);
@@ -80,7 +71,15 @@ const ResourceManager = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Load resources when component mounts
+    useEffect(() => {
+        fetchResourcesWithRetry();
+        // TODO: Get company ID from authentication context
+        // For now, setting default company ID (should come from login)
+        setCurrentCompanyId(1);
+    }, [fetchResourcesWithRetry]);
 
     // Manual refresh without retry
     const fetchResources = async () => {
@@ -240,7 +239,6 @@ const ResourceManager = () => {
                 // Initialize clean state for the modal
                 setConflictingAppointments([]);
                 setAffectedServices([]);
-                setShowAppointments(true);
                 setActiveTab('appointments');
 
                 // Trigger fetches
@@ -260,7 +258,6 @@ const ResourceManager = () => {
         try {
             const appointments = await appointmentService.getResourceAppointments(resourceToDelete);
             setConflictingAppointments(appointments || []);
-            setShowAppointments(true);
         } catch (error) {
             console.error("Failed to fetch appointments", error);
             addToast("error", "Randevu listesi alınamadı");
@@ -296,7 +293,7 @@ const ResourceManager = () => {
         };
 
         initialLoad();
-    }, []);
+    }, [fetchResourcesWithRetry]);
 
     // Search and filter logic - only runs after initial load and when filters change
     useEffect(() => {
@@ -337,29 +334,6 @@ const ResourceManager = () => {
     }, [searchTerm, sortBy, initialLoadComplete]);
 
     const filteredResources = resources; // Now handled by API
-
-    // Test backend connection
-    const testBackendConnection = async () => {
-        try {
-            console.log('Testing backend connection...');
-            const response = await fetch('http://localhost:8080/api/resources/company/1');
-            console.log('Backend test - Status:', response.status);
-            console.log('Backend test - OK:', response.ok);
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Backend test - Data:', data);
-                alert('Backend bağlantısı başarılı! Veri: ' + JSON.stringify(data));
-            } else {
-                const errorText = await response.text();
-                console.log('Backend test - Error:', errorText);
-                alert('Backend bağlantı hatası: ' + response.status + ' - ' + errorText);
-            }
-        } catch (error) {
-            console.error('Backend test - Error:', error);
-            alert('Backend bağlanamadı: ' + error.message);
-        }
-    };
 
     return (
         <div className="layout-container">
@@ -625,7 +599,6 @@ const ResourceManager = () => {
                 onClose={() => {
                     setIsForceDeleteModalOpen(false);
                     setResourceToDelete(null); // Clear selection on cancel
-                    setShowAppointments(false);
                     setConflictingAppointments([]);
                 }}
                 onConfirm={() => handleConfirmDelete(true)} // Force delete

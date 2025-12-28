@@ -62,18 +62,7 @@ export default function EmployeeDashboard() {
         setToasts(prev => prev.filter(toast => toast.id !== id));
     };
 
-    useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            setEmployee(user);
-            fetchAppointments(user.userId);
-        } else {
-            navigate('/');
-        }
-    }, [navigate]);
-
-    const fetchAppointments = async (employeeId) => {
+    const fetchAppointments = React.useCallback(async (employeeId) => {
         try {
             const appointments = await appointmentService.getEmployeeAppointments(employeeId);
             // Filter pending and sort by startTime (ascending)
@@ -87,7 +76,18 @@ export default function EmployeeDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            setEmployee(user);
+            fetchAppointments(user.userId);
+        } else {
+            navigate('/');
+        }
+    }, [navigate, fetchAppointments]);
 
     const handleApprove = async (appointment) => {
         try {

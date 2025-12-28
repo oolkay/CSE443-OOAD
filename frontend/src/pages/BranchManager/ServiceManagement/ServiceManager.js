@@ -10,6 +10,7 @@ import ConfirmationModal from '../../../components/UI/ConfirmationModal';
 
 const ServiceManager = () => {
     const user = authService.getCurrentUser();
+    const companyId = user?.companyId;
     // --- STATE ---
     const [services, setServices] = useState([]);
 
@@ -52,14 +53,14 @@ const ServiceManager = () => {
 
     // --- FETCH DATA ---
     const fetchServices = React.useCallback(async () => {
-        if (!user || !user.companyId) {
+        if (!companyId) {
             alert('Kullanıcının şirket bilgisi bulunamadı.');
             return;
         }
         try {
             setLoading(true);
             // const data = await serviceService.getAllServices();
-            const data = await serviceService.getServicesByCompany(user.companyId);
+            const data = await serviceService.getServicesByCompany(companyId);
             setServices(data);
             setError(null);
         } catch (err) {
@@ -69,7 +70,7 @@ const ServiceManager = () => {
         } finally {
             setLoading(false);
         }
-    }, [addToast]);
+    }, [addToast, companyId]);
 
     useEffect(() => {
         fetchServices();

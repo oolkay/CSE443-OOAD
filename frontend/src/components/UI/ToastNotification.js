@@ -31,20 +31,20 @@ const ToastNotification = ({ toasts, removeToast, message, type, onClose }) => {
 const Toast = ({ id, type, message, removeToast }) => {
     const [isExiting, setIsExiting] = useState(false);
 
+    const handleClose = React.useCallback(() => {
+        setIsExiting(true);
+        setTimeout(() => {
+            removeToast(id);
+        }, 400); // Match animation duration
+    }, [id, removeToast]);
+
     useEffect(() => {
         const timer = setTimeout(() => {
             handleClose();
         }, 4000); // 4 seconds auto-dismiss
 
         return () => clearTimeout(timer);
-    }, []);
-
-    const handleClose = () => {
-        setIsExiting(true);
-        setTimeout(() => {
-            removeToast(id);
-        }, 400); // Match animation duration
-    };
+    }, [handleClose]);
 
     const icons = {
         success: '',
