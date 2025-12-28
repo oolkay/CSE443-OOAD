@@ -1,0 +1,140 @@
+.custom-time-picker {
+    position: relative;
+    width: 110px;
+    /* Matched width */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.time-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.time-display:hover {
+    border-color: #9ca3af;
+}
+
+.time-display.active {
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+}
+
+.time-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.clock-icon {
+    font-size: 0.9rem;
+    color: #6b7280;
+    opacity: 0.7;
+}
+
+.time-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    /* Align right to prevent overflow */
+    left: auto;
+    margin-top: 6px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    /* Ensure high z-index */
+    display: flex;
+    padding: 8px;
+    gap: 4px;
+    width: 140px;
+    /* Slightly wider than input */
+    height: 200px;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.time-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.column-header {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 4px;
+}
+
+.column-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #e5e7eb transparent;
+}
+
+.column-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.column-list::-webkit-scrollbar-thumb {
+    background-color: #e5e7eb;
+    border-radius: 4px;
+}
+
+.time-item {
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.9rem;
+    color: #374151;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 2px;
+}
+
+.time-item:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.time-item.selected {
+    background-color: #ecfeff;
+    color: #0891b2;
+    font-weight: 600;
+}
+
+.time-separator {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: #d1d5db;
+    padding-top: 20px;
+    /* Offset for header */
+}

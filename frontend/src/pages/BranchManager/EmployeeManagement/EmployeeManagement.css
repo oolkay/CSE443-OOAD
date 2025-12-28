@@ -354,21 +354,7 @@ body {
 }
 
 /* ----- GÜNCELLENEN KISIM (FIX) ----- */
-.mini-time-input {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 4px 8px;
-    /* Padding artırıldı */
-    font-family: inherit;
-    width: 115px;
-    /* GENİŞLİK ARTIRILDI (Eski: 85px) - Sorunu çözen kısım */
-    font-size: 1rem;
-    cursor: pointer;
-    flex-shrink: 0;
-    /* Sıkışmayı önler */
-    color-scheme: light;
-    /* Browser uyumluluğu için */
-}
+
 
 /* --- SKILL CHECKBOX (HİZMETLER) --- */
 .skills-grid {
