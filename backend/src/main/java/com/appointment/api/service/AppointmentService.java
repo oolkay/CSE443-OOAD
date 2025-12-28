@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -570,56 +571,75 @@ public class AppointmentService {
 
     // Helper methods for sending emails
     private void sendAppointmentConfirmationEmail(Appointment appointment) {
-        try {
-            EmailTemplateData data = buildEmailTemplateData(appointment);
-            emailNotificationProvider.sendTemplatedNotification(
-                    appointment.getCustomer().getEmail(),
-                    "appointment_confirmation",
-                    data);
-        } catch (Exception e) {
-            // Log error but don't fail the appointment creation
-            System.err.println("Failed to send confirmation email: " + e.getMessage());
-        }
+        // Build data BEFORE async to avoid Hibernate session issues
+        final EmailTemplateData data = buildEmailTemplateData(appointment);
+        final String email = appointment.getCustomer().getEmail();
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                emailNotificationProvider.sendTemplatedNotification(
+                        email,
+                        "appointment_confirmation",
+                        data);
+            } catch (Exception e) {
+                // Log error but don't fail the appointment creation
+                System.err.println("Failed to send confirmation email: " + e.getMessage());
+            }
+        });
     }
 
     private void sendAppointmentApprovalEmail(Appointment appointment) {
-        try {
-            EmailTemplateData data = buildEmailTemplateData(appointment);
-            emailNotificationProvider.sendTemplatedNotification(
-                    appointment.getCustomer().getEmail(),
-                    "appointment_approval",
-                    data);
-        } catch (Exception e) {
-            System.err.println("Failed to send approval email: " + e.getMessage());
-        }
+        // Build data BEFORE async to avoid Hibernate session issues
+        final EmailTemplateData data = buildEmailTemplateData(appointment);
+        final String email = appointment.getCustomer().getEmail();
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                emailNotificationProvider.sendTemplatedNotification(
+                        email,
+                        "appointment_approval",
+                        data);
+            } catch (Exception e) {
+                System.err.println("Failed to send approval email: " + e.getMessage());
+            }
+        });
     }
 
     private void sendAppointmentRejectionEmail(Appointment appointment, String reason) {
-        try {
-            EmailTemplateData data = buildEmailTemplateData(appointment);
-            Map<String, Object> additionalData = new HashMap<>();
-            additionalData.put("rejectionReason", reason);
-            data.setAdditionalData(additionalData);
+        // Build data BEFORE async to avoid Hibernate session issues
+        final EmailTemplateData data = buildEmailTemplateData(appointment);
+        final String email = appointment.getCustomer().getEmail();
+        final Map<String, Object> additionalData = new HashMap<>();
+        additionalData.put("rejectionReason", reason);
+        data.setAdditionalData(additionalData);
 
-            emailNotificationProvider.sendTemplatedNotification(
-                    appointment.getCustomer().getEmail(),
-                    "appointment_rejection",
-                    data);
-        } catch (Exception e) {
-            System.err.println("Failed to send rejection email: " + e.getMessage());
-        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                emailNotificationProvider.sendTemplatedNotification(
+                        email,
+                        "appointment_rejection",
+                        data);
+            } catch (Exception e) {
+                System.err.println("Failed to send rejection email: " + e.getMessage());
+            }
+        });
     }
 
     private void sendAppointmentCancellationEmail(Appointment appointment) {
-        try {
-            EmailTemplateData data = buildEmailTemplateData(appointment);
-            emailNotificationProvider.sendTemplatedNotification(
-                    appointment.getCustomer().getEmail(),
-                    "appointment_cancellation",
-                    data);
-        } catch (Exception e) {
-            System.err.println("Failed to send cancellation email: " + e.getMessage());
-        }
+        // Build data BEFORE async to avoid Hibernate session issues
+        final EmailTemplateData data = buildEmailTemplateData(appointment);
+        final String email = appointment.getCustomer().getEmail();
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                emailNotificationProvider.sendTemplatedNotification(
+                        email,
+                        "appointment_cancellation",
+                        data);
+            } catch (Exception e) {
+                System.err.println("Failed to send cancellation email: " + e.getMessage());
+            }
+        });
     }
 
     private EmailTemplateData buildEmailTemplateData(Appointment appointment) {
