@@ -478,7 +478,7 @@ const EmployeeManager = () => {
                                 </div>
 
                                 {/* YENİ: GÜNLÜK ÇALIŞMA SAATLERİ (SADECE UI) */}
-                                <div className="form-section-title">Haftalık Program (Temsili)</div>
+                                <div className="form-section-title">Haftalık Program</div>
                                 <div className="schedule-editor-container">
                                     {DAYS_ORDER.map(day => {
                                         const dayData = formData.schedule[day];
