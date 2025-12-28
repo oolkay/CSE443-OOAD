@@ -12,6 +12,12 @@ const ConflictConfirmationModal = ({ isOpen, conflicts, onConfirm, onCancel }) =
         };
     };
 
+    const formatTimeRange = (startTime, endTime) => {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        return `${start.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+    };
+
     return (
         <div className="modal-overlay" onClick={onCancel}>
             <div className="modal-content conflict-modal" onClick={(e) => e.stopPropagation()}>
@@ -27,7 +33,8 @@ const ConflictConfirmationModal = ({ isOpen, conflicts, onConfirm, onCancel }) =
 
                     <div className="conflicts-list">
                         {conflicts.map((conflict, index) => {
-                            const { date, time } = formatDateTime(conflict.startTime);
+                            const { date } = formatDateTime(conflict.startTime);
+                            const timeRange = formatTimeRange(conflict.startTime, conflict.endTime);
                             return (
                                 <div key={conflict.appointmentId} className="conflict-item">
                                     <div className="conflict-number">{index + 1}</div>
@@ -35,9 +42,12 @@ const ConflictConfirmationModal = ({ isOpen, conflicts, onConfirm, onCancel }) =
                                         <div className="conflict-customer">
                                             <strong>{conflict.customerName}</strong>
                                         </div>
-                                        <div className="conflict-service">{conflict.serviceName}</div>
+                                        <div className="conflict-service">
+                                            {conflict.serviceName} {conflict.serviceDuration && `(${conflict.serviceDuration} dk)`}
+                                        </div>
                                         <div className="conflict-time">
-                                            {date} - {time}
+                                            <span className="conflict-date">{date}</span>
+                                            <span className="conflict-time-range">{timeRange}</span>
                                         </div>
                                     </div>
                                 </div>
