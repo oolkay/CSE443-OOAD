@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { resourceService, setCurrentCompanyId } from '../../../services/resourceService';
+import { resourceService } from '../../../services/resourceService';
+import authService from '../../../services/authService';
 import appointmentService from '../../../services/appointmentService';
 
 import ConfirmationModal from '../../../components/UI/ConfirmationModal';
@@ -7,6 +8,9 @@ import ToastNotification from '../../../components/UI/ToastNotification';
 import './ResourceManager.css';
 
 const ResourceManager = () => {
+    const user = authService.getCurrentUser();
+    const companyId = user?.companyId;
+
     // --- STATE ---
     const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -69,10 +73,14 @@ const ResourceManager = () => {
     // --- API CALLS ---
     // Fetch resources with retry logic (10 second timeout)
     const fetchResourcesWithRetry = React.useCallback(async (retryCount = 0, maxRetries = 1) => {
+        if (!companyId) {
+            setError('Kullanıcının şirket bilgisi bulunamadı.');
+            return;
+        }
         try {
             setLoading(true);
             setError(null);
-            const data = await resourceService.getResources();
+            const data = await resourceService.getResources(companyId);
             setResources(data);
         } catch (err) {
             if (retryCount < maxRetries) {
@@ -87,22 +95,23 @@ const ResourceManager = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [companyId]);
 
     // Load resources when component mounts
     useEffect(() => {
         fetchResourcesWithRetry();
-        // TODO: Get company ID from authentication context
-        // For now, setting default company ID (should come from login)
-        setCurrentCompanyId(1);
     }, [fetchResourcesWithRetry]);
 
     // Manual refresh without retry
     const fetchResources = async () => {
+        if (!companyId) {
+            setError('Kullanıcının şirket bilgisi bulunamadı.');
+            return;
+        }
         try {
             setLoading(true);
             setError(null);
-            const data = await resourceService.getResources();
+            const data = await resourceService.getResources(companyId);
             setResources(data);
         } catch (err) {
             setError('Kaynaklar yüklenemedi. Lütfen sayfayı yenileyin.');
@@ -146,8 +155,9 @@ const ResourceManager = () => {
 
     // Durum Toggle (Hızlı durum değiştirme) - API Call
     const toggleStatus = async (resourceId, currentStatus) => {
+        if (!companyId) return;
         try {
-            const updatedResource = await resourceService.toggleResourceStatus(resourceId);
+            const updatedResource = await resourceService.toggleResourceStatus(companyId, resourceId);
             setResources(prev => prev.map(res =>
                 res.resourceId === resourceId ? updatedResource : res
             ));
@@ -203,17 +213,21 @@ const ResourceManager = () => {
     // Kaydetme İşlemi - API Call
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!companyId) {
+            alert('Kullanıcının şirket bilgisi bulunamadı.');
+            return;
+        }
         try {
             let savedResource;
             if (isEditing) {
                 // Update Logic
-                savedResource = await resourceService.updateResource(selectedResource?.resourceId, formData);
+                savedResource = await resourceService.updateResource(companyId, selectedResource?.resourceId, formData);
                 setResources(prev => prev.map(res =>
                     res.resourceId === selectedResource?.resourceId ? savedResource : res
                 ));
             } else {
                 // Create Logic
-                savedResource = await resourceService.createResource(formData);
+                savedResource = await resourceService.createResource(companyId, formData);
                 setResources([...resources, savedResource]);
             }
             closeFormModal();
@@ -232,9 +246,9 @@ const ResourceManager = () => {
 
     // Silme İşlemi Onay
     const handleConfirmDelete = async (force = false) => {
-        if (!resourceToDelete) return;
+        if (!resourceToDelete || !companyId) return;
         try {
-            await resourceService.deleteResource(resourceToDelete, force);
+            await resourceService.deleteResource(companyId, resourceToDelete, force);
             setResources(resources.filter(r => r.resourceId !== resourceToDelete));
             addToast('success', 'Kaynak başarıyla silindi.');
             closeDetailModal();
@@ -281,9 +295,9 @@ const ResourceManager = () => {
     };
 
     const fetchAffectedServices = async () => {
-        if (!resourceToDelete) return;
+        if (!resourceToDelete || !companyId) return;
         try {
-            const services = await resourceService.getResourceServices(resourceToDelete);
+            const services = await resourceService.getResourceServices(companyId, resourceToDelete);
             setAffectedServices(services || []);
         } catch (error) {
             console.error("Failed to fetch services", error);
@@ -300,9 +314,6 @@ const ResourceManager = () => {
             try {
                 setInitialLoadComplete(false);
                 await fetchResourcesWithRetry();
-                // TODO: Get company ID from authentication context
-                // For now, setting default company ID (should come from login)
-                setCurrentCompanyId(1);
             } finally {
                 setInitialLoadComplete(true);
             }
@@ -319,6 +330,7 @@ const ResourceManager = () => {
         }
 
         const filterResources = async () => {
+            if (!companyId) return;
             try {
                 setLoading(true);
                 setError(null);
@@ -327,7 +339,7 @@ const ResourceManager = () => {
                     sortBy === 'available' ? 'AVAILABLE' :
                         sortBy === 'out_of_service' ? 'OUT_OF_SERVICE' : 'IN_USE';
 
-                const data = await resourceService.searchResources(searchTerm, statusFilter);
+                const data = await resourceService.searchResources(companyId, searchTerm, statusFilter);
                 setResources(data);
             } catch (err) {
                 setError('Arama ve filtreleme başarısız oldu. Lütfen tekrar deneyin.');
@@ -340,7 +352,7 @@ const ResourceManager = () => {
         // Debounce search to avoid too many API calls
         const timeoutId = setTimeout(filterResources, 300);
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, sortBy, initialLoadComplete]);
+    }, [searchTerm, sortBy, initialLoadComplete, companyId]);
 
     // Reset to all resources when filters are cleared (only after initial load)
     useEffect(() => {
@@ -565,12 +577,40 @@ const ResourceManager = () => {
                                         <input
                                             type="checkbox"
                                             checked={selectedResource.status === 'OUT_OF_SERVICE'}
-                                            onChange={() => {
-                                                toggleStatus(selectedResource.resourceId, selectedResource.status);
-                                                setSelectedResource(prev => ({
-                                                    ...prev,
-                                                    status: selectedResource.status === 'OUT_OF_SERVICE' ? 'AVAILABLE' : 'OUT_OF_SERVICE'
-                                                }));
+                                            onChange={async () => {
+                                                console.log('Toggle clicked - companyId:', companyId, 'resourceId:', selectedResource.resourceId, 'currentStatus:', selectedResource.status);
+
+                                                if (!companyId) {
+                                                    console.error('CompanyId is undefined!');
+                                                    return;
+                                                }
+
+                                                const oldStatus = selectedResource.status;
+                                                const newStatus = oldStatus === 'OUT_OF_SERVICE' ? 'AVAILABLE' : 'OUT_OF_SERVICE';
+
+                                                console.log('Toggling from', oldStatus, 'to', newStatus);
+
+                                                // Optimistic update for detail modal
+                                                setSelectedResource(prev => ({ ...prev, status: newStatus }));
+
+                                                // API call with proper state update
+                                                try {
+                                                    console.log('Calling API with companyId:', companyId, 'resourceId:', selectedResource.resourceId);
+                                                    const updated = await resourceService.toggleResourceStatus(companyId, selectedResource.resourceId);
+                                                    console.log('API response:', updated);
+
+                                                    // Update resources array
+                                                    setResources(prev => prev.map(res =>
+                                                        res.resourceId === selectedResource.resourceId ? updated : res
+                                                    ));
+
+                                                    // Update selectedResource with server response
+                                                    setSelectedResource(updated);
+                                                } catch (err) {
+                                                    console.error('Error toggling resource status:', err);
+                                                    // Revert on error
+                                                    setSelectedResource(prev => ({ ...prev, status: oldStatus }));
+                                                }
                                             }}
                                         />
                                         <span className="toggle-slider"></span>
