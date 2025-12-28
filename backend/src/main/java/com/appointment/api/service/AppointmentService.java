@@ -438,19 +438,19 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse approveAppointment(Long employeeId, Long appointmentId) {
         Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
+                .orElseThrow(() -> new RuntimeException("Çalışan bulunamadı"));
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appointmentId));
+                .orElseThrow(() -> new RuntimeException("Randevu bulunamadı"));
 
         // Verify employee is the assigned employee for this appointment
         if (!appointment.getEmployee().getUserId().equals(employeeId)) {
-            throw new RuntimeException("Unauthorized: You can only approve your own appointments");
+            throw new RuntimeException("Bu randevuyu sadece size atanmış olduğunda onaylayabilirsiniz");
         }
 
         // Can only approve PENDING appointments
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
-            throw new RuntimeException("Only pending appointments can be approved");
+            throw new RuntimeException("Sadece bekleyen randevular onaylanabilir");
         }
 
         // Find and reject all conflicting PENDING appointments
@@ -495,19 +495,19 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse rejectAppointment(Long employeeId, Long appointmentId) {
         Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
+                .orElseThrow(() -> new RuntimeException("Çalışan bulunamadı"));
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appointmentId));
+                .orElseThrow(() -> new RuntimeException("Randevu bulunamadı"));
 
         // Verify employee is the assigned employee for this appointment
         if (!appointment.getEmployee().getUserId().equals(employeeId)) {
-            throw new RuntimeException("Unauthorized: You can only reject your own appointments");
+            throw new RuntimeException("Bu randevuyu sadece size atanmış olduğunda reddedebilirsiniz");
         }
 
         // Can only reject PENDING appointments
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
-            throw new RuntimeException("Only pending appointments can be rejected");
+            throw new RuntimeException("Sadece bekleyen randevular reddedilebilir");
         }
 
         // Reject the appointment

@@ -30,8 +30,26 @@ const appointmentService = {
         return response.data;
     },
 
-    getServiceAppointments: async (serviceId) => {
-        const response = await axios.get(`${APPOINTMENT_URL}/service/${serviceId}`);
+    // Approve appointment
+    approveAppointment: async (employeeId, appointmentId) => {
+        const response = await axios.put(`${APPOINTMENT_URL}/employee/${employeeId}/approve/${appointmentId}`);
+        return response.data;
+    },
+
+    // Reject appointment
+    rejectAppointment: async (employeeId, appointmentId) => {
+        const response = await axios.put(`${APPOINTMENT_URL}/employee/${employeeId}/reject/${appointmentId}`);
+        return response.data;
+    },
+
+    // Get conflicting appointments
+    getConflictingAppointments: async (employeeId, startTime, endTime) => {
+        const response = await axios.get(`${APPOINTMENT_URL}/employee/${employeeId}/conflicts`, {
+            params: {
+                startTime: startTime,
+                endTime: endTime
+            }
+        });
         return response.data;
     }
 };

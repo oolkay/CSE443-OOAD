@@ -183,6 +183,53 @@
   background: #fafafa;
 }
 
+/* Action buttons container */
+.table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.appt-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Approve button */
+.btn-approve {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-approve:hover {
+  background: #218838;
+}
+
+/* Reject button */
+.btn-reject {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reject:hover {
+  background: #c82333;
+}
+
 .view-btn {
   background: #00c7ed;
   color: #fff;
@@ -341,9 +388,16 @@
     max-width: 60%;
   }
 
+  .appt-card-mobile .appt-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .appt-card-mobile .btn-approve,
+  .appt-card-mobile .btn-reject,
   .appt-card-mobile .view-btn {
     width: 100%;
-    margin-top: 10px;
     padding: 10px;
   }
 }
