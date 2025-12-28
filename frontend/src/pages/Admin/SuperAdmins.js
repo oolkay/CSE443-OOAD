@@ -47,7 +47,7 @@ export default function SuperAdmins() {
       return true;
     } catch (error) {
       console.error('Error creating super admin:', error);
-      alert(`Error creating Super Admin: ${error.message || error.response?.data?.message || 'Unknown error'}`);
+      alert(`Süper Admin oluşturma hatası: ${error.message || error.response?.data?.message || 'Bilinmeyen hata'}`);
     }
     return false;
   };
@@ -59,7 +59,7 @@ export default function SuperAdmins() {
       return true;
     } catch (error) {
       console.error('Error updating super admin:', error);
-      alert(`Error updating Super Admin: ${error.message || error.response?.data?.message || 'Unknown error'}`);
+      alert(`Süper Admin güncelleme hatası: ${error.message || error.response?.data?.message || 'Bilinmeyen hata'}`);
     }
     return false;
   };
@@ -71,7 +71,7 @@ export default function SuperAdmins() {
       return true;
     } catch (error) {
       console.error('Error deleting super admin:', error);
-      alert(`Error deleting Super Admin: ${error.message || error.response?.data?.message || 'Unknown error'}`);
+      alert(`Süper Admin silme hatası: ${error.message || error.response?.data?.message || 'Bilinmeyen hata'}`);
     }
     return false;
   };
@@ -109,7 +109,7 @@ export default function SuperAdmins() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this Super Admin?")) {
+    if (window.confirm("Bu Süper Admin'i silmek istediğinizden emin misiniz?")) {
       const success = await deleteSuperAdmin(id);
       if (!success) {
         // Fallback to local state update
@@ -120,7 +120,7 @@ export default function SuperAdmins() {
 
   const handleAddSuperAdmin = async () => {
     if (!newSuperAdmin.name || !newSuperAdmin.email || !newSuperAdmin.password) {
-      alert("Please fill in all required fields");
+      alert("Lütfen tüm gerekli alanları doldurun");
       return;
     }
 
@@ -157,7 +157,7 @@ export default function SuperAdmins() {
   };
 
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to log out?")) {
+    if (window.confirm("Çıkış yapmak istediğinizden emin misiniz?")) {
       // TODO: Clear auth tokens/session
       window.location.href = "/";
     }
@@ -169,7 +169,7 @@ export default function SuperAdmins() {
       <header className="super-admins-header">
         <div className="header-left">
           <h1 className="header-title">
-            Hi, {currentUser.name} <span className="wave">👋</span>
+            Merhaba, {currentUser.name} <span className="wave">👋</span>
           </h1>
         </div>
       </header>
@@ -177,12 +177,12 @@ export default function SuperAdmins() {
       {/* Super Admin List Section */}
       <div className="super-admins-container">
         <div className="super-admins-toolbar">
-          <h2 className="section-title">Super Admin List</h2>
+          <h2 className="section-title">Süper Admin Listesi</h2>
           <div className="toolbar-actions">
             <div className="search-box">
               <input
                 type="text"
-                placeholder="Search by name or email"
+                placeholder="İsim veya e-posta ile ara"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
@@ -194,7 +194,7 @@ export default function SuperAdmins() {
               setIsEditing(false);
               setNewSuperAdmin({ name: "", email: "", password: "", phoneNumber: "" });
             }}>
-              Add Super Admin
+              Süper Admin Ekle
             </button>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function SuperAdmins() {
           {loading ? (
             <div className="loading-container">
               <div className="spinner"></div>
-              <p>Loading Super Admins...</p>
+              <p>Süper Adminler Yükleniyor...</p>
             </div>
           ) : (
             <table className="super-admins-table">
@@ -213,9 +213,9 @@ export default function SuperAdmins() {
                   <th>
                     <input type="checkbox" />
                   </th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
+                  <th>İsim</th>
+                  <th>E-posta</th>
+                  <th>Telefon</th>
                   <th></th>
                 </tr>
               </thead>
@@ -233,14 +233,14 @@ export default function SuperAdmins() {
                         <button
                           className="btn-icon edit"
                           onClick={() => handleEdit(superAdmin)}
-                          title="Edit"
+                          title="Düzenle"
                         >
                           ✏️
                         </button>
                         <button
                           className="btn-icon delete"
                           onClick={() => handleDelete(superAdmin.userId)}
-                          title="Delete"
+                          title="Sil"
                         >
                           🗑️
                         </button>
@@ -256,7 +256,7 @@ export default function SuperAdmins() {
         {/* Pagination */}
         <div className="pagination">
           <div className="pagination-info">
-            Total Super Admins: {filteredSuperAdmins.length}
+            Toplam Süper Admin: {filteredSuperAdmins.length}
           </div>
           <div className="pagination-controls">
             <button
@@ -291,63 +291,63 @@ export default function SuperAdmins() {
         <div className="modal-overlay" onClick={handleModalClose}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{isEditing ? "Edit Super Admin" : "Add Super Admin"}</h2>
+              <h2>{isEditing ? "Süper Admin Düzenle" : "Süper Admin Ekle"}</h2>
               <button className="modal-close" onClick={handleModalClose}>
                 ×
               </button>
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label>Name *</label>
+                <label>İsim *</label>
                 <input
                   type="text"
                   value={newSuperAdmin.name}
                   onChange={(e) =>
                     setNewSuperAdmin({ ...newSuperAdmin, name: e.target.value })
                   }
-                  placeholder="Enter full name"
+                  placeholder="Tam isim girin"
                 />
               </div>
               <div className="form-group">
-                <label>Email *</label>
+                <label>E-posta *</label>
                 <input
                   type="email"
                   value={newSuperAdmin.email}
                   onChange={(e) =>
                     setNewSuperAdmin({ ...newSuperAdmin, email: e.target.value })
                   }
-                  placeholder="Enter email address"
+                  placeholder="E-posta adresi girin"
                 />
               </div>
               <div className="form-group">
-                <label>Password *</label>
+                <label>Şifre *</label>
                 <input
                   type="password"
                   value={newSuperAdmin.password}
                   onChange={(e) =>
                     setNewSuperAdmin({ ...newSuperAdmin, password: e.target.value })
                   }
-                  placeholder={isEditing ? "Enter new password (leave blank to keep current)" : "Enter password"}
+                  placeholder={isEditing ? "Yeni şifre girin (mevcut şifreyi korumak için boş bırakın)" : "Şifre girin"}
                 />
               </div>
               <div className="form-group">
-                <label>Phone Number</label>
+                <label>Telefon Numarası</label>
                 <input
                   type="text"
                   value={newSuperAdmin.phoneNumber}
                   onChange={(e) =>
                     setNewSuperAdmin({ ...newSuperAdmin, phoneNumber: e.target.value })
                   }
-                  placeholder="Enter phone number"
+                  placeholder="Telefon numarası girin"
                 />
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleModalClose}>
-                Cancel
+                İptal
               </button>
               <button className="btn-save" onClick={handleAddSuperAdmin}>
-                {isEditing ? "Update" : "Create"} Super Admin
+                {isEditing ? "Güncelle" : "Oluştur"} Süper Admin
               </button>
             </div>
           </div>

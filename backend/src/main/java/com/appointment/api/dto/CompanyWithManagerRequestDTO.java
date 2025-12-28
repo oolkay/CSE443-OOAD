@@ -18,4 +18,5 @@ public class CompanyWithManagerRequestDTO {
     private String managerName;
     private String managerEmail;
     private String managerPassword;
+    private String managerPhoneNumber;
 }

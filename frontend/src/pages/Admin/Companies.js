@@ -51,6 +51,12 @@ export default function Companies() {
   const [companyModalMessage, setCompanyModalMessage] = useState(null);
   const [managerModalMessage, setManagerModalMessage] = useState(null);
 
+  // Delete confirmation states
+  const [companyToDelete, setCompanyToDelete] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isForceDeleteModalOpen, setIsForceDeleteModalOpen] = useState(false);
+  const [appointmentCount, setAppointmentCount] = useState(0);
+
   const showPageMessage = (type, text) => {
     setPageMessage({ type, text });
     setTimeout(() => setPageMessage(null), 3000);
@@ -101,13 +107,37 @@ export default function Companies() {
     return false;
   };
 
-  const deleteCompany = async (id) => {
+  const deleteCompany = async (id, confirm = false) => {
     try {
-      await companyService.deleteCompany(id);
+      await companyService.deleteCompany(id, confirm);
       setCompanies(companies.filter(c => c.companyId !== id));
       return true;
     } catch (error) {
-      console.error('Error deleting company:', error);
+      console.error('=== DELETE COMPANY ERROR ===');
+      console.error('Error:', error);
+      console.error('Response:', error.response);
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+      console.error('Message:', error.response?.data?.message);
+
+      // Check for associated appointments message
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+
+      if (error.response && error.response.status === 403) {
+        showPageMessage('error', "Bu işlem için yetkiniz yok. SUPER_ADMIN rolü gereklidir.");
+      } else if (error.response && error.response.status === 404) {
+        showPageMessage('error', "Şirket bulunamadı.");
+      } else if (errorMessage.includes("associated appointments")) {
+        // Extract appointment count if available
+        const match = errorMessage.match(/(\d+)\s+associated appointments/);
+        const count = match ? parseInt(match[1]) : 0;
+        setAppointmentCount(count);
+        setIsForceDeleteModalOpen(true);
+        throw error; // Re-throw to stop deletion
+      } else {
+        const errorStatus = error.response?.status || 'Bilinmeyen';
+        showPageMessage('error', `Hata (${errorStatus}): ${errorMessage}`);
+      }
     }
     return false;
   };
@@ -146,14 +176,25 @@ export default function Companies() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Bu şirketi silmek istediğinizden emin misiniz?")) {
-      const success = await deleteCompany(id);
-      if (!success) {
-        setCompanies(companies.filter((c) => c.companyId !== id));
-      } else {
+  const initiateDelete = (id) => {
+    setCompanyToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async (force = false) => {
+    if (!companyToDelete) return;
+
+    try {
+      const success = await deleteCompany(companyToDelete, force);
+      if (success) {
         showPageMessage('success', "Şirket başarıyla silindi.");
+        setIsDeleteModalOpen(false);
+        setIsForceDeleteModalOpen(false);
+        setCompanyToDelete(null);
+        setAppointmentCount(0);
       }
+    } catch (error) {
+      // Error already handled in deleteCompany
     }
   };
 
@@ -208,14 +249,39 @@ export default function Companies() {
   };
 
 
-  const handleOpenManagerModal = (company) => {
+  const handleOpenManagerModal = async (company) => {
     setSelectedCompany(company);
-    setManagerData({
-      name: company.managerName || "",
-      email: company.managerEmail || "",
-      password: "",
-      phoneNumber: company.managerPhoneNumber || "",
-    });
+
+    // If editing existing manager, fetch fresh data from API
+    if (company.managerId) {
+      try {
+        const manager = await managerService.getManagerById(company.managerId);
+        setManagerData({
+          name: manager.name || "",
+          email: manager.email || "",
+          password: "",
+          phoneNumber: manager.phoneNumber || "",
+        });
+      } catch (error) {
+        console.error('Error fetching manager:', error);
+        // Fallback to company data if API fails
+        setManagerData({
+          name: company.managerName || "",
+          email: company.managerEmail || "",
+          password: "",
+          phoneNumber: company.managerPhoneNumber || "",
+        });
+      }
+    } else {
+      // New manager, clear form
+      setManagerData({
+        name: "",
+        email: "",
+        password: "",
+        phoneNumber: "",
+      });
+    }
+
     setIsManagerModalOpen(true);
   };
 
@@ -322,7 +388,7 @@ export default function Companies() {
                       </button>
                       <button
                         className="btn-icon delete"
-                        onClick={() => handleDelete(company.companyId)}
+                        onClick={() => initiateDelete(company.companyId)}
                         title="Sil"
                       >
                         Sil
@@ -547,7 +613,8 @@ export default function Companies() {
                   companyPhoneNumber: newManager.companyPhoneNumber,
                   managerName: createdManagerData.name,
                   managerEmail: createdManagerData.email,
-                  managerPassword: createdManagerData.password
+                  managerPassword: createdManagerData.password,
+                  managerPhoneNumber: createdManagerData.phoneNumber
                 };
 
                 try {
@@ -629,7 +696,7 @@ export default function Companies() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Telefon</label>
+                  <label>Telefon *</label>
                   <input
                     type="text"
                     value={managerData.phoneNumber}
@@ -637,6 +704,7 @@ export default function Companies() {
                       setManagerData({ ...managerData, phoneNumber: e.target.value })
                     }
                     placeholder="Telefon numarası giriniz"
+                    required
                   />
                 </div>
               </div>
@@ -660,7 +728,9 @@ export default function Companies() {
               <button
                 className="btn-save"
                 onClick={async () => {
-                  if (!managerData.name || !managerData.email || !managerData.password) {
+                  const isNewManager = !selectedCompany?.managerName;
+                  if (!managerData.name || !managerData.email || !managerData.phoneNumber ||
+                      (isNewManager && !managerData.password)) {
                     showManagerModalMessage('error', "Lütfen tüm zorunlu alanları doldurun.");
                     return;
                   }
@@ -694,6 +764,78 @@ export default function Companies() {
                 }}
               >
                 {selectedCompany ? (selectedCompany.managerName ? "Yöneticiyi Güncelle" : "Yönetici Ata") : "Yönetici Bilgisini Kaydet"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Şirketi Sil</h2>
+              <button className="modal-close" onClick={() => setIsDeleteModalOpen(false)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Bu şirketi silmek istediğinizden emin misiniz?</p>
+              <p style={{ color: '#666', fontSize: '14px', marginTop: '10px' }}>
+                Bu işlem geri alınamaz.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setIsDeleteModalOpen(false)}>
+                İptal
+              </button>
+              <button className="btn-save" style={{ backgroundColor: '#dc3545' }} onClick={() => confirmDelete(false)}>
+                Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Force Delete Confirmation Modal */}
+      {isForceDeleteModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsForceDeleteModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Dikkat: Randevular Var!</h2>
+              <button className="modal-close" onClick={() => setIsForceDeleteModalOpen(false)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div style={{ backgroundColor: '#fff3cd', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+                <p style={{ color: '#856404', fontWeight: 'bold', marginBottom: '10px' }}>
+                  ⚠️ Bu şirketin <span style={{ color: '#dc3545', fontSize: '18px' }}>{appointmentCount}</span> aktif randevusu var!
+                </p>
+                <p style={{ color: '#856404', fontSize: '14px' }}>
+                  Şirketi silerseniz:
+                </p>
+                <ul style={{ color: '#856404', fontSize: '14px', marginLeft: '20px' }}>
+                  <li>Tüm randevular iptal edilecek</li>
+                  <li>Müşterilere e-posta bildirimi gidecek</li>
+                  <li>Şirket ve çalışanlar tamamen silinecek</li>
+                </ul>
+              </div>
+              <p style={{ fontSize: '14px', color: '#666' }}>
+                Bu işlem geri alınamaz. Devam etmek istiyor musunuz?
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => {
+                setIsForceDeleteModalOpen(false);
+                setCompanyToDelete(null);
+                setAppointmentCount(0);
+              }}>
+                İptal
+              </button>
+              <button className="btn-save" style={{ backgroundColor: '#dc3545' }} onClick={() => confirmDelete(true)}>
+                Randevuları İptal Et ve Şirketi Sil
               </button>
             </div>
           </div>
