@@ -23,8 +23,10 @@ const serviceService = {
         return response.data;
     },
 
-    deleteService: async (id) => {
-        const response = await axios.delete(`${SERVICE_URL}/${id}`);
+    deleteService: async (id, confirm = false) => {
+        const response = await axios.delete(`${SERVICE_URL}/${id}`, {
+            params: { confirm }
+        });
         return response.data;
     },
 

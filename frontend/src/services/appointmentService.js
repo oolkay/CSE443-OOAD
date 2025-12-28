@@ -28,6 +28,11 @@ const appointmentService = {
     getResourceAppointments: async (resourceId) => {
         const response = await axios.get(`${APPOINTMENT_URL}/resource/${resourceId}`);
         return response.data;
+    },
+
+    getServiceAppointments: async (serviceId) => {
+        const response = await axios.get(`${APPOINTMENT_URL}/service/${serviceId}`);
+        return response.data;
     }
 };
 

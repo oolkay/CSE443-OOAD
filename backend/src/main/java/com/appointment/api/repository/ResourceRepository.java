@@ -16,66 +16,70 @@ import java.util.Optional;
 @Repository
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
-    /**
-     * Find all resources by company
-     */
-    List<Resource> findByCompanyCompanyId(Long companyId);
+       /**
+        * Find all resources by company
+        */
+       List<Resource> findByCompanyCompanyId(Long companyId);
 
-    /**
-     * Find all resources by company and status
-     */
-    List<Resource> findByCompanyCompanyIdAndStatus(Long companyId, ResourceStatus status);
+       /**
+        * Find all resources by company and status
+        */
+       List<Resource> findByCompanyCompanyIdAndStatus(Long companyId, ResourceStatus status);
 
-    /**
-     * Find resource by company and resource ID
-     */
-    Optional<Resource> findByCompanyCompanyIdAndResourceId(Long companyId, Long resourceId);
+       /**
+        * Find resource by company and resource ID
+        */
+       Optional<Resource> findByCompanyCompanyIdAndResourceId(Long companyId, Long resourceId);
 
-    /**
-     * Find all available resources by company
-     */
-    @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND r.status = :status")
-    List<Resource> findAvailableResourcesByCompany(@Param("companyId") Long companyId, @Param("status") ResourceStatus status);
+       /**
+        * Check if resource exists by company and resource ID
+        */
+       boolean existsByCompanyCompanyIdAndResourceId(Long companyId, Long resourceId);
 
-    /**
-     * Count resources by company and status
-     */
-    long countByCompanyCompanyIdAndStatus(Long companyId, ResourceStatus status);
+       /**
+        * Find all available resources by company
+        */
+       @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND r.status = :status")
+       List<Resource> findAvailableResourcesByCompany(@Param("companyId") Long companyId,
+                     @Param("status") ResourceStatus status);
 
-    /**
-     * Search resources by name or description within a company
-     */
-    @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND " +
-           "(LOWER(r.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(r.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    List<Resource> searchResourcesByCompany(@Param("companyId") Long companyId, @Param("keyword") String keyword);
+       /**
+        * Count resources by company and status
+        */
+       long countByCompanyCompanyIdAndStatus(Long companyId, ResourceStatus status);
 
-    /**
-     * Search resources by name or description within a company with status filter
-     */
-    @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND " +
-           "(LOWER(r.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(r.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
-           "(:status IS NULL OR r.status = :status)")
-    List<Resource> searchResourcesByCompanyWithStatus(
-            @Param("companyId") Long companyId,
-            @Param("keyword") String keyword,
-            @Param("status") ResourceStatus status
-    );
+       /**
+        * Search resources by name or description within a company
+        */
+       @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND " +
+                     "(LOWER(r.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                     "LOWER(r.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+       List<Resource> searchResourcesByCompany(@Param("companyId") Long companyId, @Param("keyword") String keyword);
 
-    /**
-     * Check if resource name exists within a company
-     */
-    boolean existsByCompanyCompanyIdAndNameIgnoreCase(Long companyId, String name);
+       /**
+        * Search resources by name or description within a company with status filter
+        */
+       @Query("SELECT r FROM Resource r WHERE r.company.companyId = :companyId AND " +
+                     "(LOWER(r.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                     "LOWER(r.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+                     "(:status IS NULL OR r.status = :status)")
+       List<Resource> searchResourcesByCompanyWithStatus(
+                     @Param("companyId") Long companyId,
+                     @Param("keyword") String keyword,
+                     @Param("status") ResourceStatus status);
 
-    /**
-     * Check if resource name exists within a company (excluding specific resource)
-     */
-    @Query("SELECT COUNT(r) > 0 FROM Resource r WHERE r.company.companyId = :companyId AND " +
-           "LOWER(r.name) = LOWER(:name) AND r.resourceId != :resourceId")
-    boolean existsByNameInCompanyExcludingResource(
-            @Param("companyId") Long companyId,
-            @Param("name") String name,
-            @Param("resourceId") Long resourceId
-    );
+       /**
+        * Check if resource name exists within a company
+        */
+       boolean existsByCompanyCompanyIdAndNameIgnoreCase(Long companyId, String name);
+
+       /**
+        * Check if resource name exists within a company (excluding specific resource)
+        */
+       @Query("SELECT COUNT(r) > 0 FROM Resource r WHERE r.company.companyId = :companyId AND " +
+                     "LOWER(r.name) = LOWER(:name) AND r.resourceId != :resourceId")
+       boolean existsByNameInCompanyExcludingResource(
+                     @Param("companyId") Long companyId,
+                     @Param("name") String name,
+                     @Param("resourceId") Long resourceId);
 }

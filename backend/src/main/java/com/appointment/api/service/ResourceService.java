@@ -12,8 +12,12 @@ import com.appointment.api.repository.ResourceRepository;
 import com.appointment.api.repository.AppointmentRepository;
 import com.appointment.api.dto.WorkingShiftResponseDTO;
 import com.appointment.api.entity.Appointment;
+import com.appointment.api.entity.Appointment;
+import java.util.ArrayList;
 import com.appointment.api.provider.NotificationProvider;
 import com.appointment.api.dto.EmailTemplateData;
+import com.appointment.api.repository.ServiceRepository;
+import com.appointment.api.dto.ServiceResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +45,7 @@ public class ResourceService {
     private final ResourceRepository resourceRepository;
     private final CompanyRepository companyRepository;
     private final AppointmentRepository appointmentRepository;
+    private final ServiceRepository serviceRepository;
     private final NotificationProvider notificationProvider;
 
     /**
@@ -151,44 +156,73 @@ public class ResourceService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Resource not found with ID: " + resourceId + " for company: " + companyId));
 
-        if (appointmentRepository.existsByResources_ResourceId(resourceId)) {
+        boolean hasAppointments = appointmentRepository.existsByResources_ResourceId(resourceId);
+        boolean hasServices = !serviceRepository.findByResources_ResourceId(resourceId).isEmpty();
+
+        if (hasAppointments || hasServices) {
             if (!confirm) {
-                throw new IllegalArgumentException(
-                        "Cannot delete resource. This resource is associated with existing appointments.");
+                String message = "Cannot delete resource. This resource is associated with ";
+                if (hasAppointments && hasServices)
+                    message += "existing appointments and services.";
+                else if (hasAppointments)
+                    message += "existing appointments.";
+                else
+                    message += "associated services.";
+                throw new IllegalArgumentException(message);
             }
 
-            // Confirm is true, send cancellations and delete appointments
-            List<Appointment> appointments = appointmentRepository.findByResources_ResourceId(resourceId);
-            for (Appointment appointment : appointments) {
-                if (appointment.getCustomer() != null && appointment.getCustomer().getEmail() != null) {
-                    EmailTemplateData emailData = EmailTemplateData.builder()
-                            .customerName(appointment.getCustomer().getName())
-                            .companyName(appointment.getService().getCompany().getName())
-                            .serviceName(appointment.getService().getName())
-                            .employeeName(appointment.getEmployee().getName())
-                            .appointmentDate(appointment.getStartTime().toLocalDate())
-                            .appointmentTime(appointment.getStartTime().toLocalTime())
-                            .appointmentDateTime(appointment.getStartTime()
-                                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
-                            .reason("Resource deletion: " + resource.getName())
-                            .build();
+            // 1. Remove from Services (Fixes Data Integrity Violation)
+            List<com.appointment.api.entity.Service> linkedServices = serviceRepository
+                    .findByResources_ResourceId(resourceId);
+            for (com.appointment.api.entity.Service service : linkedServices) {
+                service.getResources().removeIf(r -> r.getResourceId().equals(resourceId));
+                serviceRepository.save(service);
+            }
 
-                    CompletableFuture.runAsync(() -> {
-                        try {
-                            notificationProvider.sendTemplatedNotification(
-                                    appointment.getCustomer().getEmail(),
-                                    "APPOINTMENT_CANCELLATION",
-                                    emailData);
-                        } catch (Exception e) {
-                            System.err.println("Failed to send cancellation email: " + e.getMessage());
-                        }
-                    });
+            // 2. Handle Appointments (Collect emails, delete appointments)
+            List<Runnable> emailTasks = new ArrayList<>();
+            if (hasAppointments) {
+                List<Appointment> appointments = appointmentRepository.findByResources_ResourceId(resourceId);
+                for (Appointment appointment : appointments) {
+                    if (appointment.getCustomer() != null && appointment.getCustomer().getEmail() != null) {
+                        EmailTemplateData emailData = EmailTemplateData.builder()
+                                .customerName(appointment.getCustomer().getName())
+                                .companyName(appointment.getService().getCompany().getName())
+                                .serviceName(appointment.getService().getName())
+                                .employeeName(appointment.getEmployee().getName())
+                                .appointmentDate(appointment.getStartTime().toLocalDate())
+                                .appointmentTime(appointment.getStartTime().toLocalTime())
+                                .appointmentDateTime(appointment.getStartTime()
+                                        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                                .reason("Resource deletion: " + resource.getName())
+                                .build();
+
+                        // Add to tasks but don't execute yet
+                        emailTasks.add(() -> {
+                            try {
+                                notificationProvider.sendTemplatedNotification(
+                                        appointment.getCustomer().getEmail(),
+                                        "APPOINTMENT_CANCELLATION",
+                                        emailData);
+                            } catch (Exception e) {
+                                log.error("Failed to send cancellation email: {}", e.getMessage());
+                            }
+                        });
+                    }
+                    appointmentRepository.delete(appointment);
                 }
-                appointmentRepository.delete(appointment);
             }
-        }
 
-        resourceRepository.delete(resource);
+            // 3. Delete Resource
+            resourceRepository.delete(resource);
+
+            // 4. Send Emails (Only if we reached here without exception)
+            for (Runnable task : emailTasks) {
+                CompletableFuture.runAsync(task);
+            }
+        } else {
+            resourceRepository.delete(resource);
+        }
 
         log.info("Resource deleted successfully with ID: {}", resourceId);
     }
@@ -288,6 +322,30 @@ public class ResourceService {
         long inUse = resourceRepository.countByCompanyCompanyIdAndStatus(companyId, ResourceStatus.IN_USE);
 
         return new ResourceStatsDTO(total, available, outOfService, inUse);
+    }
+
+    /**
+     * Get services associated with a resource
+     */
+    @Transactional(readOnly = true)
+    public List<ServiceResponseDTO> getResourceServices(Long companyId, Long resourceId) {
+        log.info("Fetching services for resource: {} in company: {}", resourceId, companyId);
+
+        // Verify resource exists and belongs to company
+        if (!resourceRepository.existsByCompanyCompanyIdAndResourceId(companyId, resourceId)) {
+            throw new ResourceNotFoundException("Resource not found with ID: " + resourceId);
+        }
+
+        return serviceRepository.findByResources_ResourceId(resourceId)
+                .stream()
+                .map(service -> ServiceResponseDTO.builder()
+                        .id(service.getServiceId())
+                        .name(service.getName())
+                        .description(service.getDescription())
+                        .durationMinutes(service.getTimeDuration().intValue())
+                        .price(service.getPrice())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     /**

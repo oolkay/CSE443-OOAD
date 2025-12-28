@@ -8,10 +8,19 @@ import com.appointment.api.exception.DuplicateResourceException;
 import com.appointment.api.exception.ResourceNotFoundException;
 import com.appointment.api.repository.CompanyRepository;
 import com.appointment.api.repository.ServiceRepository;
+import com.appointment.api.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.appointment.api.repository.AppointmentRepository;
+import com.appointment.api.provider.NotificationProvider;
+import com.appointment.api.provider.NotificationProvider;
+import com.appointment.api.entity.Appointment;
+import com.appointment.api.entity.Employee;
+import com.appointment.api.dto.EmailTemplateData;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +37,9 @@ public class ServiceService {
 
     private final ServiceRepository serviceRepository;
     private final CompanyRepository companyRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final NotificationProvider notificationProvider;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * Create a new service.
@@ -126,18 +138,90 @@ public class ServiceService {
     /**
      * Delete service.
      *
-     * @param id service ID
+     * @param id      service ID
+     * @param confirm confirm deletion if appointments exist
      * @throws ResourceNotFoundException if service not found
      */
-    public void deleteService(Long id) {
+    public void deleteService(Long id, boolean confirm) {
         log.warn("Attempting to delete service with ID: {}", id);
 
         if (!serviceRepository.existsById(id)) {
             throw new ResourceNotFoundException("Service not found with ID: " + id);
         }
 
-        serviceRepository.deleteById(id);
+        // Get Name before deletion for email
+        Service service = serviceRepository.findById(id).orElseThrow();
+        String serviceName = service.getName();
+
+        boolean hasAppointments = appointmentRepository.existsByService_ServiceId(id);
+
+        if (hasAppointments) {
+            if (!confirm) {
+                throw new IllegalArgumentException(
+                        "Cannot delete service. This service is associated with existing appointments.");
+            }
+
+            // Confirm is true, send cancellations and delete appointments
+            List<Runnable> emailTasks = new ArrayList<>();
+            List<Appointment> appointments = appointmentRepository.findByService_ServiceId(id);
+            for (Appointment appointment : appointments) {
+                if (appointment.getCustomer() != null && appointment.getCustomer().getEmail() != null) {
+                    EmailTemplateData emailData = EmailTemplateData.builder()
+                            .customerName(appointment.getCustomer().getName())
+                            .companyName(appointment.getService().getCompany().getName())
+                            .serviceName(serviceName)
+                            .employeeName(appointment.getEmployee().getName())
+                            .appointmentDate(appointment.getStartTime().toLocalDate())
+                            .appointmentTime(appointment.getStartTime().toLocalTime())
+                            .appointmentDateTime(appointment.getStartTime()
+                                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                            .reason("Service deletion: " + serviceName)
+                            .build();
+
+                    emailTasks.add(() -> {
+                        try {
+                            notificationProvider.sendTemplatedNotification(
+                                    appointment.getCustomer().getEmail(),
+                                    "APPOINTMENT_CANCELLATION",
+                                    emailData);
+                        } catch (Exception e) {
+                            log.error("Failed to send cancellation email: {}", e.getMessage());
+                        }
+                    });
+                }
+                appointmentRepository.delete(appointment);
+            }
+
+            // 2. Unlink from Employees (Must happen before deletion to avoid FK
+            // constraints)
+            unlinkServiceFromEmployees(id);
+
+            // 3. Delete Service
+            serviceRepository.deleteById(id);
+            serviceRepository.flush(); // Force DB constraint check immediately
+
+            // 4. Send Emails (Only if no exception occurred)
+            for (Runnable task : emailTasks) {
+                CompletableFuture.runAsync(task);
+            }
+        } else {
+            // Unlink from Employees
+            unlinkServiceFromEmployees(id);
+
+            serviceRepository.deleteById(id);
+        }
+
         log.info("Service deleted successfully with ID: {}", id);
+    }
+
+    private void unlinkServiceFromEmployees(Long serviceId) {
+        List<Employee> linkedEmployees = employeeRepository.findByServices_ServiceId(serviceId);
+        for (Employee employee : linkedEmployees) {
+            boolean removed = employee.getServices().removeIf(s -> s.getServiceId().equals(serviceId));
+            if (removed) {
+                employeeRepository.save(employee);
+            }
+        }
     }
 
     /**

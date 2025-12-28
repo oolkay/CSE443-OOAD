@@ -22,7 +22,10 @@ const ResourceManager = () => {
     const [warningMessage, setWarningMessage] = useState('');
     const [resourceToDelete, setResourceToDelete] = useState(null);
     const [conflictingAppointments, setConflictingAppointments] = useState([]);
+
+    const [affectedServices, setAffectedServices] = useState([]);
     const [showAppointments, setShowAppointments] = useState(false);
+    const [activeTab, setActiveTab] = useState('appointments'); // 'appointments' or 'services'
 
     // Toast Notification State
     const [toasts, setToasts] = useState([]);
@@ -233,8 +236,16 @@ const ResourceManager = () => {
                 setIsDeleteModalOpen(false);
                 setWarningMessage("Bu kaynağa ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek ve müşterilere iptal maili gönderilecektir. Devam etmek istiyor musunuz?");
                 setIsForceDeleteModalOpen(true);
+
+                // Initialize clean state for the modal
                 setConflictingAppointments([]);
-                setShowAppointments(false);
+                setAffectedServices([]);
+                setShowAppointments(true);
+                setActiveTab('appointments');
+
+                // Trigger fetches
+                fetchConflictingAppointments();
+                fetchAffectedServices();
                 return;
             }
 
@@ -253,6 +264,17 @@ const ResourceManager = () => {
         } catch (error) {
             console.error("Failed to fetch appointments", error);
             addToast("error", "Randevu listesi alınamadı");
+        }
+    };
+
+    const fetchAffectedServices = async () => {
+        if (!resourceToDelete) return;
+        try {
+            const services = await resourceService.getResourceServices(resourceToDelete);
+            setAffectedServices(services || []);
+        } catch (error) {
+            console.error("Failed to fetch services", error);
+            // Don't show toast for this background fetch, just log it
         }
     };
 
@@ -611,48 +633,112 @@ const ResourceManager = () => {
                 message={
                     <div className="confirmation-content">
                         <p className="warning-text">{warningMessage}</p>
-                        {!showAppointments && (
+                        <div className="button-group" style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
                             <button
-                                className="action-button view-appointments-btn"
-                                onClick={fetchConflictingAppointments}
+                                className={`tab-button ${activeTab === 'appointments' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('appointments')}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: 'none',
+                                    background: activeTab === 'appointments' ? '#e0e7ff' : 'transparent',
+                                    color: activeTab === 'appointments' ? '#4f46e5' : '#6b7280',
+                                    fontWeight: 600,
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
                             >
-                                <span className="icon">📅</span> Randevuları Listele
+                                📅 Randevular ({conflictingAppointments.length})
                             </button>
+                            <button
+                                className={`tab-button ${activeTab === 'services' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('services')}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: 'none',
+                                    background: activeTab === 'services' ? '#e0e7ff' : 'transparent',
+                                    color: activeTab === 'services' ? '#4f46e5' : '#6b7280',
+                                    fontWeight: 600,
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                🛠️ Hizmetler ({affectedServices.length})
+                            </button>
+                        </div>
+
+                        {activeTab === 'appointments' && (
+                            <div className="tab-content" style={{ marginTop: '15px' }}>
+                                {conflictingAppointments.length > 0 ? (
+                                    <div className="appointments-list-container">
+                                        <table className="appointments-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tarih</th>
+                                                    <th>Müşteri</th>
+                                                    <th>Hizmet</th>
+                                                    <th>Çalışan</th>
+                                                    <th>Süre</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {conflictingAppointments.map(app => (
+                                                    <tr key={app.appointmentId}>
+                                                        <td className="date-cell">
+                                                            <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
+                                                            <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                        </td>
+                                                        <td className="customer-cell">
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                <span></span> {app.customerName}
+                                                            </div>
+                                                        </td>
+                                                        <td className="service-cell">{app.serviceName}</td>
+                                                        <td className="employee-cell">{app.employeeName}</td>
+                                                        <td className="duration-cell">
+                                                            {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: '#6b7280', fontStyle: 'italic', padding: '10px' }}>Listelenecek randevu yok veya yükleniyor...</p>
+                                )}
+                            </div>
                         )}
 
-                        {showAppointments && conflictingAppointments.length > 0 && (
-                            <div className="appointments-list-container">
-                                <table className="appointments-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tarih</th>
-                                            <th>Müşteri</th>
-                                            <th>Hizmet</th>
-                                            <th>Çalışan</th>
-                                            <th>Süre</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {conflictingAppointments.map(app => (
-                                            <tr key={app.appointmentId}>
-                                                <td className="date-cell">
-                                                    <span className="date">{new Date(app.startTime).toLocaleDateString('tr-TR')}</span>
-                                                    <span className="time">{new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
-                                                </td>
-                                                <td className="customer-cell">
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span></span> {app.customerName}
-                                                    </div>
-                                                </td>
-                                                <td className="service-cell">{app.serviceName}</td>
-                                                <td className="employee-cell">{app.employeeName}</td>
-                                                <td className="duration-cell">
-                                                    {app.serviceDuration ? `${app.serviceDuration} dk` : '-'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        {activeTab === 'services' && (
+                            <div className="tab-content" style={{ marginTop: '15px' }}>
+                                {affectedServices.length > 0 ? (
+                                    <div className="appointments-list-container">
+                                        <h4 style={{ textAlign: 'left', margin: '10px 0', fontSize: '0.9rem', color: '#1f2937' }}>İlişkili Hizmetler (Kaynaksız Kalacak):</h4>
+                                        <table className="appointments-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Hizmet Adı</th>
+                                                    <th>Açıklama</th>
+                                                    <th>Süre</th>
+                                                    <th>Fiyat</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {affectedServices.map(service => (
+                                                    <tr key={service.id}>
+                                                        <td style={{ fontWeight: 600, color: '#1f2937' }}>{service.name}</td>
+                                                        <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#6b7280' }}>{service.description || '-'}</td>
+                                                        <td>{service.durationMinutes} dk</td>
+                                                        <td>{service.price} TL</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: '#6b7280', fontStyle: 'italic', padding: '10px' }}>Bu kaynağın atandığı hizmet bulunmamaktadır.</p>
+                                )}
                             </div>
                         )}
                     </div>

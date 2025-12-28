@@ -265,9 +265,9 @@ const EmployeeManager = () => {
                 setIsDeleteModalOpen(false);
                 setWarningMessage("Bu çalışana ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek ve müşterilere iptal maili gönderilecektir. Devam etmek istiyor musunuz?");
                 setIsForceDeleteModalOpen(true);
-                // Pre-fetch appointments just in case user wants to see them, or fetch on demand
-                setConflictingAppointments([]); // Clear previous
-                setShowAppointments(false);
+                // Trigger fetch immediately
+                fetchConflictingAppointments();
+                setShowAppointments(true);
                 return;
             }
 
@@ -564,16 +564,22 @@ const EmployeeManager = () => {
                 message={
                     <div className="confirmation-content">
                         <p className="warning-text">{warningMessage}</p>
-                        {!showAppointments && (
-                            <button
-                                className="action-button view-appointments-btn"
-                                onClick={fetchConflictingAppointments}
-                            >
-                                <span className="icon">📅</span> Randevuları Listele
-                            </button>
-                        )}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '8px 16px',
+                            margin: '10px 0',
+                            backgroundColor: '#e0e7ff',
+                            color: '#4f46e5',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            fontSize: '0.95rem'
+                        }}>
+                            📅 Randevular ({conflictingAppointments.length})
+                        </div>
 
-                        {showAppointments && conflictingAppointments.length > 0 && (
+                        {conflictingAppointments.length > 0 && (
                             <div className="appointments-list-container">
                                 <table className="appointments-table">
                                     <thead>

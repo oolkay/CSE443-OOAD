@@ -81,8 +81,10 @@ public class ServiceController {
      * DELETE /api/services/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteService(@PathVariable Long id) {
-        serviceService.deleteService(id);
+    public ResponseEntity<Void> deleteService(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean confirm) {
+        serviceService.deleteService(id, confirm);
         return ResponseEntity.noContent().build();
     }
 

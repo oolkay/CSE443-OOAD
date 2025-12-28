@@ -184,6 +184,13 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    public List<AppointmentResponse> getServiceAppointments(Long serviceId) {
+        List<Appointment> appointments = appointmentRepository.findByService_ServiceId(serviceId);
+        return appointments.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Get employee availability for a specific date
      * Returns available time slots based on working hours and existing appointments
@@ -332,7 +339,9 @@ public class AppointmentService {
                 .status(appointment.getStatus())
                 .createdAt(appointment.getCreatedAt())
                 .updatedAt(appointment.getUpdatedAt())
-                .companyPhone(appointment.getEmployee().getCompany() != null ? appointment.getEmployee().getCompany().getPhoneNumber() : null)
+                .companyPhone(appointment.getEmployee().getCompany() != null
+                        ? appointment.getEmployee().getCompany().getPhoneNumber()
+                        : null)
                 .build();
     }
 

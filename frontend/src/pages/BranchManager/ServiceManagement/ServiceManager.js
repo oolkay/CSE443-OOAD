@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ServiceManager.css';
 import serviceService from '../../../services/serviceService';
+import appointmentService from '../../../services/appointmentService';
 import authService from '../../../services/authService';
 import ToastNotification from '../../../components/UI/ToastNotification';
 import ServiceFormModal from './ServiceFormModal';
@@ -23,7 +24,10 @@ const ServiceManager = () => {
 
     // Confirmation Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isForceDeleteModalOpen, setIsForceDeleteModalOpen] = useState(false);
     const [serviceToDelete, setServiceToDelete] = useState(null);
+    const [conflictingAppointments, setConflictingAppointments] = useState([]);
+    const [warningMessage, setWarningMessage] = useState('');
 
     // Toasts State
     const [toasts, setToasts] = useState([]);
@@ -206,23 +210,52 @@ const ServiceManager = () => {
         setIsDeleteModalOpen(true);
     };
 
-    // Silme Onaylama
-    const confirmDelete = async () => {
+    // Çakışan Randevuları Getir
+    const fetchConflictingAppointments = React.useCallback(async () => {
+        if (!serviceToDelete) return;
+        try {
+            const data = await appointmentService.getServiceAppointments(serviceToDelete);
+            // Sadece iptal edilmemiş (PENDING / APPROVED) randevuları gösterelim
+            const activeAppointments = data.filter(app => app.status !== 'CANCELLED' && app.status !== 'REJECTED');
+            setConflictingAppointments(activeAppointments);
+        } catch (err) {
+            console.error("Error fetching conflicting appointments:", err);
+            addToast('error', "Randevu bilgileri alınamadı.");
+        }
+    }, [serviceToDelete, addToast]);
+
+    // Silme Onaylama (İlk Aşama)
+    const confirmDelete = async (force = false) => {
         if (!serviceToDelete) return;
 
         try {
-            await serviceService.deleteService(serviceToDelete);
+            // Force parametresi true ise backend'e confirm=true gönder
+            await serviceService.deleteService(serviceToDelete, force);
             addToast('success', "Hizmet başarıyla silindi.");
             closeDetailModal();
             fetchServices();
-        } catch (err) {
-            console.error("Error deleting service:", err);
-            // Axios interceptor returns { message, data, status }, not the original response object
-            const msg = err.message || err.data?.message || "Silme işlemi başarısız.";
-            addToast('error', msg);
-        } finally {
             setServiceToDelete(null);
             setIsDeleteModalOpen(false);
+            setIsForceDeleteModalOpen(false);
+        } catch (err) {
+            console.error("Delete attempt failed:", err);
+            const msg = err.response?.data?.message || err.message || "Silme işlemi başarısız.";
+
+            // Eğer backend "Hizmetin randevuları var" diyerek 400/409 dönerse veya 
+            // biz kendimiz önden kontrol etmek istersek:
+            // Backend şu an exception fırlatıyor ve biz force=false gönderdik. 
+            // Mesaj "Cannot delete service..." içeriyorsa force delete modunu açalım.
+
+            if (msg.includes("associated with existing appointments") || msg.includes("Cannot delete service")) {
+                setIsDeleteModalOpen(false);
+                setWarningMessage("Bu hizmete ait randevular bulunmaktadır. Silerseniz randevular iptal edilecek ve müşterilere iptal maili gönderilecektir. Devam etmek istiyor musunuz?");
+                setIsForceDeleteModalOpen(true);
+                // Fetch appointments immediately
+                fetchConflictingAppointments();
+                return;
+            }
+
+            addToast('error', msg);
         }
     };
 
@@ -332,9 +365,71 @@ const ServiceManager = () => {
             <ConfirmationModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={confirmDelete}
+                onConfirm={() => confirmDelete(false)}
                 title="Hizmeti Sil"
                 message="Bu hizmeti silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                type="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={isForceDeleteModalOpen}
+                onClose={() => setIsForceDeleteModalOpen(false)}
+                onConfirm={() => confirmDelete(true)} // Force delete
+                title="Dikkat: Randevular Var"
+                message={
+                    <div className="confirmation-content">
+                        <p className="warning-text">{warningMessage}</p>
+
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '8px 16px',
+                            margin: '10px 0',
+                            backgroundColor: '#e0e7ff',
+                            color: '#4f46e5',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            fontSize: '0.95rem'
+                        }}>
+                            📅 Randevular ({conflictingAppointments.length})
+                        </div>
+
+                        {conflictingAppointments.length > 0 && (
+                            <div className="appointments-list-container" style={{
+                                marginTop: '15px',
+                                maxHeight: '180px',
+                                overflowY: 'auto',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px'
+                            }}>
+                                <table className="appointments-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f9fafb', zIndex: 1 }}>
+                                        <tr>
+                                            <th style={{ padding: '8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Tarih</th>
+                                            <th style={{ padding: '8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Müşteri</th>
+                                            <th style={{ padding: '8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Personel</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {conflictingAppointments.map(app => (
+                                            <tr key={app.appointmentId} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                                <td style={{ padding: '8px' }}>
+                                                    <div>{new Date(app.startTime).toLocaleDateString('tr-TR')}</div>
+                                                    <div style={{ fontSize: '0.8em', color: '#6b7280' }}>
+                                                        {new Date(app.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '8px' }}>{app.customerName}</td>
+                                                <td style={{ padding: '8px' }}>{app.employeeName}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                }
                 type="danger"
             />
         </div>
