@@ -6,6 +6,7 @@ import appointmentService from '../../../services/appointmentService';
 import authService from '../../../services/authService';
 import ToastNotification from '../../../components/UI/ToastNotification';
 import ConfirmationModal from '../../../components/UI/ConfirmationModal';
+import CustomTimePicker from '../../../components/UI/CustomTimePicker';
 
 const EmployeeManager = () => {
     const DAYS_ORDER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
@@ -498,18 +499,14 @@ const EmployeeManager = () => {
                                                 <div className="schedule-col-inputs">
                                                     {dayData.active ? (
                                                         <>
-                                                            <input
-                                                                type="time"
+                                                            <CustomTimePicker
                                                                 value={dayData.start}
-                                                                onChange={(e) => handleScheduleChange(day, 'start', e.target.value)}
-                                                                className="mini-time-input"
+                                                                onChange={(val) => handleScheduleChange(day, 'start', val)}
                                                             />
                                                             <span className="separator">-</span>
-                                                            <input
-                                                                type="time"
+                                                            <CustomTimePicker
                                                                 value={dayData.end}
-                                                                onChange={(e) => handleScheduleChange(day, 'end', e.target.value)}
-                                                                className="mini-time-input"
+                                                                onChange={(val) => handleScheduleChange(day, 'end', val)}
                                                             />
                                                         </>
                                                     ) : (

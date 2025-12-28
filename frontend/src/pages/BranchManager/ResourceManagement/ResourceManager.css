@@ -10,6 +10,7 @@
     --text-secondary: #6b7280;
     --border-light: #e5e7eb;
     --white: #ffffff;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --radius: 12px;
 }
@@ -741,6 +742,108 @@ input:checked+.toggle-slider:before {
     border-spacing: 0;
     font-size: 0.9rem;
     /* Increased font size */
+}
+
+/* --- CUSTOM DROPDOWN STYLES (Copied from Calendar.css) --- */
+.custom-dropdown {
+    position: relative;
+    min-width: 140px;
+    /* Adjusted from 200px to match previous min-width */
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.dropdown-selected {
+    padding: 12px;
+    /* Matched to input padding */
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--white);
+    font-size: 0.9rem;
+    color: var(--text-main);
+    cursor: pointer;
+    font-weight: 500;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.dropdown-selected:hover {
+    border-color: var(--text-secondary);
+}
+
+.dropdown-selected:focus,
+.dropdown-selected:active {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+}
+
+.dropdown-arrow {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-left: 0.5rem;
+    transition: transform 0.2s;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    overflow-y: auto;
+    max-height: 300px;
+    animation: dropdownSlideDown 0.2s ease-out;
+}
+
+@keyframes dropdownSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    background: var(--white);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-body);
+    color: var(--primary-color);
+}
+
+.dropdown-item.active {
+    background: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.dropdown-item.active:hover {
+    background: var(--primary-hover);
+    color: var(--white);
 }
 
 .appointments-table th {

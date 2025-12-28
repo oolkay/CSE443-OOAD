@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { resourceService, setCurrentCompanyId } from '../../../services/resourceService';
 import appointmentService from '../../../services/appointmentService';
 
@@ -41,6 +41,22 @@ const ResourceManager = () => {
     const [selectedResource, setSelectedResource] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('all'); // all, available, out_of_service
+    const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+    const sortDropdownRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isSortDropdownOpen && sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+                setIsSortDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isSortDropdownOpen]);
 
     // Form Başlangıç Değerleri
     const initialFormState = {
@@ -354,17 +370,64 @@ const ResourceManager = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="sort-wrapper">
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="sort-select"
+                <div className="sort-wrapper" ref={sortDropdownRef}>
+                    <div
+                        className="custom-dropdown"
                     >
-                        <option value="all">Tüm Durumlar</option>
-                        <option value="available">Uygun</option>
-                        <option value="out_of_service">Servis Dışı</option>
-                        <option value="in_use">Kullanımda</option>
-                    </select>
+                        <div
+                            className="dropdown-selected"
+                            onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                        >
+                            <span>{
+                                sortBy === 'all' ? 'Tüm Durumlar' :
+                                    sortBy === 'available' ? 'Uygun' :
+                                        sortBy === 'out_of_service' ? 'Servis Dışı' :
+                                            sortBy === 'in_use' ? 'Kullanımda' : 'Tüm Durumlar'
+                            }</span>
+                            <span className="dropdown-arrow">{isSortDropdownOpen ? '▲' : '▼'}</span>
+                        </div>
+
+                        {isSortDropdownOpen && (
+                            <div className="dropdown-menu">
+                                <div
+                                    className={`dropdown-item ${sortBy === 'all' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setSortBy('all');
+                                        setIsSortDropdownOpen(false);
+                                    }}
+                                >
+                                    Tüm Durumlar
+                                </div>
+                                <div
+                                    className={`dropdown-item ${sortBy === 'available' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setSortBy('available');
+                                        setIsSortDropdownOpen(false);
+                                    }}
+                                >
+                                    Uygun
+                                </div>
+                                <div
+                                    className={`dropdown-item ${sortBy === 'out_of_service' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setSortBy('out_of_service');
+                                        setIsSortDropdownOpen(false);
+                                    }}
+                                >
+                                    Servis Dışı
+                                </div>
+                                <div
+                                    className={`dropdown-item ${sortBy === 'in_use' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setSortBy('in_use');
+                                        setIsSortDropdownOpen(false);
+                                    }}
+                                >
+                                    Kullanımda
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <button className="btn-add" onClick={() => openFormModal(null)}>
                     + Yeni Kaynak

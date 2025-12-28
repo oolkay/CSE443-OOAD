@@ -15,24 +15,7 @@
     width: auto;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 480px) {
-    .toast-container {
-        /* On mobile, move slightly higher to avoid being covered by bottom sheets or nav bars */
-        bottom: max(20px, env(safe-area-inset-bottom, 20px));
-        width: 100%;
-        padding: 0 16px;
-        box-sizing: border-box;
-    }
 
-    .toast {
-        min-width: unset;
-        width: 100%;
-        margin: 0 auto;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        /* Slightly stronger shadow for contrast */
-    }
-}
 
 /* Base Toast Style */
 .toast {
@@ -131,17 +114,38 @@
 }
 
 /* Mobile Responsiveness */
+/* Mobile Responsiveness */
 @media (max-width: 480px) {
     .toast-container {
-        /* Respect safe area for iPhone */
+        left: 0;
+        transform: none;
         bottom: max(20px, env(safe-area-inset-bottom, 20px));
         width: 100%;
         padding: 0 16px;
+        /* Restore padding to keep it off edges */
         box-sizing: border-box;
+        align-items: center;
     }
 
     .toast {
         min-width: unset;
         width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 12px;
+        /* Smaller padding */
+        font-size: 0.85rem;
+        /* Smaller font */
+        background: #ffffff;
+        /* Solid background to fix color issues */
+        backdrop-filter: none;
+        /* Remove blur on mobile for performance/consistency */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+    }
+
+    .toast-icon {
+        font-size: 1.1rem;
+        /* Smaller icon */
     }
 }
