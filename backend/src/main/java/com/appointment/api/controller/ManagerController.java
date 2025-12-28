@@ -84,6 +84,7 @@ public class ManagerController {
         manager.setName(managerDTO.getName());
         manager.setEmail(managerDTO.getEmail());
         manager.setPassword(passwordEncoder.encode(managerDTO.getPassword()));
+        manager.setPhoneNumber(managerDTO.getPhoneNumber());
         manager.setCompany(company);
 
         BranchManager savedManager = managerRepository.save(manager);

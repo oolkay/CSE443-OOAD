@@ -8,10 +8,10 @@ const managerService = {
 //     return response.data;
 //   },
 
-//   getManagerById: async (id) => {
-//     const response = await axios.get(`${MANAGER_URL}/${id}`);
-//     return response.data;
-//   },
+  getManagerById: async (id) => {
+    const response = await axios.get(`${MANAGER_URL}/${id}`);
+    return response.data;
+  },
 
 //   createManager: async (managerData) => {
 //     const response = await axios.post(MANAGER_URL, managerData);

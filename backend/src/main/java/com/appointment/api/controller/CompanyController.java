@@ -4,6 +4,7 @@ import com.appointment.api.dto.CompanyRequestDTO;
 import com.appointment.api.dto.CompanyResponseDTO;
 import com.appointment.api.dto.CompanyWithManagerRequestDTO;
 import com.appointment.api.dto.ManagerRequestDTO;
+import com.appointment.api.dto.EmailTemplateData;
 import com.appointment.api.entity.BranchManager;
 import com.appointment.api.entity.Company;
 import com.appointment.api.entity.Employee;
@@ -19,6 +20,7 @@ import com.appointment.api.repository.ResourceRepository;
 import com.appointment.api.repository.ServiceRepository;
 import com.appointment.api.repository.AppointmentRepository;
 import com.appointment.api.repository.WorkingShiftRepository;
+import com.appointment.api.provider.NotificationProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * REST Controller for Company CRUD operations
@@ -50,6 +53,7 @@ public class CompanyController {
     private final AppointmentRepository appointmentRepository;
     private final WorkingShiftRepository workingShiftRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationProvider notificationProvider;
 
     /**
      * Get all companies
@@ -107,6 +111,7 @@ public class CompanyController {
         manager.setName(requestDTO.getManagerName());
         manager.setEmail(requestDTO.getManagerEmail());
         manager.setPassword(passwordEncoder.encode(requestDTO.getManagerPassword()));
+        manager.setPhoneNumber(requestDTO.getManagerPhoneNumber());
         manager.setCompany(savedCompany);
 
         BranchManager savedManager = managerRepository.save(manager);
@@ -159,9 +164,8 @@ public class CompanyController {
 
     /**
      * Delete company and all related entities
-     * Deletes in order: Appointments -> Resources -> WorkingShifts -> Employees
-     * (cascades employee_services) -> Services (cascades service_resources) ->
-     * Company (cascades to BranchManager)
+     * Deletes in order: Appointments -> WorkingShifts -> Employees -> Services
+     * (removes service_resources join table references) -> Resources -> Company
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -199,13 +203,7 @@ public class CompanyController {
         }
         log.info("Deleted {} appointments by service", serviceAppointmentCount);
 
-        // 5. Delete all resources (must be done before services since service_resources
-        // references them)
-        List<Resource> resources = resourceRepository.findByCompanyCompanyId(id);
-        log.info("Deleting {} resources", resources.size());
-        resourceRepository.deleteAll(resources);
-
-        // 6. Delete all working shifts for employees
+        // 5. Delete all working shifts for employees
         int workingShiftCount = 0;
         for (Employee employee : employees) {
             workingShiftRepository.deleteByEmployeeUserId(employee.getUserId());
@@ -213,13 +211,18 @@ public class CompanyController {
         }
         log.info("Deleted working shifts for {} employees", workingShiftCount);
 
-        // 7. Delete all employees (will cascade delete employee_services join table)
+        // 6. Delete all employees (will cascade delete employee_services join table)
         log.info("Deleting {} employees", employees.size());
         employeeRepository.deleteAll(employees);
 
-        // 8. Delete all services (will cascade delete service_resources join table)
+        // 7. Delete all services (will remove service_resources join table references)
         log.info("Deleting {} services", services.size());
         serviceRepository.deleteAll(services);
+
+        // 8. Delete all resources (now safe, no more references from service_resources)
+        List<Resource> resources = resourceRepository.findByCompanyCompanyId(id);
+        log.info("Deleting {} resources", resources.size());
+        resourceRepository.deleteAll(resources);
 
         // 9. Delete company (will cascade delete BranchManager due to CascadeType.ALL)
         log.info("Deleting company with id: {}", id);

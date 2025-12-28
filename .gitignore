@@ -31,3 +31,9 @@ node_modules/
 
 # Application-specific data (H2 DB files)
 /backend/data/
+
+# Database files (backend directory)
+insert.sql
+backend/data/*.mv.db
+backend/data/*.trace.db
+backend/data/*.db

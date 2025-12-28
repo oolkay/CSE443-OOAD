@@ -107,7 +107,23 @@ export default function Companies() {
       setCompanies(companies.filter(c => c.companyId !== id));
       return true;
     } catch (error) {
-      console.error('Error deleting company:', error);
+      console.error('=== DELETE COMPANY ERROR ===');
+      console.error('Error:', error);
+      console.error('Response:', error.response);
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+      console.error('Message:', error.response?.data?.message);
+
+      // Hata mesajını kullanıcıya göster
+      if (error.response && error.response.status === 403) {
+        showPageMessage('error', "Bu işlem için yetkiniz yok. SUPER_ADMIN rolü gereklidir.");
+      } else if (error.response && error.response.status === 404) {
+        showPageMessage('error', "Şirket bulunamadı.");
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+        const errorStatus = error.response?.status || 'Bilinmeyen';
+        showPageMessage('error', `Hata (${errorStatus}): ${errorMessage}`);
+      }
     }
     return false;
   };
@@ -149,10 +165,10 @@ export default function Companies() {
   const handleDelete = async (id) => {
     if (window.confirm("Bu şirketi silmek istediğinizden emin misiniz?")) {
       const success = await deleteCompany(id);
-      if (!success) {
-        setCompanies(companies.filter((c) => c.companyId !== id));
-      } else {
+      if (success) {
         showPageMessage('success', "Şirket başarıyla silindi.");
+      } else {
+        showPageMessage('error', "Şirket silinirken bir hata oluştu.");
       }
     }
   };
@@ -208,14 +224,39 @@ export default function Companies() {
   };
 
 
-  const handleOpenManagerModal = (company) => {
+  const handleOpenManagerModal = async (company) => {
     setSelectedCompany(company);
-    setManagerData({
-      name: company.managerName || "",
-      email: company.managerEmail || "",
-      password: "",
-      phoneNumber: company.managerPhoneNumber || "",
-    });
+
+    // If editing existing manager, fetch fresh data from API
+    if (company.managerId) {
+      try {
+        const manager = await managerService.getManagerById(company.managerId);
+        setManagerData({
+          name: manager.name || "",
+          email: manager.email || "",
+          password: "",
+          phoneNumber: manager.phoneNumber || "",
+        });
+      } catch (error) {
+        console.error('Error fetching manager:', error);
+        // Fallback to company data if API fails
+        setManagerData({
+          name: company.managerName || "",
+          email: company.managerEmail || "",
+          password: "",
+          phoneNumber: company.managerPhoneNumber || "",
+        });
+      }
+    } else {
+      // New manager, clear form
+      setManagerData({
+        name: "",
+        email: "",
+        password: "",
+        phoneNumber: "",
+      });
+    }
+
     setIsManagerModalOpen(true);
   };
 
@@ -547,7 +588,8 @@ export default function Companies() {
                   companyPhoneNumber: newManager.companyPhoneNumber,
                   managerName: createdManagerData.name,
                   managerEmail: createdManagerData.email,
-                  managerPassword: createdManagerData.password
+                  managerPassword: createdManagerData.password,
+                  managerPhoneNumber: createdManagerData.phoneNumber
                 };
 
                 try {
@@ -629,7 +671,7 @@ export default function Companies() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Telefon</label>
+                  <label>Telefon *</label>
                   <input
                     type="text"
                     value={managerData.phoneNumber}
@@ -637,6 +679,7 @@ export default function Companies() {
                       setManagerData({ ...managerData, phoneNumber: e.target.value })
                     }
                     placeholder="Telefon numarası giriniz"
+                    required
                   />
                 </div>
               </div>
@@ -660,7 +703,9 @@ export default function Companies() {
               <button
                 className="btn-save"
                 onClick={async () => {
-                  if (!managerData.name || !managerData.email || !managerData.password) {
+                  const isNewManager = !selectedCompany?.managerName;
+                  if (!managerData.name || !managerData.email || !managerData.phoneNumber ||
+                      (isNewManager && !managerData.password)) {
                     showManagerModalMessage('error', "Lütfen tüm zorunlu alanları doldurun.");
                     return;
                   }
