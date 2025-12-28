@@ -248,7 +248,7 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
         customerId: user.userId,
         companyId: selectedCompany.companyId,
         serviceId: selectedService.id,
-        employeeId: selectedEmployee.id,
+        employeeId: selectedEmployee.id, // null for random selection
         startTime: startTime // Should be ISO 8601 format: 2025-01-15T10:00:00
       };
 
@@ -341,7 +341,6 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
                         className={`company-item ${selectedCompany?.companyId === c.companyId ? "selected" : ""}`}
                         onClick={() => setSelectedCompany(c)}
                       >
-                        <div className="company-icon"></div>
                         <div className="company-info">
                           <h4>{c.name}</h4>
                           <p>{c.address}</p>
@@ -402,10 +401,8 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
                         className={`employee-item ${selectedEmployee?.id === emp.id ? "selected" : ""}`}
                         onClick={() => setSelectedEmployee(emp)}
                       >
-                        <div className="employee-avatar"></div>
                         <div className="employee-info">
                           <h4>{emp.name}</h4>
-                          {/* Title might not be available in standard DTO, assuming name is main wrapper */}
                         </div>
                       </div>
                     ))

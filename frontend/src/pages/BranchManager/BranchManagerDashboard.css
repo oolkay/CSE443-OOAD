@@ -1,4 +1,3 @@
-
 .branch-manager-page {
   display: flex;
   gap: 20px;
@@ -95,7 +94,7 @@
 .branch-manager-main {
   flex: 1;
   /* Ensure it doesn't overflow horizontally */
-  min-width: 0; 
+  min-width: 0;
 }
 
 .branch-manager-header {
@@ -148,7 +147,7 @@
   box-shadow: 0 3px 10px rgba(21, 23, 27, 0.04);
   margin-bottom: 18px;
   /* Ensure table scrolling if needed */
-  overflow-x: auto; 
+  overflow-x: auto;
 }
 
 .card h3 {
@@ -175,7 +174,8 @@
   padding: 12px;
   border-bottom: 1px solid #f0f0f2;
   font-size: 14px;
-  white-space: nowrap; /* Prevent breaking on mobile for small columns */
+  white-space: nowrap;
+  /* Prevent breaking on mobile for small columns */
 }
 
 /* Allow name columns to wrap if needed or just scroll container */
@@ -223,13 +223,15 @@
 
   .sidebar-nav {
     flex-direction: row;
-    flex-wrap: wrap; /* Allow wrapping if many items */
+    flex-wrap: wrap;
+    /* Allow wrapping if many items */
   }
-  
+
   .nav-item {
-      text-align: center;
-      flex: 1; /* Distribute space */
-      white-space: nowrap;
+    text-align: center;
+    flex: 1;
+    /* Distribute space */
+    white-space: nowrap;
   }
 
   .branch-manager-header h1 {
@@ -244,9 +246,9 @@
   .appt-table td {
     padding: 8px;
   }
-  
+
   /* Make table scrollable horizontally on very small screens */
   .card {
-     padding: 12px;
+    padding: 12px;
   }
 }
