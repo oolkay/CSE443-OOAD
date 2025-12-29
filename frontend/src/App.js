@@ -35,7 +35,7 @@ function App() {
   const isOnline = useNetworkStatus();
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="app-shell">
         {/* Show offline banner only when offline */}
         {!isOnline && <OfflineBanner />}

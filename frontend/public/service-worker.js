@@ -38,10 +38,10 @@ if (workbox) {
     new workbox.strategies.CacheFirst({
       cacheName: 'image-cache',
       plugins: [
-        new workbox.cacheableResponse.Plugin({
+        new workbox.cacheableResponse.CacheableResponsePlugin({
           statuses: [0, 200],
         }),
-        new workbox.expiration.Plugin({
+        new workbox.expiration.ExpirationPlugin({
           maxEntries: 50,
           maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
         }),
@@ -56,10 +56,10 @@ if (workbox) {
     new workbox.strategies.CacheFirst({
       cacheName: 'font-cache',
       plugins: [
-        new workbox.cacheableResponse.Plugin({
+        new workbox.cacheableResponse.CacheableResponsePlugin({
           statuses: [0, 200],
         }),
-        new workbox.expiration.Plugin({
+        new workbox.expiration.ExpirationPlugin({
           maxEntries: 10,
           maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
         }),
@@ -74,7 +74,7 @@ if (workbox) {
     new workbox.strategies.StaleWhileRevalidate({
       cacheName: 'static-resources',
       plugins: [
-        new workbox.expiration.Plugin({
+        new workbox.expiration.ExpirationPlugin({
           maxEntries: 30,
           maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
         }),
@@ -89,11 +89,11 @@ if (workbox) {
       cacheName: 'api-cache',
       networkTimeoutSeconds: 3, // Wait 3 seconds for network
       plugins: [
-        new workbox.expiration.Plugin({
+        new workbox.expiration.ExpirationPlugin({
           maxEntries: 50,
           maxAgeSeconds: 5 * 60, // 5 minutes
         }),
-        new workbox.cacheableResponse.Plugin({
+        new workbox.cacheableResponse.CacheableResponsePlugin({
           statuses: [0, 200],
         }),
       ],
@@ -103,9 +103,7 @@ if (workbox) {
   // ==========================================
   // SKIP WAITING (Immediate updates)
   // ==========================================
-
-  workbox.core.skipWaiting();
-  workbox.clientsClaim();
+  // Not: Workbox v7'de skipWaiting ve clientsClaim otomatik
 
   console.log('[Workbox] Service worker aktif!');
 
