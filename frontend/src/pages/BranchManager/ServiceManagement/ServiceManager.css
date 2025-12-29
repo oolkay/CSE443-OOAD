@@ -575,7 +575,7 @@ body {
     opacity: 1;
 }
 
-.dropdown-menu {
+.dropdown-menu-resources {
     position: absolute;
     top: 100%;
     left: 0;
@@ -591,7 +591,7 @@ body {
     display: none;
 }
 
-.dropdown-menu.open {
+.dropdown-menu-resources.open {
     display: block;
     animation: fadeIn 0.15s ease-out;
 }

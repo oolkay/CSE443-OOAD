@@ -152,7 +152,7 @@ const ServiceFormModal = ({ isOpen, isEditing, onClose, onSubmit, initialData })
                                     ))}
                                 </div>
 
-                                <div className={`dropdown-menu ${isDropdownOpen ? 'open' : ''}`}>
+                                <div className={`dropdown-menu-resources ${isDropdownOpen ? 'open' : ''}`}>
                                     {resources.length === 0 ? (
                                         <div className="dropdown-item" style={{ color: '#9ca3af', justifyContent: 'center' }}>
                                             Kayıtlı kaynak bulunamadı
