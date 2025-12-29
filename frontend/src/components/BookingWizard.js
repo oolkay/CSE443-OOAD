@@ -105,7 +105,8 @@ export default function BookingWizard({ isOpen, onClose, onComplete }) {
       const data = await appointmentService.getEmployeeAvailability(
         selectedEmployee.id,
         selectedDate,
-        selectedService.durationMinutes
+        selectedService.durationMinutes,
+        selectedService.id
       );
       setAvailableSlots(data.availableSlots || []);
     } catch (error) {

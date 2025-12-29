@@ -192,10 +192,11 @@ public class AppointmentController {
             @PathVariable Long employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam Long serviceDuration,
+            @RequestParam(required = false) Long serviceId,
             HttpServletRequest servletRequest) {
         try {
             EmployeeAvailabilityResponse availability = appointmentService.getEmployeeAvailability(
-                    employeeId, date, serviceDuration);
+                    employeeId, date, serviceDuration, serviceId);
             return ResponseEntity.ok(availability);
         } catch (RuntimeException e) {
             ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Bad Request",
@@ -215,10 +216,11 @@ public class AppointmentController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam Long serviceDuration,
+            @RequestParam(required = false) Long serviceId,
             HttpServletRequest servletRequest) {
         try {
             List<EmployeeAvailabilityResponse> availabilities = appointmentService.getEmployeeAvailabilityRange(
-                    employeeId, startDate, endDate, serviceDuration);
+                    employeeId, startDate, endDate, serviceDuration, serviceId);
             return ResponseEntity.ok(availabilities);
         } catch (RuntimeException e) {
             ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Bad Request",

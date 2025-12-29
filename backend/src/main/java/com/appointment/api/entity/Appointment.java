@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ public class Appointment {
         joinColumns = @JoinColumn(name = "appointment_id"),
         inverseJoinColumns = @JoinColumn(name = "resource_id")
     )
+    @ToString.Exclude
     private List<Resource> resources = new ArrayList<>();
 
     @PrePersist

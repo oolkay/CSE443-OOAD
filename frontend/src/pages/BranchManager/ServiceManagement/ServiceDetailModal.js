@@ -36,6 +36,21 @@ const ServiceDetailModal = ({ isOpen, service, onClose, onEdit, onDelete }) => {
                             {service.description || "Açıklama sağlanmamıştır."}
                         </p>
                     </div>
+
+                    <div className="detail-section">
+                        <span className="label-block">Kaynaklar:</span>
+                        {service.resources && service.resources.length > 0 ? (
+                            <div className="resources-tags">
+                                {service.resources.map(r => (
+                                    <span key={r.resourceId} className="resource-tag-readonly">
+                                        {r.name}
+                                    </span>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="description-text">Bu hizmet için kaynak atanmamıştır.</p>
+                        )}
+                    </div>
                 </div>
                 <div className="modal-footer">
                     <button className="btn-delete" onClick={() => onDelete(service.id)}>Sil</button>

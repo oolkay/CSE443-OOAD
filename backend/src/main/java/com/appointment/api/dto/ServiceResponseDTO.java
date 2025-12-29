@@ -25,4 +25,5 @@ public class ServiceResponseDTO {
     private BigDecimal price;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private java.util.List<ResourceResponseDTO> resources;
 }

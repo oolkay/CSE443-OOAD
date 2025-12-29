@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,10 +46,12 @@ public class Resource {
 
     // Many-to-Many relationship: A resource can be used by multiple services
     @ManyToMany(mappedBy = "resources")
+    @ToString.Exclude
     private List<Service> services = new ArrayList<>();
 
     // Many-to-Many relationship: A resource can be used by multiple appointments
     @ManyToMany(mappedBy = "resources")
+    @ToString.Exclude
     private List<Appointment> appointments = new ArrayList<>();
 
     @PrePersist

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -55,6 +56,7 @@ public class Service {
         joinColumns = @JoinColumn(name = "service_id"),
         inverseJoinColumns = @JoinColumn(name = "resource_id")
     )
+    @ToString.Exclude
     private List<Resource> resources = new ArrayList<>();
 
     @PrePersist

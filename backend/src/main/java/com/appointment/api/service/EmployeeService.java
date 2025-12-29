@@ -219,14 +219,15 @@ public class EmployeeService {
         }
 
         List<ServiceResponseDTO> serviceDTOs = employee.getServices().stream()
-                .map(service -> new ServiceResponseDTO(
-                        service.getServiceId(),
-                        service.getName(),
-                        service.getDescription(),
-                        service.getTimeDuration().intValue(),
-                        service.getPrice(),
-                        service.getCreatedAt(),
-                        service.getUpdatedAt()))
+                .map(service -> ServiceResponseDTO.builder()
+                        .id(service.getServiceId())
+                        .name(service.getName())
+                        .description(service.getDescription())
+                        .durationMinutes(service.getTimeDuration().intValue())
+                        .price(service.getPrice())
+                        .createdAt(service.getCreatedAt())
+                        .updatedAt(service.getUpdatedAt())
+                        .build())
                 .collect(Collectors.toList());
 
         dto.setAssignedServices(serviceDTOs);

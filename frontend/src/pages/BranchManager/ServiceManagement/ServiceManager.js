@@ -47,7 +47,8 @@ const ServiceManager = () => {
         name: '',
         description: '',
         timeDuration: '', // Kullanıcı girişi için string başlatıp number'a çevireceğiz
-        price: ''
+        price: '',
+        resourceIds: []
     };
     const [formData, setFormData] = useState(initialFormState);
 
@@ -113,7 +114,8 @@ const ServiceManager = () => {
                 name: service.name,
                 description: service.description || '',
                 timeDuration: service.durationMinutes, // Backend DTO: durationMinutes
-                price: service.price
+                price: service.price,
+                resourceIds: service.resources ? service.resources.map(resource => resource.resourceId) : []
             });
             // Seçili servisi güncelleme işlemi için set et (ID lazım)
             setSelectedService(service);
@@ -160,7 +162,8 @@ const ServiceManager = () => {
             name: formData.name,
             description: formData.description,
             durationMinutes: durationVal,
-            price: priceVal
+            price: priceVal,
+            resourceIds: formData.resourceIds && formData.resourceIds.length > 0 ? formData.resourceIds : null
         };
 
         try {
@@ -307,19 +310,20 @@ const ServiceManager = () => {
                         <thead>
                             <tr>
                                 <th>HİZMET ADI</th>
+                                <th style={{ textAlign: 'center' }}>KAYNAKLAR</th>
                                 <th style={{ textAlign: 'right' }}>FİYAT & SÜRESİ</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                                    <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
                                         Yükleniyor...
                                     </td>
                                 </tr>
                             ) : filteredServices.length === 0 ? (
                                 <tr>
-                                    <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
+                                    <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
                                         Hizmet bulunamadı.
                                     </td>
                                 </tr>
@@ -329,6 +333,27 @@ const ServiceManager = () => {
                                         <td>
                                             <div className="service-name-cell">
                                                 <span className="fw-bold">{srv.name}</span>
+                                            </div>
+                                        </td>
+                                        <td style={{ justifyContent: 'center' }}>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'center' }}>
+                                                {srv.resources && srv.resources.slice(0, 3).map(r => (
+                                                    <span key={r.resourceId} style={{
+                                                        backgroundColor: '#f3f4f6',
+                                                        color: '#374151',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.75rem',
+                                                        border: '1px solid #e5e7eb'
+                                                    }}>
+                                                        {r.name}
+                                                    </span>
+                                                ))}
+                                                {srv.resources && srv.resources.length > 3 && (
+                                                    <span style={{ fontSize: '0.75rem', color: '#6b7280', alignSelf: 'center' }}>
+                                                        +{srv.resources.length - 3}
+                                                    </span>
+                                                )}
                                             </div>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>

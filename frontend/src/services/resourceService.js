@@ -282,4 +282,5 @@ export const resourceService = {
 };
 
 // Export getCurrentCompanyId for external use
+export default resourceService;
 export { getCurrentCompanyId };
