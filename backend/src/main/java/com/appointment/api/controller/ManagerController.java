@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequestMapping("/api/managers")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class ManagerController {
 
     private final BranchManagerRepository managerRepository;

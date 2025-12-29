@@ -3,7 +3,7 @@
  * Handles all HTTP requests to the backend Resource endpoints
  */
 
-const API_BASE_URL = 'http://localhost:8080/api/resources';
+const API_BASE_URL = `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080'}/api/resources`;
 
 /**
  * Get current company ID for the logged-in user
