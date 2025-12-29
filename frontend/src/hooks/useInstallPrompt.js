@@ -2,13 +2,32 @@ import { useState, useEffect } from 'react';
 
 /**
  * Custom hook to handle PWA install prompt
- * @returns {Object} - { isInstallable, showInstallPrompt }
+ * @returns {Object} - { isInstallable, showInstallPrompt, browserType, isStandalone }
  */
 const useInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [browserType, setBrowserType] = useState('chrome');
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    // Detect browser type (only for Firefox/Safari)
+    const userAgent = navigator.userAgent;
+    let browser = 'chrome'; // default
+
+    if (/Firefox/i.test(userAgent)) {
+      browser = 'firefox';
+    } else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) {
+      browser = 'safari';
+    }
+
+    setBrowserType(browser);
+
+    // Check if already installed (standalone mode)
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
+                            window.navigator.standalone === true;
+    setIsStandalone(isStandaloneMode);
+
     const handleBeforeInstallPrompt = (event) => {
       event.preventDefault();
       setDeferredPrompt(event);
@@ -32,25 +51,33 @@ const useInstallPrompt = () => {
   }, []);
 
   const showInstallPrompt = async () => {
-    if (!deferredPrompt) {
-      console.warn('[PWA] No install prompt available');
-      return false;
+    // Chrome/Edge with native prompt
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+
+      console.log(`[PWA] User response: ${outcome}`);
+
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+
+      return outcome === 'accepted';
     }
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    // Firefox/Safari - manual install needed
+    if (browserType === 'firefox' || browserType === 'safari') {
+      return 'manual';
+    }
 
-    console.log(`[PWA] User response: ${outcome}`);
-
-    setDeferredPrompt(null);
-    setIsInstallable(false);
-
-    return outcome === 'accepted';
+    console.warn('[PWA] No install prompt available');
+    return false;
   };
 
   return {
-    isInstallable,
-    showInstallPrompt
+    isInstallable: isInstallable || browserType === 'firefox' || browserType === 'safari',
+    showInstallPrompt,
+    browserType,
+    isStandalone
   };
 };
 

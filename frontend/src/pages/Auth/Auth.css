@@ -1,12 +1,13 @@
 /* Basic styling for Auth pages (Login / Reset Password) */
 .auth-page {
-  min-height: calc(100vh - 0px);
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 48px;
   background: transparent;
   position: relative;
+  box-sizing: border-box;
 }
 
 .auth-card {
@@ -152,9 +153,10 @@
   right: 22px;
   background: #00c7ed;
   color: #fff;
-  padding: 8px 12px;
+  padding: 10px 18px;
   border-radius: 8px;
   font-weight: 700;
+  font-size: 14px;
   text-decoration: none;
   box-shadow: 0 6px 18px rgba(11, 142, 179, 0.12);
 }
@@ -195,9 +197,54 @@
   text-align: center;
 }
 
+/* Mobile responsive */
 @media (max-width: 480px) {
-  .auth-card {
-    width: 92%;
+  .auth-page {
     padding: 16px;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 340px;
+    padding: 20px;
+    flex-shrink: 0;
+  }
+
+  .auth-register-top {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .auth-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .auth-label {
+    margin-top: 8px;
+  }
+
+  .auth-input {
+    padding: 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .auth-button {
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 16px;
+  }
+
+  .auth-forgot {
+    font-size: 13px;
+    padding: 8px 12px;
   }
 }
