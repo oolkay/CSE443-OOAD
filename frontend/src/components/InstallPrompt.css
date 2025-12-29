@@ -1,0 +1,120 @@
+/* Button Variant */
+.install-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.install-button:hover {
+  background-color: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.install-button:active {
+  transform: translateY(0);
+}
+
+.install-icon {
+  flex-shrink: 0;
+}
+
+/* Banner Variant (Mobile-First) */
+.install-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  background-color: white;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+}
+
+.install-banner-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.install-banner-text h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.install-banner-text p {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.install-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.install-install-button {
+  flex: 1;
+  padding: 10px 16px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.install-install-button:hover {
+  background-color: #333;
+}
+
+.install-dismiss-button {
+  padding: 10px 16px;
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.install-dismiss-button:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+/* Desktop: Center it like a modal */
+@media (min-width: 481px) {
+  .install-banner {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .install-banner-text h3 {
+    font-size: 18px;
+  }
+
+  .install-banner-text p {
+    font-size: 14px;
+  }
+}

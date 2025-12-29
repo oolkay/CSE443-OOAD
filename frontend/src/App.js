@@ -1,6 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
+import OfflineBanner from "./components/OfflineBanner";
+import InstallPrompt from "./components/InstallPrompt";
+import useNetworkStatus from "./hooks/useNetworkStatus";
 import Login from "./pages/Auth/Login";
 import RequestReset from "./pages/Auth/RequestReset";
 import VerifyCode from "./pages/Auth/VerifyCode";
@@ -28,10 +31,17 @@ function App() {
     EMPLOYEE: "ROLE_EMPLOYEE",
   };
 
+  // Get network status
+  const isOnline = useNetworkStatus();
+
   return (
     <BrowserRouter>
       <div className="app-shell">
-        <main className="main-area">
+        {/* Show offline banner only when offline */}
+        {!isOnline && <OfflineBanner />}
+        <InstallPrompt variant="banner" />
+
+        <main className={`main-area ${!isOnline ? 'offline-mode' : ''}`}>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Login />} />

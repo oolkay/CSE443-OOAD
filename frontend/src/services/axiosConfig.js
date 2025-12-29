@@ -85,12 +85,18 @@ axiosProvider.interceptors.response.use(
             });
         } else if (error.request) {
             // Request was made but no response received
-            alert('Cannot connect to server. Please check your internet connection.');
+            // Check if user is offline
+            if (!navigator.onLine) {
+                alert('Çevrimdışısınız. Lütfen internet bağlantınızı kontrol edin.');
+            } else {
+                alert('Sunucuya bağlanılamıyor. Lütfen internet bağlantınızı kontrol edin.');
+            }
 
             return Promise.reject({
                 status: 0,
-                message: 'No response from server',
-                data: null
+                message: 'Sunucudan yanıt alınamadı',
+                data: null,
+                isOffline: !navigator.onLine
             });
         } else {
             // Something else happened
