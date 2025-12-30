@@ -37,3 +37,12 @@ insert.sql
 backend/data/*.mv.db
 backend/data/*.trace.db
 backend/data/*.db
+
+# PWA icon files
+#frontend/public/images/all-icons/
+
+# Local tunnel / dev binaries
+cloudflared.exe
+
+# Project documentation/planning
+PWA_CONVERSION_PLAN.md

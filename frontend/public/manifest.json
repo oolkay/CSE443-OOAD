@@ -1,25 +1,61 @@
 {
-  "short_name": "Appointment",
-  "name": "Appointment System",
+  "short_name": "Randevu",
+  "name": "Randevu Sistemi",
+  "description": "Randevularınızı kolayca oluşturun ve yönetin",
+  "lang": "tr-TR",
+  "dir": "ltr",
   "icons": [
+    { "src": "images/all-icons/Android/Icon-36.png", "sizes": "36x36", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/Android/Icon-48.png", "sizes": "48x48", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/Android/Icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/iOS/Icon-76.png", "sizes": "76x76", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/Android/Icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/iOS/Icon-100.png", "sizes": "100x100", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/iOS/Icon-114.png", "sizes": "114x114", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/iOS/Icon-120.png", "sizes": "120x120", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/iOS/Icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/iOS/Icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any maskable" },
+    { "src": "images/all-icons/iOS/Icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "images/all-icons/Android/Icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "images/all-icons/iOS/Icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" },
+    { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" }
+  ],
+  "shortcuts": [
     {
-      "src": "icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "name": "Randevu Oluştur",
+      "short_name": "Randevu",
+      "description": "Yeni bir randevu oluşturun",
+      "url": "/appointments?action=new",
+      "icons": [{ "src": "images/all-icons/Android/Icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "src": "icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "name": "Randevularım",
+      "short_name": "Randevularım",
+      "description": "Randevularınızı görüntüleyin",
+      "url": "/appointments",
+      "icons": [{ "src": "images/all-icons/Android/Icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
-  "start_url": "/",
+  "screenshots": [
+    {
+      "src": "images/screenshots/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "images/screenshots/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "portrait",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "categories": ["business", "productivity"]
 }

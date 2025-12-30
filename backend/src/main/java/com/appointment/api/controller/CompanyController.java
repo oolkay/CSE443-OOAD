@@ -42,7 +42,6 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class CompanyController {
 
     private final CompanyRepository companyRepository;
