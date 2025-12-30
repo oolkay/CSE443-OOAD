@@ -39,7 +39,7 @@ backend/data/*.trace.db
 backend/data/*.db
 
 # PWA icon files
-frontend/public/images/all-icons/
+#frontend/public/images/all-icons/
 
 # Local tunnel / dev binaries
 cloudflared.exe
