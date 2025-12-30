@@ -37,4 +37,6 @@ public class ServiceRequestDTO {
 
     private Long companyId;
 
+    private java.util.List<Long> resourceIds;
+
 }

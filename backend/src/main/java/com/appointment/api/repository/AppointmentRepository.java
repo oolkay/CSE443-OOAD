@@ -27,5 +27,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     boolean existsByResources_ResourceId(Long resourceId);
 
+    List<Appointment> findByService_Resources_ResourceIdInAndStartTimeBetween(
+        List<Long> resourceIds, LocalDateTime start, LocalDateTime end
+    );
+
+    List<Appointment> findByResources_ResourceIdAndStartTimeBetween(
+        Long resourceId, LocalDateTime start, LocalDateTime end
+    );
+
     boolean existsByService_ServiceId(Long serviceId);
 }

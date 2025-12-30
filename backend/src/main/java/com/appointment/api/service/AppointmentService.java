@@ -14,6 +14,8 @@ import com.appointment.api.repository.CustomerRepository;
 import com.appointment.api.repository.EmployeeRepository;
 import com.appointment.api.repository.ServiceRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,9 +31,14 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AppointmentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AppointmentService.class);
 
     private final AppointmentRepository appointmentRepository;
     private final CustomerRepository customerRepository;
@@ -199,7 +206,7 @@ public class AppointmentService {
      * Get employee availability for a specific date
      * Returns available time slots based on working hours and existing appointments
      */
-    public EmployeeAvailabilityResponse getEmployeeAvailability(Long employeeId, LocalDate date, Long serviceDuration) {
+    public EmployeeAvailabilityResponse getEmployeeAvailability(Long employeeId, LocalDate date, Long serviceDuration, Long serviceId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
 
@@ -248,9 +255,20 @@ public class AppointmentService {
                         .build())
                 .collect(Collectors.toList());
 
+        List<Resource> requiredResources = new ArrayList<>();
+        // Helper: Get required resources if serviceId is provided
+        if (serviceId != null) {
+            com.appointment.api.entity.Service service = serviceRepository.findById(serviceId)
+                    .orElseThrow(() -> new RuntimeException("Service not found with id: " + serviceId));
+            
+            if (service.getResources() != null) {
+                requiredResources.addAll(service.getResources());
+            }
+        }
+
         // Calculate available slots
         List<AvailableSlotDTO> availableSlots = calculateAvailableSlots(
-                date, workStart, workEnd, bookedSlots, serviceDuration);
+                date, workStart, workEnd, bookedSlots, serviceDuration, requiredResources);
 
         return EmployeeAvailabilityResponse.builder()
                 .employeeId(employeeId)
@@ -267,13 +285,14 @@ public class AppointmentService {
      * Get employee availability for multiple days
      */
     public List<EmployeeAvailabilityResponse> getEmployeeAvailabilityRange(
-            Long employeeId, LocalDate startDate, LocalDate endDate, Long serviceDuration) {
+            Long employeeId, LocalDate startDate, LocalDate endDate, Long serviceDuration, Long serviceId) {
 
+        log.info("For employee {} and service {}", employeeId, serviceId);
         List<EmployeeAvailabilityResponse> availabilities = new ArrayList<>();
         LocalDate currentDate = startDate;
 
         while (!currentDate.isAfter(endDate)) {
-            availabilities.add(getEmployeeAvailability(employeeId, currentDate, serviceDuration));
+            availabilities.add(getEmployeeAvailability(employeeId, currentDate, serviceDuration, serviceId));
             currentDate = currentDate.plusDays(1);
         }
 
@@ -281,11 +300,11 @@ public class AppointmentService {
     }
 
     /**
-     * Calculate available time slots based on working hours and booked appointments
+     * Calculate available time slots based on working hours, booked appointments, and resource availability
      */
     private List<AvailableSlotDTO> calculateAvailableSlots(
             LocalDate date, LocalTime workStart, LocalTime workEnd,
-            List<AvailableSlotDTO> bookedSlots, Long serviceDuration) {
+            List<AvailableSlotDTO> bookedSlots, Long serviceDuration, List<Resource> requiredResources) {
 
         List<AvailableSlotDTO> availableSlots = new ArrayList<>();
         LocalDateTime slotStart = date.atTime(workStart);
@@ -300,19 +319,31 @@ public class AppointmentService {
             final LocalDateTime currentSlotStart = slotStart;
             final LocalDateTime currentSlotEnd = slotStart.plusMinutes(serviceDuration);
 
-            // Check if this slot conflicts with any booked appointment
-            // IMPORTANT: Check if the ENTIRE duration [currentSlotStart, currentSlotEnd] is
-            // free
-            boolean isAvailable = bookedSlots.stream()
+            // 1. Check if employee is available (no conflict with booked appointments)
+            boolean isEmployeeFree = bookedSlots.stream()
                     .noneMatch(booked -> hasTimeConflict(currentSlotStart, currentSlotEnd,
                             booked.getStartTime(), booked.getEndTime()));
 
-            if (isAvailable) {
+            boolean isResourceFree = true;
+            
+            // 2. If employee is free, check if at least one resource is available
+            if (isEmployeeFree && requiredResources != null && !requiredResources.isEmpty()) {
+                // We need AT LEAST ONE resource to be available for this slot
+                boolean anyResourceAvailable = false;
+                for (Resource resource : requiredResources) {
+                    if (isResourceAvailable(resource.getResourceId(), currentSlotStart, currentSlotEnd, null)) {
+                        log.info("For current slot {} Resource {} is available for appointment", currentSlotStart, resource.getResourceId());
+                        anyResourceAvailable = true;
+                        break; 
+                    }
+                }
+                isResourceFree = anyResourceAvailable;
+            }
+
+            if (isEmployeeFree && isResourceFree) {
                 availableSlots.add(AvailableSlotDTO.builder()
                         .startTime(currentSlotStart)
-                        .endTime(currentSlotStart.plusMinutes(30)) // Show 30 min slot in UI, but availability is
-                                                                   // checked for full
-                                                                   // duration
+                        .endTime(currentSlotStart.plusMinutes(slotInterval))
                         .build());
             }
 
@@ -341,6 +372,25 @@ public class AppointmentService {
                 .findByEmployee_UserIdAndStartTimeBetween(employeeId, startTime.minusHours(1), endTime.plusHours(1))
                 .stream()
                 .filter(a -> a.getStatus() != AppointmentStatus.CANCELLED)
+                .filter(a -> excludeAppointmentId == null || !a.getAppointmentId().equals(excludeAppointmentId))
+                .filter(a -> {
+                    // Check if there's an overlap
+                    return !(endTime.isBefore(a.getStartTime()) || endTime.isEqual(a.getStartTime()) ||
+                            startTime.isAfter(a.getEndTime()) || startTime.isEqual(a.getEndTime()));
+                })
+                .collect(Collectors.toList());
+
+        return conflictingAppointments.isEmpty();
+    }
+
+    private boolean isResourceAvailable(Long resourceId, LocalDateTime startTime, LocalDateTime endTime,
+                                        Long excludeAppointmentId) {
+        // Broaden search to ensure we catch overlapping appointments starting before the slot
+        // e.g., Appointment 10:00-11:00, checking for 10:30-11:00
+        List<Appointment> conflictingAppointments = appointmentRepository
+                .findByResources_ResourceIdAndStartTimeBetween(resourceId, startTime.minusHours(24), endTime.plusHours(24))
+                .stream()
+                .filter(a -> a.getStatus() != AppointmentStatus.CANCELLED && a.getStatus() != AppointmentStatus.REJECTED)
                 .filter(a -> excludeAppointmentId == null || !a.getAppointmentId().equals(excludeAppointmentId))
                 .filter(a -> {
                     // Check if there's an overlap
@@ -531,6 +581,32 @@ public class AppointmentService {
         // Approve the appointment
         appointment.setStatus(AppointmentStatus.APPROVED);
         Appointment approvedAppointment = appointmentRepository.save(appointment);
+        
+        // Fetch service
+        com.appointment.api.entity.Service service = approvedAppointment.getService();
+
+        // Assign only the first resource that is available
+        if (service.getResources() != null && !service.getResources().isEmpty()) {
+            
+            boolean resourceAssigned = false;
+            
+            for (Resource resource : service.getResources()) {
+                if (isResourceAvailable(resource.getResourceId(), approvedAppointment.getStartTime(), approvedAppointment.getEndTime(), null)) {
+                    log.info("Resource {} is available for appointment", resource.getResourceId());
+                    approvedAppointment.setResources(new ArrayList<>(List.of(resource)));
+                    resourceAssigned = true;
+                    break;
+                }
+            }
+
+            if (!resourceAssigned && !service.getResources().isEmpty()) {
+                throw new RuntimeException("No resources available for this service at the requested time");
+            }
+            
+            // Save again to persist resources
+            log.info("Resource successfully assigned: {}", resourceAssigned);
+            approvedAppointment = appointmentRepository.save(approvedAppointment);
+        }
 
         // Send approval email
         sendAppointmentApprovalEmail(approvedAppointment);

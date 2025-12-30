@@ -1,14 +1,17 @@
 package com.appointment.api.service;
 
 import com.appointment.api.dto.ServiceRequestDTO;
+import com.appointment.api.dto.ResourceResponseDTO;
 import com.appointment.api.dto.ServiceResponseDTO;
 import com.appointment.api.entity.Company;
+import com.appointment.api.entity.Resource;
 import com.appointment.api.entity.Service;
 import com.appointment.api.exception.DuplicateResourceException;
 import com.appointment.api.exception.ResourceNotFoundException;
 import com.appointment.api.repository.CompanyRepository;
 import com.appointment.api.repository.ServiceRepository;
 import com.appointment.api.repository.EmployeeRepository;
+import com.appointment.api.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ public class ServiceService {
     private final AppointmentRepository appointmentRepository;
     private final NotificationProvider notificationProvider;
     private final EmployeeRepository employeeRepository;
+    private final ResourceRepository resourceRepository;
 
     /**
      * Create a new service.
@@ -64,6 +68,12 @@ public class ServiceService {
         service.setTimeDuration(requestDTO.getDurationMinutes().longValue());
         service.setPrice(requestDTO.getPrice());
         service.setCompany(company); // Set Company
+
+        // Handle Resources
+        if (requestDTO.getResourceIds() != null && !requestDTO.getResourceIds().isEmpty()) {
+            List<Resource> resources = resourceRepository.findAllById(requestDTO.getResourceIds());
+            service.setResources(resources);
+        }
 
         Service savedService = serviceRepository.save(service);
 
@@ -126,6 +136,13 @@ public class ServiceService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Company not found with ID: " + requestDTO.getCompanyId()));
             existingService.setCompany(company);
+        }
+
+        log.debug("Updating service resources for service with ID: {}", requestDTO.getResourceIds());
+        // Handle Resources update
+        if (requestDTO.getResourceIds() != null) {
+            List<Resource> resources = resourceRepository.findAllById(requestDTO.getResourceIds());
+            existingService.setResources(resources);
         }
 
         updateEntityFromDTO(existingService, requestDTO);
@@ -290,6 +307,18 @@ public class ServiceService {
         responseDTO.setPrice(service.getPrice());
         responseDTO.setCreatedAt(service.getCreatedAt());
         responseDTO.setUpdatedAt(service.getUpdatedAt());
+
+        if (service.getResources() != null) {
+            responseDTO.setResources(service.getResources().stream()
+                    .map(resource -> new ResourceResponseDTO(
+                            resource.getResourceId(),
+                            resource.getName(),
+                            resource.getDescription(),
+                            resource.getStatus(),
+                            resource.getCreatedAt(),
+                            resource.getUpdatedAt()))
+                    .collect(Collectors.toList()));
+        }
         return responseDTO;
     }
 }
