@@ -12,6 +12,7 @@ import com.appointment.api.repository.AppointmentRepository;
 import com.appointment.api.repository.BranchManagerRepository;
 import com.appointment.api.repository.CustomerRepository;
 import com.appointment.api.repository.EmployeeRepository;
+import com.appointment.api.repository.ResourceRepository;
 import com.appointment.api.repository.ServiceRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public class AppointmentService {
     private final BranchManagerRepository branchManagerRepository;
     private final EmailNotificationProvider emailNotificationProvider;
     private final WorkingShiftService workingShiftService;
+    private final ResourceRepository resourceRepository;
 
     @Transactional
     public AppointmentResponse createAppointment(AppointmentRequestDTO request) {
@@ -385,6 +387,20 @@ public class AppointmentService {
 
     private boolean isResourceAvailable(Long resourceId, LocalDateTime startTime, LocalDateTime endTime,
                                         Long excludeAppointmentId) {
+        // First, check if the resource exists and its status is AVAILABLE
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElse(null);
+        
+        if (resource == null) {
+            log.warn("Resource with id {} not found", resourceId);
+            return false;
+        }
+        
+        if (resource.getStatus() != ResourceStatus.AVAILABLE) {
+            log.info("Resource {} is not available. Current status: {}", resourceId, resource.getStatus());
+            return false;
+        }
+        
         // Broaden search to ensure we catch overlapping appointments starting before the slot
         // e.g., Appointment 10:00-11:00, checking for 10:30-11:00
         List<Appointment> conflictingAppointments = appointmentRepository
